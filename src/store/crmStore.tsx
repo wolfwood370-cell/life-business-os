@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Client, FIXED_MONTHLY_COST, RoiMetric, LeadSource, PipelineStage, ChurnRisk, Gender } from '@/types/crm';
+import {
+  Client, FIXED_MONTHLY_COST, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
+  ChurnRisk, Gender, Transaction, PaymentType,
+} from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
 // Re-export for back-compat with existing imports
@@ -89,6 +92,34 @@ const fetchAll = async (): Promise<Client[]> => {
   if (cErr) throw cErr;
   if (rErr) throw rErr;
   return (clientRows as ClientRow[]).map(c => mapClient(c, (roiRows ?? []) as RoiRow[]));
+};
+
+type TransactionRow = {
+  id: string;
+  client_id: string;
+  amount: number | string;
+  payment_type: string;
+  installments_count: number;
+  payment_date: string;
+  created_at: string;
+};
+
+const fetchTransactions = async (): Promise<Transaction[]> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('transactions')
+    .select('*')
+    .order('payment_date', { ascending: false });
+  if (error) throw error;
+  return (data as TransactionRow[]).map(r => ({
+    id: r.id,
+    client_id: r.client_id,
+    amount: Number(r.amount),
+    payment_type: r.payment_type as PaymentType,
+    installments_count: r.installments_count,
+    payment_date: r.payment_date,
+    created_at: r.created_at,
+  }));
 };
 
 export const CrmProvider = ({ children }: { children: ReactNode }) => {
