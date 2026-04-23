@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, moveClient } = useCrm();
+  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading } = useCrm();
   const client = clients.find(c => c.id === id);
 
   const [motivator, setMotivator] = useState('');
@@ -52,6 +52,10 @@ const ClientDetail = () => {
     }
   }, [client]);
 
+  if (isLoading) {
+    return <div className="px-4 pt-6"><p className="text-muted-foreground">Caricamento…</p></div>;
+  }
+
   if (!client) {
     return (
       <div className="px-4 pt-6">
@@ -80,20 +84,15 @@ const ClientDetail = () => {
     toast.success(`Spostato in "${pipelineStageLabel[s]}"`);
   };
 
-  const handleAddRoi = () => {
+  const handleAddRoi = async () => {
     if (!metricName.trim() || !metricValue.trim()) {
       toast.error('Inserisci metrica e valore');
       return;
     }
-    const newMetric: RoiMetric = {
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
+    await addRoiMetric(client.id, {
       metric: metricName.trim(),
       value: metricValue.trim(),
       note: metricNote.trim() || undefined,
-    };
-    updateClient(client.id, {
-      roi_metrics: [...(client.roi_metrics || []), newMetric],
     });
     setMetricName('');
     setMetricValue('');
@@ -101,10 +100,8 @@ const ClientDetail = () => {
     toast.success('Metrica ROI aggiunta');
   };
 
-  const handleRemoveRoi = (metricId: string) => {
-    updateClient(client.id, {
-      roi_metrics: (client.roi_metrics || []).filter(m => m.id !== metricId),
-    });
+  const handleRemoveRoi = async (metricId: string) => {
+    await removeRoiMetric(client.id, metricId);
   };
 
   const stageColor = stageColorMap[client.pipeline_stage];

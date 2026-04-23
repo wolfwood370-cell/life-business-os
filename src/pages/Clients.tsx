@@ -5,9 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { PIPELINE_STAGES, PipelineStage, pipelineStageLabel } from '@/types/crm';
 import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Clients = () => {
-  const { clients } = useCrm();
+  const { clients, isLoading } = useCrm();
   const [q, setQ] = useState('');
   const [filter, setFilter] = useState<PipelineStage | 'All'>('All');
 
@@ -50,7 +51,9 @@ const Clients = () => {
       </div>
 
       <div className="space-y-2 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-3 md:space-y-0">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)
+        ) : filtered.length === 0 ? (
           <div className="md:col-span-full rounded-2xl border border-dashed border-border p-10 text-center">
             <p className="text-sm text-muted-foreground">Nessun cliente trovato</p>
           </div>

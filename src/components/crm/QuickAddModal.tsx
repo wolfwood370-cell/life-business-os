@@ -22,27 +22,31 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
   const [source, setSource] = useState<LeadSource>('Gym Floor');
   const [stage, setStage] = useState<PipelineStage>('Lead Acquired');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast.error('Il nome è obbligatorio');
       return;
     }
-    addClient({
-      name: name.trim(),
-      lead_source: source,
-      pipeline_stage: stage,
-      root_motivator: '',
-      objection_stated: '',
-      objection_real: '',
-      last_contacted_at: new Date().toISOString(),
-      lead_score: 50,
-      churn_risk: 'Basso',
-    });
-    toast.success(`${name} aggiunto alla pipeline`);
-    setName('');
-    setSource('Gym Floor');
-    setStage('Lead Acquired');
-    onOpenChange(false);
+    try {
+      await addClient({
+        name: name.trim(),
+        lead_source: source,
+        pipeline_stage: stage,
+        root_motivator: '',
+        objection_stated: '',
+        objection_real: '',
+        last_contacted_at: new Date().toISOString(),
+        lead_score: 50,
+        churn_risk: 'Basso',
+      });
+      toast.success(`${name} aggiunto alla pipeline`);
+      setName('');
+      setSource('Gym Floor');
+      setStage('Lead Acquired');
+      onOpenChange(false);
+    } catch (e) {
+      toast.error('Errore nel salvataggio');
+    }
   };
 
   return (
