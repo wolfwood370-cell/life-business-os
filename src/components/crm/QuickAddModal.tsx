@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useCrm } from '@/store/crmStore';
 import { LEAD_SOURCES, PIPELINE_STAGES, LeadSource, PipelineStage, leadSourceLabel, pipelineStageLabel } from '@/types/crm';
+import { baseLeadScore } from '@/lib/leadScore';
 import { toast } from 'sonner';
 import { CalendarDays } from 'lucide-react';
 
@@ -36,7 +37,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
         objection_stated: '',
         objection_real: '',
         last_contacted_at: new Date().toISOString(),
-        lead_score: 50,
+        lead_score: baseLeadScore(source),
         churn_risk: 'Basso',
       });
       toast.success(`${name} aggiunto alla pipeline`);
