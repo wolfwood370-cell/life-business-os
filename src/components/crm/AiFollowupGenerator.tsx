@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Sparkles, Copy, Check, Loader2, Lock } from 'lucide-react';
+import { Sparkles, Copy, Check, Loader2, Lock, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Client } from '@/types/crm';
 import { toast } from 'sonner';
+import { usePrivacyMode } from '@/store/usePrivacyMode';
 
 interface DayMessage {
   title: string;
@@ -32,18 +33,23 @@ export const AiFollowupGenerator = ({ client }: Props) => {
   const [loading, setLoading] = useState(false);
   const [sequence, setSequence] = useState<Sequence | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const { privacyMode } = usePrivacyMode();
 
   const eligible = ELIGIBLE_STAGES.includes(client.pipeline_stage);
   const hasConsent = !!client.gdpr_consent;
 
   const handleGenerate = async () => {
     if (!eligible || !hasConsent) return;
+    if (privacyMode) {
+      toast.warning('Modalità Privacy attiva: il nome del cliente sarà mascherato prima dell\'invio.');
+    }
     setLoading(true);
     setSequence(null);
     try {
+      const safeName = privacyMode ? `Cliente #${client.id.slice(0, 4)}` : client.name;
       const { data, error } = await supabase.functions.invoke('generate-sales-copy', {
         body: {
-          name: client.name,
+          name: safeName,
           lead_source: client.lead_source,
           root_motivator: client.root_motivator,
           objection_stated: client.objection_stated,
@@ -56,7 +62,11 @@ export const AiFollowupGenerator = ({ client }: Props) => {
       setSequence(data.sequence as Sequence);
       toast.success('Sequenza follow-up generata');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Generazione AI fallita';
+      const raw = e instanceof Error ? e.message : '';
+      let msg = 'Servizio AI momentaneamente non disponibile';
+      if (/429|limite|rate/i.test(raw)) msg = 'Limite di richieste raggiunto. Riprova tra qualche istante.';
+      else if (/402|crediti|payment/i.test(raw)) msg = 'Crediti AI esauriti. Aggiungi fondi al workspace.';
+      else if (/timeout|timed?\s*out|network/i.test(raw)) msg = 'Connessione lenta: l\'AI non ha risposto in tempo. Riprova.';
       toast.error(msg);
     } finally {
       setLoading(false);
