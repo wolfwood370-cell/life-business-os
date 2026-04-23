@@ -94,8 +94,14 @@ export const TAX_RATE = 0.249; // 24.90% imposte/contributi
  * - Da Marzo 2026 in poi: 366€/mese
  */
 export const rentForMonth = (year: number, month: number): number => {
+  // Affitto palestra rimosso da Gennaio 2026 fino al mese corrente compreso.
+  // Riprenderà automaticamente dal mese successivo a quello attuale.
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
   if (year < 2026) return 0;
-  if (year === 2026 && month < 2) return 0; // Gen + Feb 2026 esclusi
+  if (year < currentYear) return 0;
+  if (year === currentYear && month <= currentMonth) return 0;
   return FIXED_MONTHLY_COST;
 };
 
