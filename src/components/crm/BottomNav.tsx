@@ -35,7 +35,7 @@ export const BottomNav = ({ onFabClick }: Props) => {
           <div className="w-16 flex items-center justify-center">
             <button
               onClick={onFabClick}
-              aria-label="Quick add lead"
+              aria-label="Aggiungi lead"
               className="flex h-14 w-14 -translate-y-4 items-center justify-center rounded-2xl gradient-primary shadow-fab transition-smooth active:scale-95 animate-pulse-glow"
             >
               <Plus className="h-6 w-6 text-primary-foreground" strokeWidth={3} />

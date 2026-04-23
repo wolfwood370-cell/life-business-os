@@ -23,7 +23,7 @@ export const SideNav = ({ onFabClick }: Props) => {
         </div>
         <div>
           <p className="text-sm font-bold leading-tight">PT CRM</p>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Command Center</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Centro di Comando</p>
         </div>
       </div>
 
@@ -52,7 +52,7 @@ export const SideNav = ({ onFabClick }: Props) => {
           className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold shadow-glow"
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={3} />
-          Aggiungi contatto
+          Aggiungi Lead
         </Button>
       </div>
     </aside>

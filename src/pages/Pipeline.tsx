@@ -8,8 +8,8 @@ const Pipeline = () => {
   return (
     <div className="pt-6 pb-4 animate-fade-in">
       <header className="px-4 md:px-0 mb-5">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sales board</p>
-        <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight">Pipeline</h1>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sales Board</p>
+        <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight">Pipeline Vendita</h1>
       </header>
 
       <div className="flex md:grid md:grid-cols-3 xl:grid-cols-6 gap-3 overflow-x-auto md:overflow-visible scrollbar-hide px-4 md:px-0 pb-4 snap-x snap-mandatory md:snap-none">
