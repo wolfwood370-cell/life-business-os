@@ -43,6 +43,8 @@ const ClientDetail = () => {
   const [gymExpiry, setGymExpiry] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   // ROI metric form
   const [metricName, setMetricName] = useState('');
@@ -65,6 +67,8 @@ const ClientDetail = () => {
       setGymExpiry(client.gym_expiry_date ? client.gym_expiry_date.slice(0, 10) : '');
       setPhone(client.phone ?? '');
       setEmail(client.email ?? '');
+      setFirstName(client.first_name ?? '');
+      setLastName(client.last_name ?? '');
     }
   }, [client]);
 
@@ -82,7 +86,13 @@ const ClientDetail = () => {
   }
 
   const handleSave = () => {
+    const fn = firstName.trim();
+    const ln = lastName.trim();
+    const fullName = [fn, ln].filter(Boolean).join(' ').trim() || client!.name;
     updateClient(client.id, {
+      name: fullName,
+      first_name: fn || undefined,
+      last_name: ln || undefined,
       root_motivator: motivator,
       objection_stated: stated,
       objection_real: real,
@@ -380,6 +390,24 @@ const ClientDetail = () => {
             <section className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-card">
               <h3 className="font-bold text-sm text-foreground">Anagrafica & Iscrizione</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nome</label>
+                  <Input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="es. Mario"
+                    className="h-12 rounded-xl bg-secondary border-0 text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cognome</label>
+                  <Input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="es. Rossi"
+                    className="h-12 rounded-xl bg-secondary border-0 text-base"
+                  />
+                </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Telefono</label>
                   <Input
