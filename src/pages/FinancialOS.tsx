@@ -11,7 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban } from 'lucide-react';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
 import { toast } from 'sonner';
 
@@ -23,10 +23,13 @@ interface ExpenseFormState {
   amount: string;
   is_recurring: boolean;
   category: string;
+  start_date: string;   // YYYY-MM-DD
 }
 
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
 const emptyExpense = (): ExpenseFormState => ({
-  name: '', amount: '', is_recurring: true, category: 'Altro',
+  name: '', amount: '', is_recurring: true, category: 'Altro', start_date: todayIso(),
 });
 
 interface GoalFormState {
@@ -46,7 +49,7 @@ const emptyGoal = (): GoalFormState => ({
 const FinancialOS = () => {
   const {
     personalExpenses, lifeGoals, dynamicTarget,
-    addPersonalExpense, updatePersonalExpense, deletePersonalExpense,
+    addPersonalExpense, updatePersonalExpense, deletePersonalExpense, endPersonalExpense,
     addLifeGoal, updateLifeGoal, deleteLifeGoal,
   } = useCrm();
 
@@ -65,6 +68,7 @@ const FinancialOS = () => {
     setExpenseForm({
       id: e.id, name: e.name, amount: String(e.amount),
       is_recurring: e.is_recurring, category: e.category,
+      start_date: e.start_date ? e.start_date.slice(0, 10) : todayIso(),
     });
     setExpenseOpen(true);
   };
@@ -74,6 +78,11 @@ const FinancialOS = () => {
       toast.error('Inserisci nome e importo validi');
       return;
     }
+    if (!expenseForm.start_date) {
+      toast.error(expenseForm.is_recurring ? 'Seleziona il mese di inizio' : 'Seleziona la data della spesa');
+      return;
+    }
+    const startIso = new Date(expenseForm.start_date + 'T00:00:00').toISOString();
     try {
       if (expenseForm.id) {
         await updatePersonalExpense(expenseForm.id, {
@@ -81,6 +90,7 @@ const FinancialOS = () => {
           amount,
           is_recurring: expenseForm.is_recurring,
           category: expenseForm.category,
+          start_date: startIso,
         });
         toast.success('Spesa aggiornata');
       } else {
@@ -89,6 +99,7 @@ const FinancialOS = () => {
           amount,
           is_recurring: expenseForm.is_recurring,
           category: expenseForm.category,
+          start_date: startIso,
         });
         toast.success('Spesa aggiunta');
       }
