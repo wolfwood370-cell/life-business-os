@@ -116,6 +116,63 @@ export type Database = {
         }
         Relationships: []
       }
+      life_goals: {
+        Row: {
+          created_at: string
+          current_savings: number
+          deadline: string
+          id: string
+          is_active: boolean
+          title: string
+          total_target_amount: number
+        }
+        Insert: {
+          created_at?: string
+          current_savings?: number
+          deadline: string
+          id?: string
+          is_active?: boolean
+          title: string
+          total_target_amount?: number
+        }
+        Update: {
+          created_at?: string
+          current_savings?: number
+          deadline?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          total_target_amount?: number
+        }
+        Relationships: []
+      }
+      personal_expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          id: string
+          is_recurring: boolean
+          name: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          is_recurring?: boolean
+          name: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          id?: string
+          is_recurring?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       roi_metrics: {
         Row: {
           client_id: string
@@ -158,6 +215,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          duration_months: number
           id: string
           name: string
           price: number
@@ -166,6 +224,7 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
+          duration_months?: number
           id?: string
           name: string
           price: number
@@ -174,6 +233,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          duration_months?: number
           id?: string
           name?: string
           price?: number
@@ -194,6 +254,7 @@ export type Database = {
           payment_type: string
           recurring_active: boolean
           recurring_stopped_at: string | null
+          service_id: string | null
           status: string
         }
         Insert: {
@@ -208,6 +269,7 @@ export type Database = {
           payment_type: string
           recurring_active?: boolean
           recurring_stopped_at?: string | null
+          service_id?: string | null
           status?: string
         }
         Update: {
@@ -222,6 +284,7 @@ export type Database = {
           payment_type?: string
           recurring_active?: boolean
           recurring_stopped_at?: string | null
+          service_id?: string | null
           status?: string
         }
         Relationships: [
@@ -230,6 +293,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
             referencedColumns: ["id"]
           },
         ]
