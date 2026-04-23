@@ -1,4 +1,4 @@
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { LEAD_SOURCES, formatEuro, leadSourceLabel, sourceColorMap } from '@/types/crm';
 import { PrivacyMask } from './PrivacyMask';
 

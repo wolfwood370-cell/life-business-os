@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';

@@ -1,5 +1,5 @@
 import { Eye, EyeOff } from 'lucide-react';
-import { usePrivacyMode } from '@/store/privacyMode';
+import { usePrivacyMode } from '@/store/usePrivacyMode';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 

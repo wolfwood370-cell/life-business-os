@@ -1,4 +1,4 @@
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { PIPELINE_STAGES, stageColorMap, pipelineStageLabel } from '@/types/crm';
 import { ClientCard } from '@/components/crm/ClientCard';
 import { ClientCardSkeleton } from '@/components/crm/skeletons';

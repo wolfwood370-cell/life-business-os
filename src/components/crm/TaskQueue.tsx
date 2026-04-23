@@ -1,4 +1,4 @@
-import { useCrm, daysSince } from '@/store/crmStore';
+import { useCrm, daysSince } from '@/store/useCrm';
 import { AlertTriangle, Clock, Flame, Trophy, Zap, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

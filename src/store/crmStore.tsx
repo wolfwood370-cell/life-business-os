@@ -7,9 +7,6 @@ import {
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
-// Re-export for back-compat with existing imports
-export { useCrm, daysSince } from './useCrm';
-
 type ClientRow = {
   id: string;
   name: string;

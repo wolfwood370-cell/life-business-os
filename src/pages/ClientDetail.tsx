@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useCrm, daysSince } from '@/store/crmStore';
+import { useCrm, daysSince } from '@/store/useCrm';
 import {
   ChevronLeft, Heart, Shield, Eye, Phone, Euro, CalendarClock,
   Sparkles, Activity, Plus, Trash2, MessageSquare, AlertTriangle, TrendingUp, Receipt,

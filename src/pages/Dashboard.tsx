@@ -2,7 +2,7 @@ import { BreakEvenGauge } from '@/components/crm/BreakEvenGauge';
 import { RevenueBySource } from '@/components/crm/RevenueBySource';
 import { FinancialWidget } from '@/components/crm/FinancialWidget';
 import { TaskQueue } from '@/components/crm/TaskQueue';
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { FinancialCardSkeleton, TaskQueueSkeleton } from '@/components/crm/skeletons';
 import { Skeleton } from '@/components/ui/skeleton';
 

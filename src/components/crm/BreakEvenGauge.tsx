@@ -1,4 +1,4 @@
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { formatEuro } from '@/types/crm';
 import { Building2, TrendingUp } from 'lucide-react';
 import { PrivacyMask } from './PrivacyMask';

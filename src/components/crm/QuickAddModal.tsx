@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { LEAD_SOURCES, PIPELINE_STAGES, LeadSource, PipelineStage, leadSourceLabel, pipelineStageLabel } from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
 import { toast } from 'sonner';

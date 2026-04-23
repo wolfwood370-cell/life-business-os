@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { ClientCard } from '@/components/crm/ClientCard';
 import { Input } from '@/components/ui/input';
 import { Search, ArrowUpDown } from 'lucide-react';

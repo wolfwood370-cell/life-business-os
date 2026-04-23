@@ -1,7 +1,7 @@
 import { Client } from '@/types/crm';
 import { SourceBadge } from './SourceBadge';
 import { LeadScoreBadge } from './ScoreBadges';
-import { daysSince } from '@/store/crmStore';
+import { daysSince } from '@/store/useCrm';
 import { Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

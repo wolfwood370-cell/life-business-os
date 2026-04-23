@@ -1,4 +1,4 @@
-import { useCrm } from '@/store/crmStore';
+import { useCrm } from '@/store/useCrm';
 import { formatEuro } from '@/types/crm';
 import { ArrowDown, ArrowUp, CalendarRange, TrendingUp, Wallet } from 'lucide-react';
 import { PrivacyMask } from './PrivacyMask';
