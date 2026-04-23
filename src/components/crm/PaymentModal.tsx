@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Euro, Loader2, Receipt } from 'lucide-react';
+import { CalendarClock, Euro, Loader2, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCrm } from '@/store/useCrm';
 import { PaymentType, formatEuro } from '@/types/crm';
@@ -18,15 +18,18 @@ interface PaymentModalProps {
 
 export const PaymentModal = ({ open, onOpenChange, clientId, clientName }: PaymentModalProps) => {
   const { addTransaction } = useCrm();
+  const todayIso = () => new Date().toISOString().slice(0, 10);
   const [amount, setAmount] = useState('');
   const [paymentType, setPaymentType] = useState<PaymentType>('Unica Soluzione');
   const [installments, setInstallments] = useState(2);
+  const [paymentDate, setPaymentDate] = useState<string>(todayIso());
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setAmount('');
     setPaymentType('Unica Soluzione');
     setInstallments(2);
+    setPaymentDate(todayIso());
   };
 
   const handleSubmit = async () => {
@@ -42,6 +45,7 @@ export const PaymentModal = ({ open, onOpenChange, clientId, clientName }: Payme
         amount: value,
         payment_type: paymentType,
         installments_count: paymentType === 'A Rate' ? installments : 1,
+        payment_date: paymentDate ? new Date(paymentDate).toISOString() : undefined,
       });
       const perInstallment = paymentType === 'A Rate' ? value / installments : value;
       toast.success(
@@ -146,6 +150,23 @@ export const PaymentModal = ({ open, onOpenChange, clientId, clientName }: Payme
               </Select>
             </div>
           )}
+
+          {/* Data pagamento */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5" /> Data Pagamento
+            </label>
+            <Input
+              type="date"
+              value={paymentDate}
+              max={todayIso()}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              className="h-12 rounded-xl bg-secondary border-0 text-base font-semibold"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Default: oggi. Modificala per registrare un incasso passato.
+            </p>
+          </div>
 
           {/* Riepilogo */}
           {totalToCharge > 0 && (
