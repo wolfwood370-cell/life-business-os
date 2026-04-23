@@ -87,8 +87,8 @@ const SalesCoach = () => {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KpiCard icon={<Trophy className="h-4 w-4" />} label="Vinte" value={String(won)} tone="primary" />
-          <KpiCard icon={<TrendingDown className="h-4 w-4" />} label="Perse" value={String(lost)} tone="destructive" />
+          <KpiCard icon={<Trophy className="h-4 w-4" />} label="Totale Chiusi Vinti" value={String(won)} tone="primary" onClick={() => setDrill('won')} />
+          <KpiCard icon={<TrendingDown className="h-4 w-4" />} label="Totale Persi" value={String(lost)} tone="destructive" onClick={() => setDrill('lost')} />
           <KpiCard icon={<Target className="h-4 w-4" />} label="Tasso Conversione" value={`${conversionRate}%`} tone="warning" />
           <KpiCard icon={<BarChart3 className="h-4 w-4" />} label="Ricavo Perso/mese" value={formatEuro(lostRevenue)} tone="muted" />
         </div>
