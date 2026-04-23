@@ -1,5 +1,6 @@
 import { BreakEvenGauge } from '@/components/crm/BreakEvenGauge';
 import { RevenueBySource } from '@/components/crm/RevenueBySource';
+import { FinancialWidget } from '@/components/crm/FinancialWidget';
 import { TaskQueue } from '@/components/crm/TaskQueue';
 import { useCrm } from '@/store/crmStore';
 import { FinancialCardSkeleton, TaskQueueSkeleton } from '@/components/crm/skeletons';
@@ -38,6 +39,8 @@ const Dashboard = () => {
         </>
       ) : (
         <>
+          <FinancialWidget />
+
           <div className="grid gap-4 md:grid-cols-2">
             <BreakEvenGauge />
             <RevenueBySource />

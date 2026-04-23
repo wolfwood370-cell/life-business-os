@@ -2,13 +2,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCrm, daysSince } from '@/store/crmStore';
 import {
   ChevronLeft, Heart, Shield, Eye, Phone, Euro, CalendarClock,
-  Sparkles, Activity, Plus, Trash2, MessageSquare, AlertTriangle, TrendingUp,
+  Sparkles, Activity, Plus, Trash2, MessageSquare, AlertTriangle, TrendingUp, Receipt,
 } from 'lucide-react';
 import { SourceBadge } from '@/components/crm/SourceBadge';
 import { ChurnBadge, LeadScoreBadge } from '@/components/crm/ScoreBadges';
 import { AiFollowupGenerator } from '@/components/crm/AiFollowupGenerator';
 import { RoiChart } from '@/components/crm/RoiChart';
 import { ClientDetailSkeleton } from '@/components/crm/skeletons';
+import { PaymentModal } from '@/components/crm/PaymentModal';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -19,18 +20,31 @@ import {
   CHURN_RISKS, ChurnRisk, RoiMetric,
   LEAD_SOURCES, LeadSource, leadSourceLabel,
   GENDERS, Gender, genderLabel,
+  formatEuro,
 } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ShieldCheck } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading } = useCrm();
+  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions } = useCrm();
   const client = clients.find(c => c.id === id);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+
+  const clientTransactions = useMemo(
+    () => transactions.filter(t => t.client_id === id).sort((a, b) =>
+      new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
+    ),
+    [transactions, id]
+  );
+  const totalPaid = useMemo(
+    () => clientTransactions.reduce((s, t) => s + t.amount, 0),
+    [clientTransactions]
+  );
 
   const [motivator, setMotivator] = useState('');
   const [stated, setStated] = useState('');
@@ -398,7 +412,63 @@ const ClientDetail = () => {
               </div>
             </section>
 
-            {/* Anagrafica & Iscrizione palestra */}
+            {/* Pagamenti / Transazioni */}
+            <section className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                    <Receipt className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-foreground">Pagamenti</h3>
+                    <p className="text-[11px] text-muted-foreground">
+                      {clientTransactions.length === 0
+                        ? 'Nessuna transazione registrata'
+                        : `Totale incassato: ${formatEuro(totalPaid)}`}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setPaymentOpen(true)}
+                  className="rounded-xl gradient-primary text-primary-foreground font-semibold"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Registra
+                </Button>
+              </div>
+
+              {clientTransactions.length > 0 && (
+                <div className="space-y-2">
+                  {clientTransactions.slice(0, 5).map(t => (
+                    <div key={t.id} className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Euro className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="font-semibold text-sm text-foreground truncate">
+                            {t.payment_type === 'A Rate'
+                              ? `${t.installments_count} rate da ${formatEuro(t.amount / t.installments_count)}`
+                              : 'Unica Soluzione'}
+                          </p>
+                          <p className="font-bold text-sm text-primary shrink-0">{formatEuro(t.amount)}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(t.payment_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {clientTransactions.length > 5 && (
+                    <p className="text-[11px] text-muted-foreground text-center">
+                      +{clientTransactions.length - 5} altre transazioni
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
+
+
             <section className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-card">
               <h3 className="font-bold text-sm text-foreground">Anagrafica & Iscrizione</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -604,6 +674,13 @@ const ClientDetail = () => {
           Salva Modifiche
         </Button>
       </div>
+
+      <PaymentModal
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+        clientId={client.id}
+        clientName={client.name}
+      />
     </div>
   );
 };

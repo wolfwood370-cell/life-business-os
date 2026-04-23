@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Client, FIXED_MONTHLY_COST, RoiMetric, LeadSource, PipelineStage, ChurnRisk, Gender } from '@/types/crm';
+import {
+  Client, FIXED_MONTHLY_COST, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
+  ChurnRisk, Gender, Transaction, PaymentType,
+} from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
 // Re-export for back-compat with existing imports
@@ -91,6 +94,34 @@ const fetchAll = async (): Promise<Client[]> => {
   return (clientRows as ClientRow[]).map(c => mapClient(c, (roiRows ?? []) as RoiRow[]));
 };
 
+type TransactionRow = {
+  id: string;
+  client_id: string;
+  amount: number | string;
+  payment_type: string;
+  installments_count: number;
+  payment_date: string;
+  created_at: string;
+};
+
+const fetchTransactions = async (): Promise<Transaction[]> => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any)
+    .from('transactions')
+    .select('*')
+    .order('payment_date', { ascending: false });
+  if (error) throw error;
+  return (data as TransactionRow[]).map(r => ({
+    id: r.id,
+    client_id: r.client_id,
+    amount: Number(r.amount),
+    payment_type: r.payment_type as PaymentType,
+    installments_count: r.installments_count,
+    payment_date: r.payment_date,
+    created_at: r.created_at,
+  }));
+};
+
 export const CrmProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
   const [monthlyTarget, setMonthlyTarget] = useState(1500);
@@ -98,6 +129,11 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['crm', 'clients'],
     queryFn: fetchAll,
+  });
+
+  const { data: transactions = [] } = useQuery({
+    queryKey: ['crm', 'transactions'],
+    queryFn: fetchTransactions,
   });
 
   // Realtime subscription
@@ -109,6 +145,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'roi_metrics' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'clients'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] });
       })
       .subscribe();
     return () => {
@@ -192,10 +231,54 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidate,
   });
 
+  const addTransactionMutation = useMutation({
+    mutationFn: async (t: Omit<Transaction, 'id' | 'created_at' | 'payment_date'> & { payment_date?: string }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('transactions').insert({
+        client_id: t.client_id,
+        amount: t.amount,
+        payment_type: t.payment_type,
+        installments_count: t.installments_count,
+        payment_date: t.payment_date ?? new Date().toISOString(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
+  });
+
   const current_monthly_revenue = useMemo(
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
   );
+
+  const financialSummary = useMemo(() => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const monthNum = month + 1;
+
+    let gross_monthly = 0;
+    let gross_ytd = 0;
+    for (const t of transactions) {
+      const d = new Date(t.payment_date);
+      if (d.getFullYear() !== year) continue;
+      gross_ytd += t.amount;
+      if (d.getMonth() === month) gross_monthly += t.amount;
+    }
+
+    const net_monthly = gross_monthly - (gross_monthly * TAX_RATE) - FIXED_MONTHLY_COST;
+    const net_ytd = gross_ytd - (gross_ytd * TAX_RATE) - (FIXED_MONTHLY_COST * monthNum);
+
+    return {
+      gross_monthly,
+      net_monthly,
+      gross_ytd,
+      net_ytd,
+      fixed_monthly_cost: FIXED_MONTHLY_COST,
+      monthly_target: monthlyTarget,
+      current_month_number: monthNum,
+    };
+  }, [transactions, monthlyTarget]);
 
   const value: CrmContextValue = {
     clients,
@@ -205,11 +288,14 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       current_monthly_revenue,
       monthly_target: monthlyTarget,
     },
+    financialSummary,
+    transactions,
     addClient: async (c) => { await addMutation.mutateAsync(c); },
     updateClient: async (id, patch) => { await updateMutation.mutateAsync({ id, patch }); },
     moveClient: async (id, stage) => { await moveMutation.mutateAsync({ id, stage }); },
     addRoiMetric: async (clientId, metric) => { await addRoiMutation.mutateAsync({ clientId, metric }); },
     removeRoiMetric: async (clientId, metricId) => { await removeRoiMutation.mutateAsync({ clientId, metricId }); },
+    addTransaction: async (t) => { await addTransactionMutation.mutateAsync(t); },
     setMonthlyTarget,
   };
 

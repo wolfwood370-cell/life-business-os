@@ -86,6 +86,30 @@ export const PIPELINE_STAGES: PipelineStage[] = [
 export const CHURN_RISKS: ChurnRisk[] = ['Basso', 'Medio', 'Alto'];
 
 export const FIXED_MONTHLY_COST = 366;
+export const TAX_RATE = 0.249; // 24.90% imposte/contributi
+
+export type PaymentType = 'Unica Soluzione' | 'A Rate';
+export const PAYMENT_TYPES: PaymentType[] = ['Unica Soluzione', 'A Rate'];
+
+export interface Transaction {
+  id: string;
+  client_id: string;
+  amount: number;
+  payment_type: PaymentType;
+  installments_count: number;
+  payment_date: string; // ISO
+  created_at: string;
+}
+
+export interface FinancialSummary {
+  gross_monthly: number;
+  net_monthly: number;
+  gross_ytd: number;
+  net_ytd: number;
+  fixed_monthly_cost: number;
+  monthly_target: number;
+  current_month_number: number;
+}
 
 export const leadSourceLabel: Record<LeadSource, string> = {
   'Gym-provided': 'Contatto Palestra',
