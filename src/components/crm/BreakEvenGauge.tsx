@@ -4,8 +4,10 @@ import { Building2, TrendingUp } from 'lucide-react';
 import { PrivacyMask } from './PrivacyMask';
 
 export const BreakEvenGauge = () => {
-  const { financials } = useCrm();
-  const { current_monthly_revenue, fixed_monthly_cost, monthly_target } = financials;
+  const { financials, financialSummary } = useCrm();
+  const { fixed_monthly_cost, monthly_target } = financials;
+  // Fonte di verità: ricavi lordi del mese dalle transazioni Saldate
+  const current_monthly_revenue = financialSummary.gross_monthly;
 
   const reachedBreakEven = current_monthly_revenue >= fixed_monthly_cost;
   const surplus = Math.max(0, current_monthly_revenue - fixed_monthly_cost);
