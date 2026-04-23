@@ -1,7 +1,7 @@
 import { useCrm } from '@/store/crmStore';
 import { PIPELINE_STAGES, stageColorMap, pipelineStageLabel } from '@/types/crm';
 import { ClientCard } from '@/components/crm/ClientCard';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ClientCardSkeleton } from '@/components/crm/skeletons';
 
 const Pipeline = () => {
   const { clients, isLoading } = useCrm();
@@ -14,9 +14,16 @@ const Pipeline = () => {
       </header>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-3 px-4 md:px-0">
+        <div className="flex md:grid md:grid-cols-3 xl:grid-cols-6 gap-3 overflow-x-auto md:overflow-visible scrollbar-hide px-4 md:px-0 pb-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-2xl" />
+            <div key={i} className="w-[78vw] max-w-[300px] md:w-auto md:max-w-none shrink-0 rounded-2xl border border-border bg-card/50 p-3 space-y-2">
+              <div className="mb-3 flex items-center justify-between px-1">
+                <div className="h-3 w-24 rounded-full skeleton-shimmer" />
+                <div className="h-5 w-7 rounded-full skeleton-shimmer" />
+              </div>
+              <ClientCardSkeleton compact />
+              <ClientCardSkeleton compact />
+            </div>
           ))}
         </div>
       ) : (

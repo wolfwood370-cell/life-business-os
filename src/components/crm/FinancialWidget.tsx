@@ -1,6 +1,7 @@
 import { useCrm } from '@/store/crmStore';
 import { formatEuro } from '@/types/crm';
 import { Building2, Target, TrendingUp } from 'lucide-react';
+import { PrivacyMask } from './PrivacyMask';
 
 interface GaugeProps {
   value: number;
@@ -58,13 +59,13 @@ const Gauge = ({ value, target, label, sublabel, icon, colorVar }: GaugeProps) =
       </div>
 
       <div className="mt-3 flex items-baseline justify-between text-xs">
-        <span className="font-semibold text-foreground">{formatEuro(value)}</span>
-        <span className="text-muted-foreground">su {formatEuro(target)}</span>
+        <span className="font-semibold text-foreground"><PrivacyMask>{formatEuro(value)}</PrivacyMask></span>
+        <span className="text-muted-foreground">su <PrivacyMask>{formatEuro(target)}</PrivacyMask></span>
       </div>
       <p className={`mt-1 text-xs font-medium ${reached ? 'text-primary' : 'text-muted-foreground'}`}>
         {reached
-          ? `Obiettivo superato di ${formatEuro(value - target)}`
-          : `Mancano ${formatEuro(target - value)}`}
+          ? <>Obiettivo superato di <PrivacyMask>{formatEuro(value - target)}</PrivacyMask></>
+          : <>Mancano <PrivacyMask>{formatEuro(target - value)}</PrivacyMask></>}
       </p>
     </div>
   );
@@ -84,12 +85,12 @@ export const FinancialWidget = () => {
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ricavi Totali del Mese</p>
             <p className="mt-1 text-4xl font-bold tracking-tight text-foreground">
-              {formatEuro(current_monthly_revenue)}
+              <PrivacyMask>{formatEuro(current_monthly_revenue)}</PrivacyMask>
             </p>
             <p className={`mt-1 text-sm font-medium ${aboveBreakEven ? 'text-primary' : 'text-warning'}`}>
               {aboveBreakEven
-                ? `+${formatEuro(profit)} di profitto netto`
-                : `${formatEuro(Math.abs(profit))} al pareggio`}
+                ? <>+<PrivacyMask>{formatEuro(profit)}</PrivacyMask> di profitto netto</>
+                : <><PrivacyMask>{formatEuro(Math.abs(profit))}</PrivacyMask> al pareggio</>}
             </p>
           </div>
         </div>

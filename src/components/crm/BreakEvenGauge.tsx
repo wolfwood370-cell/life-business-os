@@ -1,6 +1,7 @@
 import { useCrm } from '@/store/crmStore';
 import { formatEuro } from '@/types/crm';
 import { Building2, TrendingUp } from 'lucide-react';
+import { PrivacyMask } from './PrivacyMask';
 
 export const BreakEvenGauge = () => {
   const { financials } = useCrm();
@@ -29,7 +30,7 @@ export const BreakEvenGauge = () => {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Break-Even Mensile</p>
-          <p className="text-[11px] text-muted-foreground">Affitto fisso {formatEuro(fixed_monthly_cost)}</p>
+          <p className="text-[11px] text-muted-foreground">Affitto fisso <PrivacyMask>{formatEuro(fixed_monthly_cost)}</PrivacyMask></p>
         </div>
         <div
           className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
@@ -84,7 +85,7 @@ export const BreakEvenGauge = () => {
 
         <div className="absolute inset-0 flex flex-col items-center justify-end pb-1">
           <p className="text-3xl font-bold tracking-tight text-foreground">
-            {formatEuro(current_monthly_revenue)}
+            <PrivacyMask>{formatEuro(current_monthly_revenue)}</PrivacyMask>
           </p>
           <p
             className={`text-xs font-semibold ${
@@ -92,8 +93,8 @@ export const BreakEvenGauge = () => {
             }`}
           >
             {reachedBreakEven
-              ? `+${formatEuro(surplus)} di profitto`
-              : `${formatEuro(fixed_monthly_cost - current_monthly_revenue)} al pareggio`}
+              ? <>+<PrivacyMask>{formatEuro(surplus)}</PrivacyMask> di profitto</>
+              : <><PrivacyMask>{formatEuro(fixed_monthly_cost - current_monthly_revenue)}</PrivacyMask> al pareggio</>}
           </p>
         </div>
       </div>
@@ -101,11 +102,11 @@ export const BreakEvenGauge = () => {
       <div className="mt-4 flex items-center justify-between text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1">
           <Building2 className="h-3 w-3" />
-          Pareggio {formatEuro(fixed_monthly_cost)}
+          Pareggio <PrivacyMask>{formatEuro(fixed_monthly_cost)}</PrivacyMask>
         </span>
         <span className="flex items-center gap-1">
           <TrendingUp className="h-3 w-3" />
-          Obiettivo {formatEuro(monthly_target)}
+          Obiettivo <PrivacyMask>{formatEuro(monthly_target)}</PrivacyMask>
         </span>
       </div>
     </div>

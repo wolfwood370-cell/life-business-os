@@ -1,5 +1,6 @@
 import { useCrm } from '@/store/crmStore';
 import { LEAD_SOURCES, formatEuro, leadSourceLabel, sourceColorMap } from '@/types/crm';
+import { PrivacyMask } from './PrivacyMask';
 
 export const RevenueBySource = () => {
   const { clients } = useCrm();
@@ -21,7 +22,7 @@ export const RevenueBySource = () => {
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Valore per Fonte</p>
           <p className="text-[11px] text-muted-foreground">Ricavi mensili da clienti attivi</p>
         </div>
-        <p className="text-sm font-bold text-foreground">{formatEuro(grandTotal)}</p>
+        <p className="text-sm font-bold text-foreground"><PrivacyMask>{formatEuro(grandTotal)}</PrivacyMask></p>
       </div>
 
       {grandTotal === 0 ? (
@@ -39,7 +40,7 @@ export const RevenueBySource = () => {
               <div key={source}>
                 <div className="mb-1 flex items-center justify-between text-xs">
                   <span className="font-medium text-foreground">{leadSourceLabel[source]}</span>
-                  <span className="font-semibold text-muted-foreground">{formatEuro(value)}</span>
+                  <span className="font-semibold text-muted-foreground"><PrivacyMask>{formatEuro(value)}</PrivacyMask></span>
                 </div>
                 <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                   <div
