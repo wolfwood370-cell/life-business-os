@@ -23,6 +23,7 @@ type ClientRow = {
   churn_risk: string | null;
   notes: string | null;
   phone: string | null;
+  email: string | null;
   birth_date: string | null;
   gender: string | null;
   gym_signup_date: string | null;
@@ -58,6 +59,7 @@ const mapClient = (row: ClientRow, metrics: RoiRow[]): Client => ({
   churn_risk: (row.churn_risk as ChurnRisk) ?? undefined,
   notes: row.notes ?? undefined,
   phone: row.phone ?? undefined,
+  email: row.email ?? undefined,
   birth_date: row.birth_date ?? undefined,
   gender: (row.gender as Gender) ?? undefined,
   gym_signup_date: row.gym_signup_date ?? undefined,
