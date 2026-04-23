@@ -41,6 +41,8 @@ const ClientDetail = () => {
   const [gender, setGender] = useState<Gender | ''>('');
   const [gymSignup, setGymSignup] = useState('');
   const [gymExpiry, setGymExpiry] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
 
   // ROI metric form
   const [metricName, setMetricName] = useState('');
@@ -61,6 +63,8 @@ const ClientDetail = () => {
       setGender(client.gender ?? '');
       setGymSignup(client.gym_signup_date ? client.gym_signup_date.slice(0, 10) : '');
       setGymExpiry(client.gym_expiry_date ? client.gym_expiry_date.slice(0, 10) : '');
+      setPhone(client.phone ?? '');
+      setEmail(client.email ?? '');
     }
   }, [client]);
 
