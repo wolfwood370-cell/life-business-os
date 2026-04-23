@@ -498,15 +498,22 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
 
   // ---------- Dynamic Target ----------
   const dynamicTarget = useMemo<DynamicTarget>(() => {
+    const now = new Date();
+    // Solo le ricorrenti ATTUALMENTE attive (start_date <= oggi e (end_date assente o futuro))
     const totalRecurringExpenses = personalExpenses
-      .filter(e => e.is_recurring)
+      .filter(e => {
+        if (!e.is_recurring) return false;
+        const start = new Date(e.start_date);
+        if (start > now) return false;
+        if (e.end_date && new Date(e.end_date) < now) return false;
+        return true;
+      })
       .reduce((s, e) => s + e.amount, 0);
 
     const activeGoal = lifeGoals.find(g => g.is_active);
     let monthlyGoalSaving = 0;
     let monthsUntilDeadline = 0;
     if (activeGoal) {
-      const now = new Date();
       const deadline = new Date(activeGoal.deadline);
       const diffMs = deadline.getTime() - now.getTime();
       monthsUntilDeadline = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
