@@ -16,8 +16,12 @@ export type Database = {
     Tables: {
       clients: {
         Row: {
+          birth_date: string | null
           churn_risk: string | null
           created_at: string
+          gender: string | null
+          gym_expiry_date: string | null
+          gym_signup_date: string | null
           id: string
           last_contacted_at: string | null
           lead_score: number | null
@@ -35,8 +39,12 @@ export type Database = {
           stage_updated_at: string
         }
         Insert: {
+          birth_date?: string | null
           churn_risk?: string | null
           created_at?: string
+          gender?: string | null
+          gym_expiry_date?: string | null
+          gym_signup_date?: string | null
           id?: string
           last_contacted_at?: string | null
           lead_score?: number | null
@@ -54,8 +62,12 @@ export type Database = {
           stage_updated_at?: string
         }
         Update: {
+          birth_date?: string | null
           churn_risk?: string | null
           created_at?: string
+          gender?: string | null
+          gym_expiry_date?: string | null
+          gym_signup_date?: string | null
           id?: string
           last_contacted_at?: string | null
           lead_score?: number | null
