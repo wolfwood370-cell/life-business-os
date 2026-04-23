@@ -436,7 +436,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     let m = HISTORY_START_MONTH;
     while (y < endYear || (y === endYear && m <= endMonth)) {
       const gross = map.get(`${y}-${m}`) ?? 0;
-      const net = gross - (gross * TAX_RATE) - FIXED_MONTHLY_COST;
+      const rent = rentForMonth(y, m);
+      const net = gross - (gross * TAX_RATE) - rent;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
       months.push({ year: y, month: m, label, gross, net });
       m += 1;
