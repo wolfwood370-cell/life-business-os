@@ -10,7 +10,7 @@ export const AppLayout = () => {
     <div className="min-h-screen bg-background flex w-full">
       <SideNav onFabClick={() => setOpen(true)} />
       <div className="flex-1 min-w-0">
-        <div className="mx-auto w-full max-w-md md:max-w-5xl xl:max-w-7xl min-h-screen pb-28 md:pb-8 md:px-6">
+        <div className="mx-auto w-full max-w-md md:max-w-5xl xl:max-w-7xl min-h-screen pb-32 md:pb-8 md:px-6" style={{ paddingBottom: 'max(8rem, calc(7rem + env(safe-area-inset-bottom)))' }}>
           <Outlet context={{ openQuickAdd: () => setOpen(true) }} />
         </div>
       </div>

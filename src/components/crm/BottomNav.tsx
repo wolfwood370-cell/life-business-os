@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, KanbanSquare, Users, Plus, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
 
 interface Props {
   onFabClick: () => void;
@@ -16,8 +17,12 @@ const items = [
 export const BottomNav = ({ onFabClick }: Props) => {
   const location = useLocation();
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 safe-bottom">
-      <div className="relative mx-auto max-w-md px-4 pb-3 pt-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 safe-bottom pointer-events-none">
+      <div className="relative mx-auto max-w-md px-4 pb-3 pt-2 pointer-events-auto">
+        {/* Floating privacy toggle above the bar */}
+        <div className="absolute right-4 -top-2 z-10">
+          <PrivacyToggle variant="mobile" />
+        </div>
         <div className="relative flex items-center justify-around rounded-2xl border border-border bg-card/95 backdrop-blur-xl px-2 py-2 shadow-card">
           {items.slice(0, 2).map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));

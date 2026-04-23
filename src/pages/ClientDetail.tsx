@@ -20,6 +20,8 @@ import {
   GENDERS, Gender, genderLabel,
 } from '@/types/crm';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ShieldCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -45,6 +47,7 @@ const ClientDetail = () => {
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [gdprConsent, setGdprConsent] = useState(false);
 
   // ROI metric form
   const [metricName, setMetricName] = useState('');
@@ -69,6 +72,7 @@ const ClientDetail = () => {
       setEmail(client.email ?? '');
       setFirstName(client.first_name ?? '');
       setLastName(client.last_name ?? '');
+      setGdprConsent(!!client.gdpr_consent);
     }
   }, [client]);
 
@@ -107,6 +111,7 @@ const ClientDetail = () => {
       gym_expiry_date: gymExpiry || undefined,
       phone: phone.trim() || undefined,
       email: email.trim() || undefined,
+      gdpr_consent: gdprConsent,
     });
     toast.success('Profilo aggiornato');
   };
@@ -252,12 +257,14 @@ const ClientDetail = () => {
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">I 5 Perché</p>
                 </div>
               </div>
-              <Textarea
-                value={motivator}
-                onChange={(e) => setMotivator(e.target.value)}
-                placeholder="Cosa lo muove davvero? Scava fino al 5° perché…"
-                className="min-h-[90px] rounded-xl bg-card border-border text-sm"
-              />
+              <div className="privacy-blur-target">
+                <Textarea
+                  value={motivator}
+                  onChange={(e) => setMotivator(e.target.value)}
+                  placeholder="Cosa lo muove davvero? Scava fino al 5° perché…"
+                  className="min-h-[90px] rounded-xl bg-card border-border text-sm"
+                />
+              </div>
             </section>
 
             {/* Win/Loss */}
@@ -271,12 +278,14 @@ const ClientDetail = () => {
                   </div>
                   <label className="text-xs font-bold uppercase tracking-wider text-warning">Obiezione Dichiarata</label>
                 </div>
-                <Textarea
-                  value={stated}
-                  onChange={(e) => setStated(e.target.value)}
-                  placeholder="La scusa di superficie…"
-                  className="min-h-[60px] rounded-xl bg-card border-border text-sm"
-                />
+                <div className="privacy-blur-target">
+                  <Textarea
+                    value={stated}
+                    onChange={(e) => setStated(e.target.value)}
+                    placeholder="La scusa di superficie…"
+                    className="min-h-[60px] rounded-xl bg-card border-border text-sm"
+                  />
+                </div>
               </div>
 
               <div className="rounded-xl border-2 border-destructive/30 bg-destructive/5 p-3 space-y-2">
@@ -286,12 +295,14 @@ const ClientDetail = () => {
                   </div>
                   <label className="text-xs font-bold uppercase tracking-wider text-destructive">Obiezione Reale</label>
                 </div>
-                <Textarea
-                  value={real}
-                  onChange={(e) => setReal(e.target.value)}
-                  placeholder="La vera causa radice isolata…"
-                  className="min-h-[60px] rounded-xl bg-card border-border text-sm"
-                />
+                <div className="privacy-blur-target">
+                  <Textarea
+                    value={real}
+                    onChange={(e) => setReal(e.target.value)}
+                    placeholder="La vera causa radice isolata…"
+                    className="min-h-[60px] rounded-xl bg-card border-border text-sm"
+                  />
+                </div>
               </div>
             </section>
 
@@ -469,6 +480,23 @@ const ClientDetail = () => {
                   />
                 </div>
               </div>
+
+              <label className="flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-3 cursor-pointer hover:bg-secondary/60 transition-smooth mt-2">
+                <Checkbox
+                  checked={gdprConsent}
+                  onCheckedChange={(v) => setGdprConsent(v === true)}
+                  className="mt-0.5"
+                />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-sm font-semibold text-foreground">Consenso Privacy & Marketing Acquisito</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Necessario per attivare l'AI Sales Assistant e l'invio di follow-up.
+                  </p>
+                </div>
+              </label>
             </section>
           </TabsContent>
 
@@ -489,7 +517,7 @@ const ClientDetail = () => {
 
               {/* Grafico progressi */}
               {(client.roi_metrics?.length ?? 0) > 0 && (
-                <RoiChart metrics={client.roi_metrics!} />
+                <RoiChart metrics={client.roi_metrics!} clientName={client.name} />
               )}
 
               {/* Lista metriche */}

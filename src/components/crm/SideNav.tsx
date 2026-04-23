@@ -2,6 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
 
 interface Props {
   onFabClick: () => void;
@@ -47,7 +48,8 @@ export const SideNav = ({ onFabClick }: Props) => {
         })}
       </nav>
 
-      <div className="p-3">
+      <div className="p-3 space-y-2">
+        <PrivacyToggle variant="desktop" />
         <Button
           onClick={onFabClick}
           className="w-full h-12 rounded-xl gradient-primary text-primary-foreground font-semibold shadow-glow"

@@ -34,9 +34,10 @@ export const AiFollowupGenerator = ({ client }: Props) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   const eligible = ELIGIBLE_STAGES.includes(client.pipeline_stage);
+  const hasConsent = !!client.gdpr_consent;
 
   const handleGenerate = async () => {
-    if (!eligible) return;
+    if (!eligible || !hasConsent) return;
     setLoading(true);
     setSequence(null);
     try {
@@ -92,6 +93,13 @@ export const AiFollowupGenerator = ({ client }: Props) => {
           <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
           <p className="text-xs text-muted-foreground">
             Disponibile solo per clienti in <strong>In Trattativa</strong> o <strong>Perso / Recupero</strong>.
+          </p>
+        </div>
+      ) : !hasConsent ? (
+        <div className="flex items-center gap-2 rounded-xl bg-warning/10 border border-warning/30 p-3" title="Spunta 'Consenso Privacy & Marketing' nei dati anagrafici per sbloccare l'AI.">
+          <Lock className="h-4 w-4 text-warning shrink-0" />
+          <p className="text-xs text-foreground">
+            <strong>Consenso GDPR mancante.</strong> Acquisisci il consenso Privacy & Marketing prima di generare follow-up.
           </p>
         </div>
       ) : (

@@ -49,6 +49,7 @@ export interface Client {
   gender?: Gender;
   gym_signup_date?: string;   // ISO date
   gym_expiry_date?: string;   // ISO date
+  gdpr_consent?: boolean;
 }
 
 export type Gender = 'M' | 'F' | 'Altro';

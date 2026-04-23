@@ -30,6 +30,7 @@ type ClientRow = {
   gender: string | null;
   gym_signup_date: string | null;
   gym_expiry_date: string | null;
+  gdpr_consent: boolean | null;
   created_at: string;
   stage_updated_at: string;
 };
@@ -68,6 +69,7 @@ const mapClient = (row: ClientRow, metrics: RoiRow[]): Client => ({
   gender: (row.gender as Gender) ?? undefined,
   gym_signup_date: row.gym_signup_date ?? undefined,
   gym_expiry_date: row.gym_expiry_date ?? undefined,
+  gdpr_consent: row.gdpr_consent ?? false,
   roi_metrics: metrics
     .filter(m => m.client_id === row.id)
     .map(m => ({
@@ -133,6 +135,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         churn_risk: c.churn_risk ?? null,
         notes: c.notes ?? null,
         phone: c.phone ?? null,
+        gdpr_consent: c.gdpr_consent ?? false,
       });
       if (error) throw error;
     },

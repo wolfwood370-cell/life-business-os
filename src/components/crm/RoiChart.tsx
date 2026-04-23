@@ -1,10 +1,13 @@
 import { useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { RoiMetric } from '@/types/crm';
-import { TrendingUp } from 'lucide-react';
+import { TrendingUp, Share2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 interface Props {
   metrics: RoiMetric[];
+  clientName?: string;
 }
 
 // Group metrics by metric name; plot numeric portion of value over time
@@ -15,7 +18,7 @@ const extractNumber = (raw: string): number | null => {
 
 const palette = ['hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--warning))', 'hsl(var(--destructive))', 'hsl(var(--muted-foreground))'];
 
-export const RoiChart = ({ metrics }: Props) => {
+export const RoiChart = ({ metrics, clientName }: Props) => {
   const { data, series } = useMemo(() => {
     const byDate: Record<string, Record<string, number | string>> = {};
     const seriesSet = new Set<string>();
@@ -44,11 +47,46 @@ export const RoiChart = ({ metrics }: Props) => {
     );
   }
 
+  const handleExport = async () => {
+    const lines: string[] = [];
+    lines.push(`💪 Report progressi${clientName ? ` — ${clientName}` : ''}`);
+    lines.push('');
+    // Latest value per metric
+    const latest: Record<string, { value: string; date: string }> = {};
+    metrics
+      .slice()
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .forEach(m => { latest[m.metric] = { value: m.value, date: m.date }; });
+    Object.entries(latest).forEach(([k, v]) => {
+      const d = new Date(v.date).toLocaleDateString('it-IT');
+      lines.push(`• ${k}: ${v.value}  (${d})`);
+    });
+    lines.push('');
+    lines.push('Continua così, i risultati parlano da soli! 🚀');
+    const text = lines.join('\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Report copiato — incollalo su WhatsApp');
+    } catch {
+      toast.error('Impossibile copiare il report');
+    }
+  };
+
   return (
     <div className="rounded-xl border border-border bg-card p-3">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-        Progressi nel tempo
-      </p>
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Progressi nel tempo
+        </p>
+        <Button
+          onClick={handleExport}
+          size="sm"
+          variant="outline"
+          className="h-8 rounded-lg text-[11px] font-semibold gap-1.5"
+        >
+          <Share2 className="h-3.5 w-3.5" /> Esporta per WhatsApp
+        </Button>
+      </div>
       <div className="h-56 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
