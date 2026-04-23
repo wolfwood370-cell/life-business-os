@@ -17,7 +17,7 @@ const ResetPassword = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Reimposta password · PT CRM";
+    document.title = "Reimposta password · Life & Business OS";
     const hashParams = new URLSearchParams(window.location.hash.substring(1));
     const type = hashParams.get("type");
     if (type === "recovery") {
@@ -85,7 +85,7 @@ const ResetPassword = () => {
             <div className="h-10 w-10 rounded-xl gradient-primary shadow-glow flex items-center justify-center">
               <Dumbbell className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
             </div>
-            <span className="text-xl font-bold text-foreground">PT CRM</span>
+            <span className="text-xl font-bold text-foreground">Life & Business OS</span>
           </div>
           <CardTitle className="text-xl text-center">Nuova Password</CardTitle>
           <CardDescription className="text-center">Inserisci la tua nuova password</CardDescription>
