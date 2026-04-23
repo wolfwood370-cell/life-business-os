@@ -3,7 +3,7 @@ import { useCrm } from '@/store/crmStore';
 import { ClientCard } from '@/components/crm/ClientCard';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
-import { PIPELINE_STAGES, PipelineStage } from '@/types/crm';
+import { PIPELINE_STAGES, PipelineStage, pipelineStageLabel } from '@/types/crm';
 import { cn } from '@/lib/utils';
 
 const Clients = () => {
@@ -18,10 +18,10 @@ const Clients = () => {
   }, [clients, q, filter]);
 
   return (
-    <div className="px-4 pt-6 pb-4 space-y-4 animate-fade-in">
+    <div className="px-4 md:px-0 pt-6 pb-4 space-y-4 animate-fade-in">
       <header>
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{clients.length} total</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight">Clients</h1>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{clients.length} totali</p>
+        <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight">Clienti</h1>
       </header>
 
       <div className="relative">
@@ -29,12 +29,12 @@ const Clients = () => {
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name…"
+          placeholder="Cerca per nome…"
           className="h-12 pl-10 rounded-xl bg-secondary border-0 text-base"
         />
       </div>
 
-      <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4">
+      <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0 md:flex-wrap">
         {(['All', ...PIPELINE_STAGES] as const).map(s => (
           <button
             key={s}
@@ -44,15 +44,15 @@ const Clients = () => {
               filter === s ? 'gradient-primary text-primary-foreground shadow-glow' : 'bg-secondary text-muted-foreground'
             )}
           >
-            {s}
+            {s === 'All' ? 'Tutti' : pipelineStageLabel[s]}
           </button>
         ))}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-3 md:space-y-0">
         {filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-            <p className="text-sm text-muted-foreground">No clients found</p>
+          <div className="md:col-span-full rounded-2xl border border-dashed border-border p-10 text-center">
+            <p className="text-sm text-muted-foreground">Nessun cliente trovato</p>
           </div>
         ) : (
           filtered.map(c => <ClientCard key={c.id} client={c} />)

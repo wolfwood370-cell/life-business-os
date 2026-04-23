@@ -1,5 +1,6 @@
 import { useCrm } from '@/store/crmStore';
-import { TrendingUp, Target } from 'lucide-react';
+import { TrendingUp, Target, Building2 } from 'lucide-react';
+import { formatEuro } from '@/types/crm';
 
 export const FinancialWidget = () => {
   const { financials } = useCrm();
@@ -14,30 +15,32 @@ export const FinancialWidget = () => {
     <div className="relative overflow-hidden rounded-3xl gradient-card border border-border p-5 shadow-card">
       <div className="absolute inset-0 gradient-emerald-glow pointer-events-none" />
       <div className="relative">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">This month</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Fatturato del mese</p>
             <p className="mt-1 text-4xl font-bold tracking-tight">
-              €{current_monthly_revenue}
+              {formatEuro(current_monthly_revenue)}
             </p>
             <p className={`mt-1 text-sm font-medium ${aboveBreakEven ? 'text-primary' : 'text-warning'}`}>
-              {aboveBreakEven ? `+€${profit} profit` : `€${Math.abs(profit)} to break even`}
+              {aboveBreakEven ? `+${formatEuro(profit)} di profitto` : `${formatEuro(Math.abs(profit))} al pareggio`}
             </p>
           </div>
-          <div className="text-right text-xs text-muted-foreground">
+          <div className="text-right text-xs text-muted-foreground space-y-1">
             <div className="flex items-center gap-1 justify-end">
               <Target className="h-3 w-3" />
-              <span>€{monthly_target}</span>
+              <span>Obiettivo {formatEuro(monthly_target)}</span>
             </div>
-            <div className="mt-1">Rent €{fixed_monthly_cost}</div>
+            <div className="flex items-center gap-1 justify-end">
+              <Building2 className="h-3 w-3" />
+              <span>Affitto {formatEuro(fixed_monthly_cost)}</span>
+            </div>
           </div>
         </div>
 
-        {/* Break-even bar */}
         <div className="mt-5 space-y-3">
           <div>
             <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-              <span>Break-even</span>
+              <span>Break-even ({formatEuro(fixed_monthly_cost)})</span>
               <span>{Math.round(breakEvenPct)}%</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
@@ -49,7 +52,7 @@ export const FinancialWidget = () => {
           </div>
           <div>
             <div className="mb-1.5 flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-              <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Monthly target</span>
+              <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3" /> Obiettivo Mensile</span>
               <span>{Math.round(targetPct)}%</span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">

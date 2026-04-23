@@ -3,15 +3,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useCrm } from '@/store/crmStore';
-import { LEAD_SOURCES, PIPELINE_STAGES, LeadSource, PipelineStage } from '@/types/crm';
+import { LEAD_SOURCES, PIPELINE_STAGES, LeadSource, PipelineStage, leadSourceLabel, pipelineStageLabel } from '@/types/crm';
 import { toast } from 'sonner';
+import { CalendarDays } from 'lucide-react';
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
+
+const todayLabel = () => new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
 
 export const QuickAddModal = ({ open, onOpenChange }: Props) => {
   const { addClient } = useCrm();
@@ -21,7 +24,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
 
   const handleSave = () => {
     if (!name.trim()) {
-      toast.error('Name required');
+      toast.error('Il nome è obbligatorio');
       return;
     }
     addClient({
@@ -32,7 +35,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       objection_stated: '',
       objection_real: '',
     });
-    toast.success(`${name} added to pipeline`);
+    toast.success(`${name} aggiunto alla pipeline`);
     setName('');
     setSource('Gym Floor');
     setStage('Lead Acquired');
@@ -41,42 +44,69 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-3xl border-border bg-card p-6">
+      <DialogContent className="max-w-lg rounded-3xl border-border bg-card p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Quick add lead</DialogTitle>
+          <DialogTitle className="text-2xl">Aggiungi contatto</DialogTitle>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <CalendarDays className="h-3.5 w-3.5" />
+            <span>Oggi · {todayLabel()}</span>
+          </div>
         </DialogHeader>
         <div className="space-y-5 mt-2">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-xs uppercase tracking-wider text-muted-foreground">Name</Label>
+            <Label htmlFor="name" className="text-xs uppercase tracking-wider text-muted-foreground">Nome</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Marco Rossi"
+              placeholder="es. Marco Rossi"
               autoFocus
               className="h-12 rounded-xl bg-secondary border-0 text-base"
             />
           </div>
+
           <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Lead source</Label>
-            <Select value={source} onValueChange={(v) => setSource(v as LeadSource)}>
-              <SelectTrigger className="h-12 rounded-xl bg-secondary border-0 text-base"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {LEAD_SOURCES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Fonte contatto</Label>
+            <ToggleGroup
+              type="single"
+              value={source}
+              onValueChange={(v) => v && setSource(v as LeadSource)}
+              className="grid grid-cols-2 gap-2"
+            >
+              {LEAD_SOURCES.map(s => (
+                <ToggleGroupItem
+                  key={s}
+                  value={s}
+                  className="h-11 rounded-xl bg-secondary border-0 text-xs font-semibold data-[state=on]:gradient-primary data-[state=on]:text-primary-foreground"
+                >
+                  {leadSourceLabel[s]}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
           </div>
+
           <div className="space-y-2">
-            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Stage</Label>
-            <Select value={stage} onValueChange={(v) => setStage(v as PipelineStage)}>
-              <SelectTrigger className="h-12 rounded-xl bg-secondary border-0 text-base"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Fase pipeline</Label>
+            <ToggleGroup
+              type="single"
+              value={stage}
+              onValueChange={(v) => v && setStage(v as PipelineStage)}
+              className="grid grid-cols-2 gap-2"
+            >
+              {PIPELINE_STAGES.map(s => (
+                <ToggleGroupItem
+                  key={s}
+                  value={s}
+                  className="h-11 rounded-xl bg-secondary border-0 text-xs font-semibold data-[state=on]:gradient-primary data-[state=on]:text-primary-foreground"
+                >
+                  {pipelineStageLabel[s]}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
           </div>
+
           <Button onClick={handleSave} className="w-full h-14 rounded-xl text-base font-semibold gradient-primary text-primary-foreground shadow-glow">
-            Save lead
+            Salva contatto
           </Button>
         </div>
       </DialogContent>

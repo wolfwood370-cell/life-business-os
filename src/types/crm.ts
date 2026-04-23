@@ -24,6 +24,8 @@ export interface Client {
   created_at: string;
   stage_updated_at: string;
   monthly_value?: number;
+  next_renewal_date?: string;
+  pt_pack_sessions_used?: number;
   notes?: string;
   phone?: string;
 }
@@ -53,6 +55,24 @@ export const PIPELINE_STAGES: PipelineStage[] = [
 
 export const FIXED_MONTHLY_COST = 366;
 
+// Italian translations
+export const leadSourceLabel: Record<LeadSource, string> = {
+  'Gym-provided': 'Contatto Palestra',
+  'PT Pack 99€': 'PT Pack 99€',
+  'Gym Floor': 'Approccio Sala',
+  'Referral': 'Passaparola',
+  'Social Media': 'Social Media',
+};
+
+export const pipelineStageLabel: Record<PipelineStage, string> = {
+  'Lead Acquired': 'Contatto Acquisito',
+  'Nurturing': 'In Trattativa',
+  'Trial Active': 'Prova/Trial Attivo',
+  'Pitch Presented': 'Proposta Presentata',
+  'Closed Won': 'Cliente Attivo',
+  'Closed Lost': 'Perso / Recupero',
+};
+
 export const sourceColorMap: Record<LeadSource, string> = {
   'Gym-provided': 'source-gym',
   'PT Pack 99€': 'source-pack',
@@ -69,3 +89,6 @@ export const stageColorMap: Record<PipelineStage, string> = {
   'Closed Won': 'stage-won',
   'Closed Lost': 'stage-lost',
 };
+
+export const formatEuro = (n: number) =>
+  new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n);

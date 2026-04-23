@@ -1,4 +1,4 @@
-import { LeadSource, sourceColorMap } from '@/types/crm';
+import { LeadSource, sourceColorMap, leadSourceLabel } from '@/types/crm';
 import { cn } from '@/lib/utils';
 
 export const SourceBadge = ({ source, className }: { source: LeadSource; className?: string }) => {
@@ -15,7 +15,7 @@ export const SourceBadge = ({ source, className }: { source: LeadSource; classNa
       }}
     >
       <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: `hsl(var(--${color}))` }} />
-      {source}
+      {leadSourceLabel[source]}
     </span>
   );
 };

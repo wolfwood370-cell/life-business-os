@@ -9,7 +9,7 @@ interface Props {
 const items = [
   { to: '/', label: 'Dashboard', icon: Home },
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
-  { to: '/clients', label: 'Clients', icon: Users },
+  { to: '/clients', label: 'Clienti', icon: Users },
 ];
 
 export const BottomNav = ({ onFabClick }: Props) => {

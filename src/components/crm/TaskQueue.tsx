@@ -1,5 +1,5 @@
 import { useCrm, daysSince } from '@/store/crmStore';
-import { Bell, Clock, Flame, UserCheck } from 'lucide-react';
+import { Bell, Clock, Flame, UserCheck, Trophy, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface Task {
@@ -7,6 +7,7 @@ interface Task {
   title: string;
   subtitle: string;
   tone: 'warning' | 'primary' | 'destructive' | 'muted';
+  priority: number;
   clientId?: string;
 }
 
@@ -24,42 +25,73 @@ export const TaskQueue = () => {
   const tasks: Task[] = [];
 
   clients.forEach(c => {
-    const days = daysSince(c.stage_updated_at);
-    if (c.pipeline_stage === 'Pitch Presented' && days >= 2) {
+    const stageDays = daysSince(c.stage_updated_at);
+    const leadAge = daysSince(c.created_at);
+
+    // Follow-up sequence: Nurturing / Trial Active at 1, 3, 7 days
+    if (c.pipeline_stage === 'Nurturing' || c.pipeline_stage === 'Trial Active') {
+      if ([1, 3, 7].includes(stageDays)) {
+        const urgent = stageDays >= 7;
+        tasks.push({
+          icon: urgent ? <Flame className="h-4 w-4" /> : <Zap className="h-4 w-4" />,
+          tone: urgent ? 'destructive' : stageDays === 3 ? 'warning' : 'primary',
+          priority: urgent ? 0 : stageDays === 3 ? 1 : 2,
+          title: `Follow-up strategico — ${c.name}`,
+          subtitle: `${stageDays}g in "${c.pipeline_stage === 'Nurturing' ? 'In Trattativa' : 'Prova/Trial Attivo'}"`,
+          clientId: c.id,
+        });
+      }
+    }
+
+    // Pitch presented urgent follow-up
+    if (c.pipeline_stage === 'Pitch Presented' && stageDays >= 2) {
       tasks.push({
-        icon: <Flame className="h-4 w-4" />, tone: 'destructive',
-        title: `Follow up with ${c.name}`, subtitle: `Pitch presented ${days}d ago`, clientId: c.id,
+        icon: <Flame className="h-4 w-4" />, tone: 'destructive', priority: 0,
+        title: `Chiudere la proposta — ${c.name}`,
+        subtitle: `Proposta presentata ${stageDays}g fa`, clientId: c.id,
       });
     }
-    if (c.pipeline_stage === 'Trial Active' && days >= 3) {
-      tasks.push({
-        icon: <UserCheck className="h-4 w-4" />, tone: 'warning',
-        title: `${c.name} finishing trial`, subtitle: `Trial active ${days}d — close the deal`, clientId: c.id,
-      });
+
+    // Milestone reviews for Closed Won at day 45 and 80
+    if (c.pipeline_stage === 'Closed Won') {
+      if (leadAge === 45 || leadAge === 80) {
+        tasks.push({
+          icon: <Trophy className="h-4 w-4" />, tone: 'primary', priority: 1,
+          title: `Review Risultati — ${c.name}`,
+          subtitle: `Milestone ${leadAge} giorni`, clientId: c.id,
+        });
+      }
     }
-    if (c.pipeline_stage === 'Nurturing' && days >= 3) {
-      tasks.push({
-        icon: <Bell className="h-4 w-4" />, tone: 'primary',
-        title: `Nurture ${c.name}`, subtitle: `${days}d since last touch`, clientId: c.id,
-      });
+
+    // PT Pack expiry: 3 sessions or 14 days from acquisition
+    if (c.lead_source === 'PT Pack 99€' && c.pipeline_stage !== 'Closed Won' && c.pipeline_stage !== 'Closed Lost') {
+      const sessions = c.pt_pack_sessions_used || 0;
+      if (sessions >= 3 || leadAge >= 14) {
+        tasks.push({
+          icon: <UserCheck className="h-4 w-4" />, tone: 'warning', priority: 1,
+          title: `Pitch Finale — ${c.name}`,
+          subtitle: sessions >= 3 ? `${sessions} sessioni completate` : `${leadAge}g dal pacchetto`,
+          clientId: c.id,
+        });
+      }
     }
-    if (c.pipeline_stage === 'Lead Acquired' && days >= 1) {
+
+    // New lead waiting
+    if (c.pipeline_stage === 'Lead Acquired' && stageDays >= 1) {
       tasks.push({
-        icon: <Clock className="h-4 w-4" />, tone: 'muted',
-        title: `Qualify ${c.name}`, subtitle: 'New lead waiting', clientId: c.id,
+        icon: <Clock className="h-4 w-4" />, tone: 'muted', priority: 3,
+        title: `Qualificare — ${c.name}`,
+        subtitle: 'Nuovo contatto in attesa', clientId: c.id,
       });
     }
   });
 
-  const sorted = tasks.sort((a, b) => {
-    const order = { destructive: 0, warning: 1, primary: 2, muted: 3 };
-    return order[a.tone] - order[b.tone];
-  });
+  const sorted = tasks.sort((a, b) => a.priority - b.priority);
 
   if (sorted.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-card p-6 text-center">
-        <p className="text-sm text-muted-foreground">All caught up. Go train.</p>
+        <p className="text-sm text-muted-foreground">Tutto sotto controllo. Vai ad allenarti.</p>
       </div>
     );
   }

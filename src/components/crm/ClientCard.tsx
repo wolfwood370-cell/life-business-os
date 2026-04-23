@@ -29,7 +29,7 @@ export const ClientCard = ({ client, compact = false }: { client: Client; compac
         <SourceBadge source={client.lead_source} />
         <span className="inline-flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
           <Clock className="h-3 w-3" />
-          {days}d in stage
+          {days}g in fase
         </span>
       </div>
     </button>
