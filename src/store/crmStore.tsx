@@ -411,7 +411,68 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
   });
 
-  const current_monthly_revenue = useMemo(
+  // ---------- Personal Expenses CRUD ----------
+  const invalidateExpenses = () => queryClient.invalidateQueries({ queryKey: ['crm', 'personal_expenses'] });
+  const addExpenseMutation = useMutation({
+    mutationFn: async (e: Omit<PersonalExpense, 'id' | 'created_at'>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('personal_expenses').insert({
+        name: e.name, amount: e.amount, is_recurring: e.is_recurring, category: e.category,
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidateExpenses,
+  });
+  const updateExpenseMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<PersonalExpense> }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('personal_expenses').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateExpenses,
+  });
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('personal_expenses').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateExpenses,
+  });
+
+  // ---------- Life Goals CRUD ----------
+  const invalidateGoals = () => queryClient.invalidateQueries({ queryKey: ['crm', 'life_goals'] });
+  const addGoalMutation = useMutation({
+    mutationFn: async (g: Omit<LifeGoal, 'id' | 'created_at'>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('life_goals').insert({
+        title: g.title,
+        total_target_amount: g.total_target_amount,
+        current_savings: g.current_savings,
+        deadline: g.deadline,
+        is_active: g.is_active,
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidateGoals,
+  });
+  const updateGoalMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<LifeGoal> }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('life_goals').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateGoals,
+  });
+  const deleteGoalMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('life_goals').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateGoals,
+  });
+
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
   );
