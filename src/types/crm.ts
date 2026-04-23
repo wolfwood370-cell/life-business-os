@@ -90,17 +90,16 @@ export const TAX_RATE = 0.249; // 24.90% imposte/contributi
 
 /**
  * Costo affitto palestra per uno specifico mese.
- * - Gennaio + Febbraio 2026: 549€ totali (quindi 274,50€/mese)
+ * - Prima di Marzo 2026: 0€ (nessun affitto)
  * - Da Marzo 2026 in poi: 366€/mese
  */
 export const rentForMonth = (year: number, month: number): number => {
-  if (year === 2026 && (month === 0 || month === 1)) return 549 / 2;
   if (year < 2026) return 0;
-  if (year === 2026 && month < 0) return 0;
+  if (year === 2026 && month < 2) return 0; // Gen + Feb 2026 esclusi
   return FIXED_MONTHLY_COST;
 };
 
-/** Somma del costo affitto da Gen 2026 fino al mese corrente compreso. */
+/** Somma del costo affitto da Gen dell'anno fino al mese corrente compreso. */
 export const rentYtd = (year: number, month: number): number => {
   let total = 0;
   for (let m = 0; m <= month; m++) total += rentForMonth(year, m);
