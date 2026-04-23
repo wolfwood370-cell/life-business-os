@@ -200,6 +200,24 @@ const SalesCoach = () => {
               <p className="text-sm text-foreground">{report.sintesi}</p>
             </div>
 
+            {/* Friction Points (top 2) */}
+            {report.friction_points && report.friction_points.length > 0 && (
+              <div className="rounded-xl border border-warning/40 bg-warning/5 p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <AlertCircle className="h-4 w-4 text-warning" />
+                  <p className="text-xs font-bold uppercase tracking-wider text-foreground">Top 2 Punti di Attrito</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {report.friction_points.slice(0, 2).map((fp, i) => (
+                    <div key={i} className="rounded-lg bg-card border border-border p-2.5">
+                      <p className="text-xs font-bold text-foreground">{fp.titolo}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1 leading-snug">{fp.descrizione}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Perché perdiamo */}
             <div className="rounded-xl border border-border bg-card p-3">
               <div className="flex items-center gap-2 mb-2">
