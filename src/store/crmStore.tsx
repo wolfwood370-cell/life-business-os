@@ -187,6 +187,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         is_recurring: Boolean(r.is_recurring),
         category: r.category,
         created_at: r.created_at,
+        start_date: r.start_date ?? r.created_at,
+        end_date: r.end_date ?? undefined,
       }));
     },
   });
@@ -417,7 +419,12 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: async (e: Omit<PersonalExpense, 'id' | 'created_at'>) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from('personal_expenses').insert({
-        name: e.name, amount: e.amount, is_recurring: e.is_recurring, category: e.category,
+        name: e.name,
+        amount: e.amount,
+        is_recurring: e.is_recurring,
+        category: e.category,
+        start_date: e.start_date,
+        end_date: e.end_date ?? null,
       });
       if (error) throw error;
     },
@@ -427,6 +434,17 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<PersonalExpense> }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from('personal_expenses').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateExpenses,
+  });
+  const endExpenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('personal_expenses')
+        .update({ end_date: new Date().toISOString() })
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: invalidateExpenses,
