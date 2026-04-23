@@ -85,32 +85,7 @@ export const PIPELINE_STAGES: PipelineStage[] = [
 
 export const CHURN_RISKS: ChurnRisk[] = ['Basso', 'Medio', 'Alto'];
 
-export const FIXED_MONTHLY_COST = 366;
 export const TAX_RATE = 0.249; // 24.90% imposte/contributi
-
-/**
- * Costo affitto palestra per uno specifico mese.
- * - Prima di Marzo 2026: 0€ (nessun affitto)
- * - Da Marzo 2026 in poi: 366€/mese
- */
-export const rentForMonth = (year: number, month: number): number => {
-  // Affitto palestra rimosso da Gennaio 2026 fino al mese corrente compreso.
-  // Riprenderà automaticamente dal mese successivo a quello attuale.
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
-  if (year < 2026) return 0;
-  if (year < currentYear) return 0;
-  if (year === currentYear && month <= currentMonth) return 0;
-  return FIXED_MONTHLY_COST;
-};
-
-/** Somma del costo affitto da Gen dell'anno fino al mese corrente compreso. */
-export const rentYtd = (year: number, month: number): number => {
-  let total = 0;
-  for (let m = 0; m <= month; m++) total += rentForMonth(year, m);
-  return total;
-};
 
 export type PaymentType = 'Unica Soluzione' | 'A Rate' | 'Ricorrente';
 export const PAYMENT_TYPES: PaymentType[] = ['Unica Soluzione', 'A Rate', 'Ricorrente'];
@@ -190,7 +165,7 @@ export interface DynamicTarget {
   monthlyGoalSaving: number;       // risparmio mensile per coprire l'obiettivo attivo
   totalRecurringExpenses: number;  // somma spese personali ricorrenti
   totalNetNeeded: number;          // recurring + monthlyGoalSaving
-  dynamicGrossTarget: number;      // (totalNetNeeded + 366) / (1 - 0.249)
+  dynamicGrossTarget: number;      // totalNetNeeded / (1 - 0.249)
   monthsUntilDeadline: number;     // mesi residui all'obiettivo (>=1)
 }
 
