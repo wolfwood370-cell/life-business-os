@@ -63,7 +63,11 @@ const SalesCoach = () => {
       setAnalyzedCount(data.analyzed ?? lostClients.length);
       toast.success('Report generato');
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Generazione fallita';
+      const raw = e instanceof Error ? e.message : '';
+      let msg = 'Errore di connessione all\'AI';
+      if (/429|limite|rate/i.test(raw)) msg = 'Limite di richieste raggiunto. Riprova tra qualche istante.';
+      else if (/402|crediti|payment/i.test(raw)) msg = 'Crediti AI esauriti. Aggiungi fondi al workspace.';
+      else if (raw) msg = raw;
       toast.error(msg);
     } finally {
       setGenerating(false);
@@ -130,10 +134,42 @@ const SalesCoach = () => {
         )}
 
         {generating && (
-          <div className="space-y-3">
-            <Skeleton className="h-20 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
-            <Skeleton className="h-32 rounded-xl" />
+          <div className="space-y-3" aria-busy="true" aria-live="polite">
+            {/* Sintesi skeleton */}
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-3 space-y-2">
+              <Skeleton className="h-2.5 w-24 rounded-full" />
+              <Skeleton className="h-3 w-full rounded-full" />
+              <Skeleton className="h-3 w-4/5 rounded-full" />
+            </div>
+            {/* Perché perdiamo skeleton */}
+            <div className="rounded-xl border border-border bg-card p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-3 w-40 rounded-full" />
+              </div>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex gap-2">
+                  <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                  <Skeleton className="h-3 flex-1 rounded-full" />
+                </div>
+              ))}
+            </div>
+            {/* Azioni correttive skeleton */}
+            <div className="rounded-xl border border-primary/30 bg-card p-3 space-y-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-4 rounded" />
+                <Skeleton className="h-3 w-48 rounded-full" />
+              </div>
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex gap-2">
+                  <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                  <Skeleton className="h-3 flex-1 rounded-full" />
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] text-center text-muted-foreground italic">
+              Il modello Pro sta analizzando i pattern… può richiedere qualche secondo.
+            </p>
           </div>
         )}
 
