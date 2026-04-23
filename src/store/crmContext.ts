@@ -15,10 +15,12 @@ export interface CrmContextValue {
   transactions: Transaction[];
   addClient: (c: Omit<Client, 'id' | 'created_at' | 'stage_updated_at'>) => Promise<void>;
   updateClient: (id: string, patch: Partial<Client>) => Promise<void>;
+  deleteClient: (id: string) => Promise<void>;
   moveClient: (id: string, stage: PipelineStage) => Promise<void>;
   addRoiMetric: (clientId: string, metric: Omit<RoiMetric, 'id' | 'date'>) => Promise<void>;
   removeRoiMetric: (clientId: string, metricId: string) => Promise<void>;
   addTransaction: (t: Omit<Transaction, 'id' | 'created_at' | 'payment_date'> & { payment_date?: string }) => Promise<void>;
+  stopRecurringPayment: (transactionId: string) => Promise<void>;
   setMonthlyTarget: (n: number) => void;
 }
 
