@@ -14,7 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          churn_risk: string | null
+          created_at: string
+          id: string
+          last_contacted_at: string | null
+          lead_score: number | null
+          lead_source: string
+          monthly_value: number | null
+          name: string
+          next_renewal_date: string | null
+          notes: string | null
+          objection_real: string
+          objection_stated: string
+          phone: string | null
+          pipeline_stage: string
+          pt_pack_sessions_used: number | null
+          root_motivator: string
+          stage_updated_at: string
+        }
+        Insert: {
+          churn_risk?: string | null
+          created_at?: string
+          id?: string
+          last_contacted_at?: string | null
+          lead_score?: number | null
+          lead_source: string
+          monthly_value?: number | null
+          name: string
+          next_renewal_date?: string | null
+          notes?: string | null
+          objection_real?: string
+          objection_stated?: string
+          phone?: string | null
+          pipeline_stage: string
+          pt_pack_sessions_used?: number | null
+          root_motivator?: string
+          stage_updated_at?: string
+        }
+        Update: {
+          churn_risk?: string | null
+          created_at?: string
+          id?: string
+          last_contacted_at?: string | null
+          lead_score?: number | null
+          lead_source?: string
+          monthly_value?: number | null
+          name?: string
+          next_renewal_date?: string | null
+          notes?: string | null
+          objection_real?: string
+          objection_stated?: string
+          phone?: string | null
+          pipeline_stage?: string
+          pt_pack_sessions_used?: number | null
+          root_motivator?: string
+          stage_updated_at?: string
+        }
+        Relationships: []
+      }
+      roi_metrics: {
+        Row: {
+          client_id: string
+          created_at: string
+          date: string
+          id: string
+          metric: string
+          note: string | null
+          value: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          metric: string
+          note?: string | null
+          value: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          metric?: string
+          note?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "roi_metrics_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
