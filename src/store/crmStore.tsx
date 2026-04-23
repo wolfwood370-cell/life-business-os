@@ -154,6 +154,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'clients'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'roi_metrics' }, () => {
+        // ROI metrics sono lette insieme ai clients in fetchAll → invalida la query corretta
         queryClient.invalidateQueries({ queryKey: ['crm', 'clients'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
@@ -273,14 +274,18 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
 
       if (t.payment_type === 'A Rate' && t.installments_count > 1) {
         const n = t.installments_count;
-        const per = +(totalAmount / n).toFixed(2);
+        const cents = Math.round(totalAmount * 100);
+        const baseCents = Math.floor(cents / n);
+        const remainderCents = cents - baseCents * n;
         const rows = Array.from({ length: n }).map((_, i) => {
           const due = new Date(start);
           due.setDate(due.getDate() + 28 * i);
           const isFirst = i === 0;
+          // Distribuiamo il resto sulle prime "remainderCents" rate per evitare perdite di centesimi
+          const amountCents = baseCents + (i < remainderCents ? 1 : 0);
           return {
             client_id: t.client_id,
-            amount: per,
+            amount: amountCents / 100,
             payment_type: 'A Rate',
             payment_method: t.payment_method ?? 'Stripe',
             installments_count: n,
