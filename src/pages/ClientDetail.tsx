@@ -257,12 +257,14 @@ const ClientDetail = () => {
                   <p className="text-[10px] text-muted-foreground uppercase tracking-wider">I 5 Perché</p>
                 </div>
               </div>
-              <Textarea
-                value={motivator}
-                onChange={(e) => setMotivator(e.target.value)}
-                placeholder="Cosa lo muove davvero? Scava fino al 5° perché…"
-                className="min-h-[90px] rounded-xl bg-card border-border text-sm"
-              />
+              <div className="privacy-blur-target">
+                <Textarea
+                  value={motivator}
+                  onChange={(e) => setMotivator(e.target.value)}
+                  placeholder="Cosa lo muove davvero? Scava fino al 5° perché…"
+                  className="min-h-[90px] rounded-xl bg-card border-border text-sm"
+                />
+              </div>
             </section>
 
             {/* Win/Loss */}
@@ -276,12 +278,14 @@ const ClientDetail = () => {
                   </div>
                   <label className="text-xs font-bold uppercase tracking-wider text-warning">Obiezione Dichiarata</label>
                 </div>
-                <Textarea
-                  value={stated}
-                  onChange={(e) => setStated(e.target.value)}
-                  placeholder="La scusa di superficie…"
-                  className="min-h-[60px] rounded-xl bg-card border-border text-sm"
-                />
+                <div className="privacy-blur-target">
+                  <Textarea
+                    value={stated}
+                    onChange={(e) => setStated(e.target.value)}
+                    placeholder="La scusa di superficie…"
+                    className="min-h-[60px] rounded-xl bg-card border-border text-sm"
+                  />
+                </div>
               </div>
 
               <div className="rounded-xl border-2 border-destructive/30 bg-destructive/5 p-3 space-y-2">
@@ -291,12 +295,14 @@ const ClientDetail = () => {
                   </div>
                   <label className="text-xs font-bold uppercase tracking-wider text-destructive">Obiezione Reale</label>
                 </div>
-                <Textarea
-                  value={real}
-                  onChange={(e) => setReal(e.target.value)}
-                  placeholder="La vera causa radice isolata…"
-                  className="min-h-[60px] rounded-xl bg-card border-border text-sm"
-                />
+                <div className="privacy-blur-target">
+                  <Textarea
+                    value={real}
+                    onChange={(e) => setReal(e.target.value)}
+                    placeholder="La vera causa radice isolata…"
+                    className="min-h-[60px] rounded-xl bg-card border-border text-sm"
+                  />
+                </div>
               </div>
             </section>
 
