@@ -253,6 +253,31 @@ const SalesCoach = () => {
                 ))}
               </ul>
             </div>
+
+            {/* Entrepreneurial Nudge — Coach Insight Premium Card */}
+            {report.entrepreneurial_nudge && (
+              <div className="relative overflow-hidden rounded-2xl border-2 border-primary/40 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/15 p-4 shadow-glow">
+                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-primary/20 blur-2xl" aria-hidden />
+                <div className="relative flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-glow">
+                    <Rocket className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1">Coach Insight · Imprenditoriale</p>
+                    <p className="text-sm text-foreground leading-relaxed font-medium">{report.entrepreneurial_nudge}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {privacyMode && (
+          <div className="flex items-center gap-2 rounded-xl bg-muted/40 border border-border px-3 py-2 mt-1">
+            <EyeOff className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            <p className="text-[11px] text-muted-foreground">
+              Modalità Privacy attiva: i nomi clienti vengono mascherati prima dell'invio all'AI.
+            </p>
           </div>
         )}
       </section>
