@@ -7,6 +7,7 @@ import {
 import { SourceBadge } from '@/components/crm/SourceBadge';
 import { ChurnBadge, LeadScoreBadge } from '@/components/crm/ScoreBadges';
 import { AiFollowupGenerator } from '@/components/crm/AiFollowupGenerator';
+import { RoiChart } from '@/components/crm/RoiChart';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -352,6 +353,11 @@ const ClientDetail = () => {
                   </p>
                 </div>
               </div>
+
+              {/* Grafico progressi */}
+              {(client.roi_metrics?.length ?? 0) > 0 && (
+                <RoiChart metrics={client.roi_metrics!} />
+              )}
 
               {/* Lista metriche */}
               <div className="space-y-2">

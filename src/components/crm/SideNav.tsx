@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, KanbanSquare, Users, Plus, Dumbbell } from 'lucide-react';
+import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -11,6 +11,7 @@ const items = [
   { to: '/', label: 'Dashboard', icon: Home },
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/clients', label: 'Clienti', icon: Users },
+  { to: '/coach', label: 'Sales Coach', icon: BarChart3 },
 ];
 
 export const SideNav = ({ onFabClick }: Props) => {

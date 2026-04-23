@@ -1,5 +1,6 @@
 import { Client } from '@/types/crm';
 import { SourceBadge } from './SourceBadge';
+import { LeadScoreBadge } from './ScoreBadges';
 import { daysSince } from '@/store/crmStore';
 import { Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -24,6 +25,9 @@ export const ClientCard = ({ client, compact = false }: { client: Client; compac
             )}
           </div>
         </div>
+        {typeof client.lead_score === 'number' && (
+          <LeadScoreBadge score={client.lead_score} size="sm" />
+        )}
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
         <SourceBadge source={client.lead_source} />
