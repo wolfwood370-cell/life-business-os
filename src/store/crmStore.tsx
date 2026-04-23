@@ -105,6 +105,8 @@ type TransactionRow = {
   created_at: string;
   recurring_active?: boolean | null;
   recurring_stopped_at?: string | null;
+  status?: string | null;
+  due_date?: string | null;
 };
 
 const fetchTransactions = async (): Promise<Transaction[]> => {
@@ -112,7 +114,7 @@ const fetchTransactions = async (): Promise<Transaction[]> => {
   const { data, error } = await (supabase as any)
     .from('transactions')
     .select('*')
-    .order('payment_date', { ascending: false });
+    .order('due_date', { ascending: false });
   if (error) throw error;
   return (data as TransactionRow[]).map(r => ({
     id: r.id,
@@ -125,6 +127,8 @@ const fetchTransactions = async (): Promise<Transaction[]> => {
     created_at: r.created_at,
     recurring_active: r.recurring_active ?? false,
     recurring_stopped_at: r.recurring_stopped_at ?? undefined,
+    status: ((r.status as 'Saldato' | 'In Attesa') ?? 'Saldato'),
+    due_date: r.due_date ?? r.payment_date,
   }));
 };
 
@@ -255,18 +259,53 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const addTransactionMutation = useMutation({
-    mutationFn: async (t: Omit<Transaction, 'id' | 'created_at' | 'payment_date'> & { payment_date?: string }) => {
+    mutationFn: async (
+      t: Omit<Transaction, 'id' | 'created_at' | 'payment_date' | 'status' | 'due_date'> & {
+        payment_date?: string;
+      }
+    ) => {
+      const startIso = t.payment_date ?? new Date().toISOString();
+      const start = new Date(startIso);
+      const totalAmount = t.amount;
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('transactions').insert({
-        client_id: t.client_id,
-        amount: t.amount,
-        payment_type: t.payment_type,
-        payment_method: t.payment_method ?? 'Stripe',
-        installments_count: t.installments_count,
-        payment_date: t.payment_date ?? new Date().toISOString(),
-        recurring_active: t.payment_type === 'Ricorrente',
-      });
-      if (error) throw error;
+      const sb = supabase as any;
+
+      if (t.payment_type === 'A Rate' && t.installments_count > 1) {
+        const n = t.installments_count;
+        const per = +(totalAmount / n).toFixed(2);
+        const rows = Array.from({ length: n }).map((_, i) => {
+          const due = new Date(start);
+          due.setDate(due.getDate() + 28 * i);
+          const isFirst = i === 0;
+          return {
+            client_id: t.client_id,
+            amount: per,
+            payment_type: 'A Rate',
+            payment_method: t.payment_method ?? 'Stripe',
+            installments_count: n,
+            payment_date: isFirst ? startIso : due.toISOString(),
+            due_date: due.toISOString(),
+            status: isFirst ? 'Saldato' : 'In Attesa',
+            recurring_active: false,
+          };
+        });
+        const { error } = await sb.from('transactions').insert(rows);
+        if (error) throw error;
+      } else {
+        const { error } = await sb.from('transactions').insert({
+          client_id: t.client_id,
+          amount: totalAmount,
+          payment_type: t.payment_type,
+          payment_method: t.payment_method ?? 'Stripe',
+          installments_count: 1,
+          payment_date: startIso,
+          due_date: startIso,
+          status: 'Saldato',
+          recurring_active: t.payment_type === 'Ricorrente',
+        });
+        if (error) throw error;
+      }
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
   });
@@ -277,6 +316,18 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       const { error } = await (supabase as any)
         .from('transactions')
         .update({ recurring_active: false, recurring_stopped_at: new Date().toISOString() })
+        .eq('id', transactionId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
+  });
+
+  const markPaidMutation = useMutation({
+    mutationFn: async (transactionId: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('transactions')
+        .update({ status: 'Saldato', payment_date: new Date().toISOString() })
         .eq('id', transactionId);
       if (error) throw error;
     },
@@ -297,6 +348,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     let gross_monthly = 0;
     let gross_ytd = 0;
     for (const t of transactions) {
+      if (t.status !== 'Saldato') continue;
       const d = new Date(t.payment_date);
       if (d.getFullYear() !== year) continue;
       gross_ytd += t.amount;
@@ -335,6 +387,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     removeRoiMetric: async (clientId, metricId) => { await removeRoiMutation.mutateAsync({ clientId, metricId }); },
     addTransaction: async (t) => { await addTransactionMutation.mutateAsync(t); },
     stopRecurringPayment: async (transactionId) => { await stopRecurringMutation.mutateAsync(transactionId); },
+    markTransactionPaid: async (transactionId) => { await markPaidMutation.mutateAsync(transactionId); },
     setMonthlyTarget,
   };
 
