@@ -45,6 +45,7 @@ export const PaymentModal = ({ open, onOpenChange, clientId, clientName }: Payme
         amount: value,
         payment_type: paymentType,
         installments_count: paymentType === 'A Rate' ? installments : 1,
+        payment_date: paymentDate ? new Date(paymentDate).toISOString() : undefined,
       });
       const perInstallment = paymentType === 'A Rate' ? value / installments : value;
       toast.success(
