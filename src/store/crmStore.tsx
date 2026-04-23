@@ -7,6 +7,9 @@ import {
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
+// Back-compat re-exports (some modules may still import from here via HMR cache)
+export { useCrm, daysSince } from './useCrm';
+
 type ClientRow = {
   id: string;
   name: string;
