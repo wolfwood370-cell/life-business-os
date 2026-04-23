@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Search, ArrowUpDown } from 'lucide-react';
 import { PIPELINE_STAGES, PipelineStage, pipelineStageLabel } from '@/types/crm';
 import { cn } from '@/lib/utils';
-import { Skeleton } from '@/components/ui/skeleton';
+import { ClientCardSkeleton } from '@/components/crm/skeletons';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type SortKey =
@@ -163,7 +163,7 @@ const Clients = () => {
 
       <div className="space-y-2 md:grid md:grid-cols-2 xl:grid-cols-3 md:gap-3 md:space-y-0">
         {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-2xl" />)
+          Array.from({ length: 6 }).map((_, i) => <ClientCardSkeleton key={i} />)
         ) : filtered.length === 0 ? (
           <div className="md:col-span-full rounded-2xl border border-dashed border-border p-10 text-center">
             <p className="text-sm text-muted-foreground">Nessun cliente trovato</p>

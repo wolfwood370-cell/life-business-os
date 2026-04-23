@@ -77,7 +77,8 @@ const ClientDetail = () => {
   }, [client]);
 
   if (isLoading) {
-    return <div className="px-4 pt-6"><p className="text-muted-foreground">Caricamento…</p></div>;
+    const { ClientDetailSkeleton } = require('@/components/crm/skeletons');
+    return <ClientDetailSkeleton />;
   }
 
   if (!client) {
