@@ -13,6 +13,16 @@ export type PipelineStage =
   | 'Closed Won'
   | 'Closed Lost';
 
+export type ChurnRisk = 'Basso' | 'Medio' | 'Alto';
+
+export interface RoiMetric {
+  id: string;
+  date: string;       // ISO date
+  metric: string;     // es. "Squat 1RM", "Peso", "% massa grassa"
+  value: string;      // es. "+10kg", "-4kg", "22%"
+  note?: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -25,7 +35,11 @@ export interface Client {
   stage_updated_at: string;
   monthly_value?: number;
   next_renewal_date?: string;
+  last_contacted_at?: string;
   pt_pack_sessions_used?: number;
+  lead_score?: number;          // 0-100
+  churn_risk?: ChurnRisk;
+  roi_metrics?: RoiMetric[];
   notes?: string;
   phone?: string;
 }
@@ -53,9 +67,10 @@ export const PIPELINE_STAGES: PipelineStage[] = [
   'Closed Lost',
 ];
 
+export const CHURN_RISKS: ChurnRisk[] = ['Basso', 'Medio', 'Alto'];
+
 export const FIXED_MONTHLY_COST = 366;
 
-// Italian translations
 export const leadSourceLabel: Record<LeadSource, string> = {
   'Gym-provided': 'Contatto Palestra',
   'PT Pack 99€': 'PT Pack 99€',

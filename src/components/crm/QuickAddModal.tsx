@@ -34,6 +34,9 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       root_motivator: '',
       objection_stated: '',
       objection_real: '',
+      last_contacted_at: new Date().toISOString(),
+      lead_score: 50,
+      churn_risk: 'Basso',
     });
     toast.success(`${name} aggiunto alla pipeline`);
     setName('');

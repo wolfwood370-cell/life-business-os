@@ -1,21 +1,44 @@
 import { useCrm, daysSince } from '@/store/crmStore';
-import { Bell, Clock, Flame, UserCheck, Trophy, Zap } from 'lucide-react';
+import { AlertTriangle, Clock, Flame, Trophy, Zap, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+type Priority = 'critical' | 'high' | 'medium' | 'low';
 
 interface Task {
   icon: React.ReactNode;
   title: string;
   subtitle: string;
-  tone: 'warning' | 'primary' | 'destructive' | 'muted';
-  priority: number;
-  clientId?: string;
+  priority: Priority;
+  clientId: string;
 }
 
-const toneClass = {
-  warning: 'bg-warning/10 text-warning',
-  primary: 'bg-primary/10 text-primary',
-  destructive: 'bg-destructive/10 text-destructive',
-  muted: 'bg-muted text-muted-foreground',
+const priorityOrder: Record<Priority, number> = { critical: 0, high: 1, medium: 2, low: 3 };
+
+const priorityStyles: Record<Priority, { wrap: string; chip: string; icon: string; label: string }> = {
+  critical: {
+    wrap: 'border-destructive/40 bg-destructive/5 hover:border-destructive',
+    chip: 'bg-destructive text-destructive-foreground',
+    icon: 'bg-destructive/15 text-destructive',
+    label: 'Critica',
+  },
+  high: {
+    wrap: 'border-warning/40 bg-warning/5 hover:border-warning',
+    chip: 'bg-warning text-warning-foreground',
+    icon: 'bg-warning/15 text-warning',
+    label: 'Alta',
+  },
+  medium: {
+    wrap: 'border-border bg-card hover:border-primary/40',
+    chip: 'bg-primary/10 text-primary',
+    icon: 'bg-primary/10 text-primary',
+    label: 'Media',
+  },
+  low: {
+    wrap: 'border-border bg-card hover:border-foreground/20',
+    chip: 'bg-muted text-muted-foreground',
+    icon: 'bg-muted text-muted-foreground',
+    label: 'Bassa',
+  },
 };
 
 export const TaskQueue = () => {
@@ -27,100 +50,117 @@ export const TaskQueue = () => {
   clients.forEach(c => {
     const stageDays = daysSince(c.stage_updated_at);
     const leadAge = daysSince(c.created_at);
+    const sinceContact = c.last_contacted_at ? daysSince(c.last_contacted_at) : null;
 
-    // Follow-up sequence: Nurturing / Trial Active — task scatta a >=1, >=3, >=7 giorni
-    if (c.pipeline_stage === 'Nurturing' || c.pipeline_stage === 'Trial Active') {
-      if (stageDays >= 1) {
-        const urgent = stageDays >= 7;
-        const warn = stageDays >= 3;
-        tasks.push({
-          icon: urgent ? <Flame className="h-4 w-4" /> : <Zap className="h-4 w-4" />,
-          tone: urgent ? 'destructive' : warn ? 'warning' : 'primary',
-          priority: urgent ? 0 : warn ? 1 : 2,
-          title: `Follow-up strategico — ${c.name}`,
-          subtitle: `${stageDays}g in "${c.pipeline_stage === 'Nurturing' ? 'In Trattativa' : 'Prova/Trial Attivo'}"`,
-          clientId: c.id,
-        });
-      }
-    }
-
-    // Pitch presented urgent follow-up
-    if (c.pipeline_stage === 'Pitch Presented' && stageDays >= 2) {
+    // Churn Prevention — Cliente Attivo con churn_risk Alto
+    if (c.pipeline_stage === 'Closed Won' && c.churn_risk === 'Alto') {
       tasks.push({
-        icon: <Flame className="h-4 w-4" />, tone: 'destructive', priority: 0,
-        title: `Chiudere la proposta — ${c.name}`,
-        subtitle: `Proposta presentata ${stageDays}g fa`, clientId: c.id,
+        icon: <AlertTriangle className="h-4 w-4" />,
+        priority: 'critical',
+        title: `Rischio Abbandono Alto: Contattare Subito`,
+        subtitle: c.name,
+        clientId: c.id,
       });
     }
 
-    // Milestone reviews per Cliente Attivo: Day 45 e Day 80 (finestra di 5g per non perderli)
-    if (c.pipeline_stage === 'Closed Won') {
-      const milestone = leadAge >= 80 && leadAge <= 84 ? 80 : leadAge >= 45 && leadAge <= 49 ? 45 : null;
-      if (milestone) {
-        tasks.push({
-          icon: <Trophy className="h-4 w-4" />, tone: 'primary', priority: 1,
-          title: `Review Risultati — ${c.name}`,
-          subtitle: `Milestone ${milestone} giorni`, clientId: c.id,
-        });
-      }
-    }
-
-    // PT Pack expiry: 3 sessioni o 14 giorni dall'acquisizione (solo se non chiuso)
+    // PT Pack Conversion — fonte PT Pack 99€ con leadAge >= 14g (escluse chiusure)
     if (
       c.lead_source === 'PT Pack 99€' &&
       c.pipeline_stage !== 'Closed Won' &&
-      c.pipeline_stage !== 'Closed Lost'
+      c.pipeline_stage !== 'Closed Lost' &&
+      leadAge >= 14
     ) {
-      const sessions = c.pt_pack_sessions_used || 0;
-      if (sessions >= 3 || leadAge >= 14) {
-        tasks.push({
-          icon: <UserCheck className="h-4 w-4" />, tone: 'warning', priority: 1,
-          title: `Pitch Finale — ${c.name}`,
-          subtitle: sessions >= 3 ? `${sessions} sessioni completate` : `${leadAge}g dal pacchetto`,
-          clientId: c.id,
-        });
-      }
+      tasks.push({
+        icon: <Flame className="h-4 w-4" />,
+        priority: 'high',
+        title: `Pitch di Vendita Finale - Fine PT Pack`,
+        subtitle: `${c.name} · ${leadAge}g dall'acquisizione`,
+        clientId: c.id,
+      });
     }
 
-    // Nuovo lead in attesa di qualifica
+    // 14-Day Nurture — In Trattativa, last_contacted_at = 1, 3 o 7 giorni
+    if (c.pipeline_stage === 'Nurturing' && sinceContact !== null && [1, 3, 7].includes(sinceContact)) {
+      tasks.push({
+        icon: <Zap className="h-4 w-4" />,
+        priority: 'medium',
+        title: `Invia Follow-up Strategico`,
+        subtitle: `${c.name} · ${sinceContact}g dall'ultimo contatto`,
+        clientId: c.id,
+      });
+    }
+
+    // ROI & Retention — Cliente Attivo, stageDays = 45 o 80
+    if (c.pipeline_stage === 'Closed Won' && (stageDays === 45 || stageDays === 80)) {
+      tasks.push({
+        icon: <Trophy className="h-4 w-4" />,
+        priority: 'medium',
+        title: `Fissare Review Risultati (Dimostrazione ROI)`,
+        subtitle: `${c.name} · Milestone ${stageDays} giorni`,
+        clientId: c.id,
+      });
+    }
+
+    // Pitch Presented in attesa di chiusura
+    if (c.pipeline_stage === 'Pitch Presented' && stageDays >= 2) {
+      tasks.push({
+        icon: <Target className="h-4 w-4" />,
+        priority: stageDays >= 5 ? 'high' : 'medium',
+        title: `Chiudere la Proposta`,
+        subtitle: `${c.name} · proposta presentata ${stageDays}g fa`,
+        clientId: c.id,
+      });
+    }
+
+    // Nuovo lead da qualificare
     if (c.pipeline_stage === 'Lead Acquired' && stageDays >= 1) {
       tasks.push({
-        icon: <Clock className="h-4 w-4" />, tone: 'muted', priority: 3,
-        title: `Qualificare — ${c.name}`,
-        subtitle: 'Nuovo contatto in attesa', clientId: c.id,
+        icon: <Clock className="h-4 w-4" />,
+        priority: 'low',
+        title: `Qualificare il nuovo contatto`,
+        subtitle: `${c.name} · in attesa da ${stageDays}g`,
+        clientId: c.id,
       });
     }
   });
 
-  const sorted = tasks.sort((a, b) => a.priority - b.priority);
+  const sorted = tasks.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card p-6 text-center">
-        <p className="text-sm text-muted-foreground">Tutto sotto controllo. Vai ad allenarti.</p>
+      <div className="rounded-2xl border border-border bg-card p-6 text-center shadow-card">
+        <p className="text-sm text-muted-foreground">Nessuna azione richiesta. Pipeline sotto controllo.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-2">
-      {sorted.map((t, i) => (
-        <button
-          key={i}
-          onClick={() => t.clientId && navigate(`/clients/${t.clientId}`)}
-          className="w-full text-left rounded-2xl border border-border bg-card p-4 transition-smooth active:scale-[0.98] hover:border-primary/40"
-        >
-          <div className="flex items-center gap-3">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${toneClass[t.tone]}`}>
-              {t.icon}
+      {sorted.map((t, i) => {
+        const s = priorityStyles[t.priority];
+        return (
+          <button
+            key={i}
+            onClick={() => navigate(`/clients/${t.clientId}`)}
+            className={`w-full text-left rounded-2xl border p-4 transition-smooth active:scale-[0.99] shadow-card ${s.wrap}`}
+          >
+            <div className="flex items-center gap-3">
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.icon}`}>
+                {t.icon}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold text-sm truncate">{t.title}</p>
+                </div>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{t.subtitle}</p>
+              </div>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${s.chip}`}>
+                {s.label}
+              </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm truncate">{t.title}</p>
-              <p className="text-xs text-muted-foreground truncate">{t.subtitle}</p>
-            </div>
-          </div>
-        </button>
-      ))}
+          </button>
+        );
+      })}
     </div>
   );
 };
