@@ -28,14 +28,15 @@ export const TaskQueue = () => {
     const stageDays = daysSince(c.stage_updated_at);
     const leadAge = daysSince(c.created_at);
 
-    // Follow-up sequence: Nurturing / Trial Active at 1, 3, 7 days
+    // Follow-up sequence: Nurturing / Trial Active — task scatta a >=1, >=3, >=7 giorni
     if (c.pipeline_stage === 'Nurturing' || c.pipeline_stage === 'Trial Active') {
-      if ([1, 3, 7].includes(stageDays)) {
+      if (stageDays >= 1) {
         const urgent = stageDays >= 7;
+        const warn = stageDays >= 3;
         tasks.push({
           icon: urgent ? <Flame className="h-4 w-4" /> : <Zap className="h-4 w-4" />,
-          tone: urgent ? 'destructive' : stageDays === 3 ? 'warning' : 'primary',
-          priority: urgent ? 0 : stageDays === 3 ? 1 : 2,
+          tone: urgent ? 'destructive' : warn ? 'warning' : 'primary',
+          priority: urgent ? 0 : warn ? 1 : 2,
           title: `Follow-up strategico — ${c.name}`,
           subtitle: `${stageDays}g in "${c.pipeline_stage === 'Nurturing' ? 'In Trattativa' : 'Prova/Trial Attivo'}"`,
           clientId: c.id,
@@ -52,19 +53,24 @@ export const TaskQueue = () => {
       });
     }
 
-    // Milestone reviews for Closed Won at day 45 and 80
+    // Milestone reviews per Cliente Attivo: Day 45 e Day 80 (finestra di 5g per non perderli)
     if (c.pipeline_stage === 'Closed Won') {
-      if (leadAge === 45 || leadAge === 80) {
+      const milestone = leadAge >= 80 && leadAge <= 84 ? 80 : leadAge >= 45 && leadAge <= 49 ? 45 : null;
+      if (milestone) {
         tasks.push({
           icon: <Trophy className="h-4 w-4" />, tone: 'primary', priority: 1,
           title: `Review Risultati — ${c.name}`,
-          subtitle: `Milestone ${leadAge} giorni`, clientId: c.id,
+          subtitle: `Milestone ${milestone} giorni`, clientId: c.id,
         });
       }
     }
 
-    // PT Pack expiry: 3 sessions or 14 days from acquisition
-    if (c.lead_source === 'PT Pack 99€' && c.pipeline_stage !== 'Closed Won' && c.pipeline_stage !== 'Closed Lost') {
+    // PT Pack expiry: 3 sessioni o 14 giorni dall'acquisizione (solo se non chiuso)
+    if (
+      c.lead_source === 'PT Pack 99€' &&
+      c.pipeline_stage !== 'Closed Won' &&
+      c.pipeline_stage !== 'Closed Lost'
+    ) {
       const sessions = c.pt_pack_sessions_used || 0;
       if (sessions >= 3 || leadAge >= 14) {
         tasks.push({
@@ -76,7 +82,7 @@ export const TaskQueue = () => {
       }
     }
 
-    // New lead waiting
+    // Nuovo lead in attesa di qualifica
     if (c.pipeline_stage === 'Lead Acquired' && stageDays >= 1) {
       tasks.push({
         icon: <Clock className="h-4 w-4" />, tone: 'muted', priority: 3,

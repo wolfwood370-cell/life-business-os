@@ -2,6 +2,9 @@ import { useMemo, useState, ReactNode } from 'react';
 import { Client, FIXED_MONTHLY_COST } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
+// Re-export for back-compat with existing imports
+export { useCrm, daysSince } from './useCrm';
+
 const daysAgo = (n: number) => {
   const d = new Date();
   d.setDate(d.getDate() - n);
