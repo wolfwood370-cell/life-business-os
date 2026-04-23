@@ -142,6 +142,39 @@ const ClientDetail = () => {
     toast.success('Profilo aggiornato');
   };
 
+  const handleRegisterPayment = async () => {
+    const value = Number(payAmount);
+    if (!payAmount || isNaN(value) || value <= 0) {
+      toast.error('Inserisci un importo valido');
+      return;
+    }
+    setPaySubmitting(true);
+    try {
+      await addTransaction({
+        client_id: client!.id,
+        amount: value,
+        payment_type: payType,
+        payment_method: payMethod,
+        installments_count: payType === 'A Rate' ? payInstallments : 1,
+        payment_date: payDate ? new Date(payDate).toISOString() : undefined,
+      });
+      const perInstallment = payType === 'A Rate' ? value / payInstallments : value;
+      toast.success(
+        payType === 'A Rate'
+          ? `Registrato: ${payInstallments} rate da ${formatEuro(perInstallment)} (${payMethod})`
+          : `Pagamento di ${formatEuro(value)} registrato (${payMethod})`
+      );
+      setPayAmount('');
+      setPayType('Unica Soluzione');
+      setPayInstallments(2);
+      setPayDate(todayIso());
+    } catch {
+      toast.error('Errore nel salvataggio del pagamento');
+    } finally {
+      setPaySubmitting(false);
+    }
+  };
+
   const handleSourceChange = (s: LeadSource) => {
     updateClient(client!.id, { lead_source: s });
     toast.success(`Fonte aggiornata: ${leadSourceLabel[s]}`);
