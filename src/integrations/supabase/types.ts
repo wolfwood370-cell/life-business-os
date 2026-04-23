@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           email: string | null
           first_name: string | null
+          gdpr_consent: boolean
           gender: string | null
           gym_expiry_date: string | null
           gym_signup_date: string | null
@@ -47,6 +48,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string | null
+          gdpr_consent?: boolean
           gender?: string | null
           gym_expiry_date?: string | null
           gym_signup_date?: string | null
@@ -73,6 +75,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string | null
+          gdpr_consent?: boolean
           gender?: string | null
           gym_expiry_date?: string | null
           gym_signup_date?: string | null

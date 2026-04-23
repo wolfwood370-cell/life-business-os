@@ -1,0 +1,1 @@
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS gdpr_consent boolean NOT NULL DEFAULT false;
