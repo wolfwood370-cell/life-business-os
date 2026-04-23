@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Pipeline from "./pages/Pipeline";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
+import SalesCoach from "./pages/SalesCoach";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
               <Route path="/pipeline" element={<Pipeline />} />
               <Route path="/clients" element={<Clients />} />
               <Route path="/clients/:id" element={<ClientDetail />} />
+              <Route path="/coach" element={<SalesCoach />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, KanbanSquare, Users, Plus } from 'lucide-react';
+import { Home, KanbanSquare, Users, Plus, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -10,6 +10,7 @@ const items = [
   { to: '/', label: 'Dashboard', icon: Home },
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/clients', label: 'Clienti', icon: Users },
+  { to: '/coach', label: 'Coach', icon: BarChart3 },
 ];
 
 export const BottomNav = ({ onFabClick }: Props) => {
