@@ -13,6 +13,7 @@ import Pipeline from "./pages/Pipeline";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import SalesCoach from "./pages/SalesCoach";
+import FinancialOS from "./pages/FinancialOS";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound.tsx";
@@ -37,6 +38,7 @@ const App = () => (
                   <Route path="/clients" element={<Clients />} />
                   <Route path="/clients/:id" element={<ClientDetail />} />
                   <Route path="/coach" element={<SalesCoach />} />
+                  <Route path="/finance" element={<FinancialOS />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

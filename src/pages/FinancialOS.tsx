@@ -1,0 +1,476 @@
+import { useMemo, useState } from 'react';
+import { useCrm } from '@/store/useCrm';
+import { formatEuro, FIXED_MONTHLY_COST, TAX_RATE, PersonalExpense, LifeGoal } from '@/types/crm';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles } from 'lucide-react';
+import { PrivacyMask } from '@/components/crm/PrivacyMask';
+import { toast } from 'sonner';
+
+const EXPENSE_CATEGORIES = ['Casa', 'Bollette', 'Trasporti', 'Spesa', 'Tempo Libero', 'Abbonamenti', 'Salute', 'Altro'] as const;
+
+interface ExpenseFormState {
+  id?: string;
+  name: string;
+  amount: string;
+  is_recurring: boolean;
+  category: string;
+}
+
+const emptyExpense = (): ExpenseFormState => ({
+  name: '', amount: '', is_recurring: true, category: 'Altro',
+});
+
+interface GoalFormState {
+  id?: string;
+  title: string;
+  total_target_amount: string;
+  current_savings: string;
+  deadline: string;
+  is_active: boolean;
+}
+
+const emptyGoal = (): GoalFormState => ({
+  title: '', total_target_amount: '', current_savings: '0',
+  deadline: '', is_active: true,
+});
+
+const FinancialOS = () => {
+  const {
+    personalExpenses, lifeGoals, dynamicTarget,
+    addPersonalExpense, updatePersonalExpense, deletePersonalExpense,
+    addLifeGoal, updateLifeGoal, deleteLifeGoal,
+  } = useCrm();
+
+  const [expenseOpen, setExpenseOpen] = useState(false);
+  const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(emptyExpense());
+  const [goalOpen, setGoalOpen] = useState(false);
+  const [goalForm, setGoalForm] = useState<GoalFormState>(emptyGoal());
+
+  const activeGoal = useMemo(() => lifeGoals.find(g => g.is_active), [lifeGoals]);
+  const goalProgress = activeGoal
+    ? Math.min(100, (activeGoal.current_savings / Math.max(1, activeGoal.total_target_amount)) * 100)
+    : 0;
+
+  const openNewExpense = () => { setExpenseForm(emptyExpense()); setExpenseOpen(true); };
+  const openEditExpense = (e: PersonalExpense) => {
+    setExpenseForm({
+      id: e.id, name: e.name, amount: String(e.amount),
+      is_recurring: e.is_recurring, category: e.category,
+    });
+    setExpenseOpen(true);
+  };
+  const submitExpense = async () => {
+    const amount = Number(expenseForm.amount.replace(',', '.'));
+    if (!expenseForm.name.trim() || !Number.isFinite(amount) || amount < 0) {
+      toast.error('Inserisci nome e importo validi');
+      return;
+    }
+    try {
+      if (expenseForm.id) {
+        await updatePersonalExpense(expenseForm.id, {
+          name: expenseForm.name.trim(),
+          amount,
+          is_recurring: expenseForm.is_recurring,
+          category: expenseForm.category,
+        });
+        toast.success('Spesa aggiornata');
+      } else {
+        await addPersonalExpense({
+          name: expenseForm.name.trim(),
+          amount,
+          is_recurring: expenseForm.is_recurring,
+          category: expenseForm.category,
+        });
+        toast.success('Spesa aggiunta');
+      }
+      setExpenseOpen(false);
+    } catch {
+      toast.error('Errore durante il salvataggio');
+    }
+  };
+
+  const openNewGoal = () => { setGoalForm(emptyGoal()); setGoalOpen(true); };
+  const openEditGoal = (g: LifeGoal) => {
+    setGoalForm({
+      id: g.id, title: g.title,
+      total_target_amount: String(g.total_target_amount),
+      current_savings: String(g.current_savings),
+      deadline: g.deadline,
+      is_active: g.is_active,
+    });
+    setGoalOpen(true);
+  };
+  const submitGoal = async () => {
+    const target = Number(goalForm.total_target_amount.replace(',', '.'));
+    const savings = Number(goalForm.current_savings.replace(',', '.'));
+    if (!goalForm.title.trim() || !goalForm.deadline || !Number.isFinite(target) || target <= 0) {
+      toast.error('Compila titolo, importo e scadenza');
+      return;
+    }
+    try {
+      if (goalForm.id) {
+        await updateLifeGoal(goalForm.id, {
+          title: goalForm.title.trim(),
+          total_target_amount: target,
+          current_savings: Number.isFinite(savings) ? savings : 0,
+          deadline: goalForm.deadline,
+          is_active: goalForm.is_active,
+        });
+        toast.success('Obiettivo aggiornato');
+      } else {
+        await addLifeGoal({
+          title: goalForm.title.trim(),
+          total_target_amount: target,
+          current_savings: Number.isFinite(savings) ? savings : 0,
+          deadline: goalForm.deadline,
+          is_active: goalForm.is_active,
+        });
+        toast.success('Obiettivo creato');
+      }
+      setGoalOpen(false);
+    } catch {
+      toast.error('Errore durante il salvataggio');
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    try { await deletePersonalExpense(id); toast.success('Spesa eliminata'); }
+    catch { toast.error('Errore durante l\'eliminazione'); }
+  };
+  const handleDeleteGoal = async (id: string) => {
+    try { await deleteLifeGoal(id); toast.success('Obiettivo eliminato'); }
+    catch { toast.error('Errore durante l\'eliminazione'); }
+  };
+
+  return (
+    <div className="px-4 md:px-0 pt-6 pb-24 md:pb-8 space-y-6 animate-fade-in">
+      <header>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Life · Finance OS</p>
+        <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight text-foreground">Target Dinamico</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Calcola il fatturato lordo che devi generare ogni mese per coprire affitto, tasse, spese personali e obiettivi di vita.
+        </p>
+      </header>
+
+      {/* Visual Target Card */}
+      <div className="relative overflow-hidden rounded-3xl gradient-card border border-primary/30 p-6 shadow-card">
+        <div className="absolute inset-0 gradient-emerald-glow pointer-events-none" />
+        <div className="relative">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Fatturato Lordo Mensile da Generare</p>
+          </div>
+          <p className="mt-2 text-5xl font-bold tracking-tight text-foreground">
+            <PrivacyMask>{formatEuro(dynamicTarget.dynamicGrossTarget)}</PrivacyMask>
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Per ottenere <PrivacyMask>{formatEuro(dynamicTarget.totalNetNeeded)}</PrivacyMask> netti dopo {Math.round(TAX_RATE * 100)}% tasse + {formatEuro(FIXED_MONTHLY_COST)} affitto.
+          </p>
+
+          <div className="mt-5 grid grid-cols-3 gap-3">
+            <div className="rounded-xl bg-card/60 border border-border p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spese Ricorrenti</p>
+              <p className="mt-1 text-lg font-bold text-foreground">
+                <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringExpenses)}</PrivacyMask>
+              </p>
+            </div>
+            <div className="rounded-xl bg-card/60 border border-border p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Risparmio Obiettivo</p>
+              <p className="mt-1 text-lg font-bold text-foreground">
+                <PrivacyMask>{formatEuro(dynamicTarget.monthlyGoalSaving)}</PrivacyMask>
+              </p>
+            </div>
+            <div className="rounded-xl bg-card/60 border border-border p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Affitto</p>
+              <p className="mt-1 text-lg font-bold text-foreground">{formatEuro(FIXED_MONTHLY_COST)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Life Goal */}
+      <section className="rounded-3xl border border-border bg-card p-5 shadow-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Target className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Obiettivo di Vita</h2>
+          </div>
+          <Button size="sm" variant="outline" onClick={openNewGoal} className="rounded-xl">
+            <Plus className="h-4 w-4 mr-1" />
+            Nuovo
+          </Button>
+        </div>
+
+        {activeGoal ? (
+          <div className="mt-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xl font-bold text-foreground">{activeGoal.title}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Scadenza: {new Date(activeGoal.deadline).toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {' · '}
+                  {dynamicTarget.monthsUntilDeadline} mesi rimanenti
+                </p>
+              </div>
+              <div className="flex gap-1">
+                <Button size="icon" variant="ghost" onClick={() => openEditGoal(activeGoal)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button size="icon" variant="ghost" onClick={() => handleDeleteGoal(activeGoal.id)}>
+                  <Trash2 className="h-4 w-4 text-destructive" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <div className="flex items-baseline justify-between text-xs">
+                <span className="text-muted-foreground">Progresso</span>
+                <span className="font-bold text-foreground">
+                  <PrivacyMask>{formatEuro(activeGoal.current_savings)}</PrivacyMask> / <PrivacyMask>{formatEuro(activeGoal.total_target_amount)}</PrivacyMask>
+                </span>
+              </div>
+              <div className="h-3 w-full rounded-full bg-secondary overflow-hidden">
+                <div
+                  className="h-full gradient-primary transition-smooth"
+                  style={{ width: `${goalProgress}%` }}
+                />
+              </div>
+              <p className="text-xs text-primary font-semibold">
+                Devi risparmiare <PrivacyMask>{formatEuro(dynamicTarget.monthlyGoalSaving)}</PrivacyMask>/mese
+              </p>
+            </div>
+          </div>
+        ) : (
+          <p className="mt-4 text-sm text-muted-foreground">Nessun obiettivo attivo. Crea il tuo primo obiettivo (es. "Trasferimento a Tokyo") per attivare il calcolo dinamico.</p>
+        )}
+
+        {/* Inactive goals */}
+        {lifeGoals.filter(g => !g.is_active).length > 0 && (
+          <div className="mt-5 pt-4 border-t border-border space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Archiviati</p>
+            {lifeGoals.filter(g => !g.is_active).map(g => (
+              <div key={g.id} className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{g.title}</span>
+                <div className="flex gap-1">
+                  <Button size="sm" variant="ghost" onClick={() => openEditGoal(g)}>Riattiva</Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDeleteGoal(g.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Personal Expenses */}
+      <section className="rounded-3xl border border-border bg-card p-5 shadow-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Wallet className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Spese Personali</h2>
+          </div>
+          <Button size="sm" variant="outline" onClick={openNewExpense} className="rounded-xl">
+            <Plus className="h-4 w-4 mr-1" />
+            Aggiungi
+          </Button>
+        </div>
+
+        <div className="mt-4 flex items-baseline justify-between">
+          <p className="text-xs text-muted-foreground">Totale ricorrenti / mese</p>
+          <p className="text-2xl font-bold text-foreground">
+            <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringExpenses)}</PrivacyMask>
+          </p>
+        </div>
+
+        {personalExpenses.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">Aggiungi le tue spese fisse (Netflix, affitto, abbonamenti...) per calcolare il target reale.</p>
+        ) : (
+          <ul className="mt-4 divide-y divide-border">
+            {personalExpenses.map(e => (
+              <li key={e.id} className="py-3 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-foreground truncate">{e.name}</p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {e.category} · {e.is_recurring ? 'Ricorrente' : 'Una tantum'}
+                  </p>
+                </div>
+                <p className={`text-sm font-bold tabular-nums ${e.is_recurring ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  <PrivacyMask>{formatEuro(e.amount)}</PrivacyMask>
+                </p>
+                <div className="flex gap-1">
+                  <Button size="icon" variant="ghost" onClick={() => openEditExpense(e)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      {/* Math breakdown */}
+      <section className="rounded-3xl border border-dashed border-border bg-secondary/40 p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Come si calcola</h2>
+        </div>
+        <div className="space-y-1.5 text-xs text-muted-foreground font-mono">
+          <p>Spese ricorrenti: <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringExpenses)}</PrivacyMask></p>
+          <p>+ Risparmio obiettivo: <PrivacyMask>{formatEuro(dynamicTarget.monthlyGoalSaving)}</PrivacyMask></p>
+          <p>= Netto necessario: <PrivacyMask>{formatEuro(dynamicTarget.totalNetNeeded)}</PrivacyMask></p>
+          <p>+ Affitto: {formatEuro(FIXED_MONTHLY_COST)}</p>
+          <p>÷ (1 − {Math.round(TAX_RATE * 100)}% tasse)</p>
+          <p className="text-foreground font-bold pt-2 border-t border-border">
+            = Lordo da fatturare: <PrivacyMask>{formatEuro(dynamicTarget.dynamicGrossTarget)}</PrivacyMask>
+          </p>
+        </div>
+      </section>
+
+      {/* Expense Dialog */}
+      <Dialog open={expenseOpen} onOpenChange={setExpenseOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{expenseForm.id ? 'Modifica spesa' : 'Nuova spesa personale'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="exp-name">Nome</Label>
+              <Input
+                id="exp-name"
+                placeholder="es. Netflix, Affitto casa"
+                value={expenseForm.name}
+                onChange={e => setExpenseForm(s => ({ ...s, name: e.target.value }))}
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="exp-amount">Importo (€)</Label>
+                <Input
+                  id="exp-amount"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={expenseForm.amount}
+                  onChange={e => setExpenseForm(s => ({ ...s, amount: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="exp-cat">Categoria</Label>
+                <Select
+                  value={expenseForm.category}
+                  onValueChange={v => setExpenseForm(s => ({ ...s, category: v }))}
+                >
+                  <SelectTrigger id="exp-cat"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {EXPENSE_CATEGORIES.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border p-3">
+              <div>
+                <p className="text-sm font-semibold">Ricorrente mensile</p>
+                <p className="text-xs text-muted-foreground">Inclusa nel target dinamico</p>
+              </div>
+              <Switch
+                checked={expenseForm.is_recurring}
+                onCheckedChange={v => setExpenseForm(s => ({ ...s, is_recurring: v }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setExpenseOpen(false)}>Annulla</Button>
+            <Button onClick={submitExpense} className="gradient-primary text-primary-foreground">
+              Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Goal Dialog */}
+      <Dialog open={goalOpen} onOpenChange={setGoalOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{goalForm.id ? 'Modifica obiettivo' : 'Nuovo obiettivo di vita'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="goal-title">Titolo</Label>
+              <Input
+                id="goal-title"
+                placeholder="es. Trasferimento a Tokyo"
+                value={goalForm.title}
+                onChange={e => setGoalForm(s => ({ ...s, title: e.target.value }))}
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="goal-target">Importo totale (€)</Label>
+                <Input
+                  id="goal-target"
+                  inputMode="decimal"
+                  placeholder="20000"
+                  value={goalForm.total_target_amount}
+                  onChange={e => setGoalForm(s => ({ ...s, total_target_amount: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="goal-savings">Già risparmiati (€)</Label>
+                <Input
+                  id="goal-savings"
+                  inputMode="decimal"
+                  placeholder="0"
+                  value={goalForm.current_savings}
+                  onChange={e => setGoalForm(s => ({ ...s, current_savings: e.target.value }))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="goal-deadline">Scadenza</Label>
+              <Input
+                id="goal-deadline"
+                type="date"
+                value={goalForm.deadline}
+                onChange={e => setGoalForm(s => ({ ...s, deadline: e.target.value }))}
+              />
+            </div>
+            <div className="flex items-center justify-between rounded-xl border border-border p-3">
+              <div>
+                <p className="text-sm font-semibold">Obiettivo attivo</p>
+                <p className="text-xs text-muted-foreground">Solo uno alla volta entra nel target</p>
+              </div>
+              <Switch
+                checked={goalForm.is_active}
+                onCheckedChange={v => setGoalForm(s => ({ ...s, is_active: v }))}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setGoalOpen(false)}>Annulla</Button>
+            <Button onClick={submitGoal} className="gradient-primary text-primary-foreground">
+              Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default FinancialOS;

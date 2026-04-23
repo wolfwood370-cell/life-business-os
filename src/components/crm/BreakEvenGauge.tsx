@@ -32,7 +32,7 @@ export const BreakEvenGauge = () => {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Break-Even Mensile</p>
-          <p className="text-[11px] text-muted-foreground">Affitto fisso <PrivacyMask>{formatEuro(fixed_monthly_cost)}</PrivacyMask></p>
+          <p className="text-[11px] text-muted-foreground">Affitto fisso <PrivacyMask>{formatEuro(fixed_monthly_cost)}</PrivacyMask> · Target dinamico <PrivacyMask>{formatEuro(monthly_target)}</PrivacyMask></p>
         </div>
         <div
           className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${

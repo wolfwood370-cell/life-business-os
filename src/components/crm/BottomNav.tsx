@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, KanbanSquare, Users, Plus, BarChart3 } from 'lucide-react';
+import { Home, KanbanSquare, Users, Plus, BarChart3, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
 
@@ -10,8 +10,8 @@ interface Props {
 const items = [
   { to: '/', label: 'Dashboard', icon: Home },
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
+  { to: '/finance', label: 'Finance', icon: Target },
   { to: '/clients', label: 'Clienti', icon: Users },
-  { to: '/coach', label: 'Coach', icon: BarChart3 },
 ];
 
 export const BottomNav = ({ onFabClick }: Props) => {

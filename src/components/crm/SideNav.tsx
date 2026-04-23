@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3, LogOut } from 'lucide-react';
+import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3, LogOut, Target } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
@@ -14,6 +14,7 @@ const items = [
   { to: '/', label: 'Dashboard', icon: Home },
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/clients', label: 'Clienti', icon: Users },
+  { to: '/finance', label: 'Finance OS', icon: Target },
   { to: '/coach', label: 'Sales Coach', icon: BarChart3 },
 ];
 
