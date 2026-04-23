@@ -2,17 +2,17 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCrm, daysSince } from '@/store/useCrm';
 import {
   ChevronLeft, Heart, Shield, Eye, Phone, Euro, CalendarClock,
-  Sparkles, Activity, Plus, Trash2, MessageSquare, AlertTriangle, TrendingUp, Receipt,
+  Sparkles, Activity, Plus, Trash2, MessageSquare, AlertTriangle, TrendingUp, Receipt, Loader2, CreditCard,
 } from 'lucide-react';
 import { SourceBadge } from '@/components/crm/SourceBadge';
 import { ChurnBadge, LeadScoreBadge } from '@/components/crm/ScoreBadges';
 import { AiFollowupGenerator } from '@/components/crm/AiFollowupGenerator';
 import { RoiChart } from '@/components/crm/RoiChart';
 import { ClientDetailSkeleton } from '@/components/crm/skeletons';
-import { PaymentModal } from '@/components/crm/PaymentModal';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -20,6 +20,7 @@ import {
   CHURN_RISKS, ChurnRisk, RoiMetric,
   LEAD_SOURCES, LeadSource, leadSourceLabel,
   GENDERS, Gender, genderLabel,
+  PaymentType, PaymentMethod, PAYMENT_METHODS,
   formatEuro,
 } from '@/types/crm';
 import { Button } from '@/components/ui/button';
@@ -28,12 +29,22 @@ import { ShieldCheck } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions } = useCrm();
+  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, addTransaction } = useCrm();
   const client = clients.find(c => c.id === id);
-  const [paymentOpen, setPaymentOpen] = useState(false);
+
+  // Inline payment form state
+  const [payAmount, setPayAmount] = useState('');
+  const [payType, setPayType] = useState<PaymentType>('Unica Soluzione');
+  const [payInstallments, setPayInstallments] = useState(2);
+  const [payMethod, setPayMethod] = useState<PaymentMethod>('Stripe');
+  const [payDate, setPayDate] = useState<string>(todayIso());
+  const [paySubmitting, setPaySubmitting] = useState(false);
+
 
   const clientTransactions = useMemo(
     () => transactions.filter(t => t.client_id === id).sort((a, b) =>
