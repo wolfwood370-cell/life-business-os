@@ -4,63 +4,63 @@
 
 @layer base {
   :root {
-    /* Dark gym CRM theme — slate + emerald */
-    --background: 222 30% 7%;
-    --foreground: 210 30% 96%;
+    /* Light theme — clean white + slate + emerald/blue accents */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
-    --card: 222 25% 11%;
-    --card-foreground: 210 30% 96%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
 
-    --popover: 222 28% 9%;
-    --popover-foreground: 210 30% 96%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
 
-    --primary: 152 76% 44%;
-    --primary-foreground: 222 47% 6%;
-    --primary-glow: 152 85% 55%;
+    --primary: 152 70% 38%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 152 75% 50%;
 
-    --secondary: 222 20% 16%;
-    --secondary-foreground: 210 30% 96%;
+    --secondary: 210 30% 95%;
+    --secondary-foreground: 222 47% 14%;
 
-    --muted: 222 18% 14%;
-    --muted-foreground: 215 16% 62%;
+    --muted: 210 25% 94%;
+    --muted-foreground: 215 16% 42%;
 
-    --accent: 152 60% 22%;
-    --accent-foreground: 152 90% 80%;
+    --accent: 217 91% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 55%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 75% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --warning: 38 92% 55%;
-    --warning-foreground: 222 47% 6%;
+    --warning: 32 95% 50%;
+    --warning-foreground: 0 0% 100%;
 
-    --border: 222 20% 18%;
-    --input: 222 20% 16%;
-    --ring: 152 76% 44%;
+    --border: 215 25% 90%;
+    --input: 215 25% 90%;
+    --ring: 152 70% 38%;
 
     --radius: 1rem;
 
     /* Lead source colors */
-    --source-gym: 199 89% 55%;
-    --source-pack: 152 76% 44%;
-    --source-floor: 38 92% 55%;
-    --source-referral: 280 70% 60%;
-    --source-social: 330 75% 60%;
+    --source-gym: 217 91% 55%;
+    --source-pack: 152 70% 38%;
+    --source-floor: 32 95% 50%;
+    --source-referral: 268 75% 58%;
+    --source-social: 330 75% 55%;
 
     /* Pipeline stage colors */
-    --stage-lead: 215 20% 55%;
-    --stage-nurture: 199 89% 55%;
-    --stage-trial: 38 92% 55%;
-    --stage-pitch: 280 70% 60%;
-    --stage-won: 152 76% 44%;
-    --stage-lost: 0 72% 55%;
+    --stage-lead: 215 18% 45%;
+    --stage-nurture: 217 91% 55%;
+    --stage-trial: 32 95% 50%;
+    --stage-pitch: 268 75% 58%;
+    --stage-won: 152 70% 38%;
+    --stage-lost: 0 70% 55%;
 
     --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
-    --gradient-card: linear-gradient(180deg, hsl(222 25% 13%), hsl(222 25% 10%));
-    --gradient-emerald-glow: radial-gradient(circle at top, hsl(152 76% 44% / 0.18), transparent 60%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 25% 97%));
+    --gradient-emerald-glow: radial-gradient(circle at top, hsl(152 70% 50% / 0.10), transparent 65%);
 
-    --shadow-glow: 0 10px 40px -10px hsl(var(--primary) / 0.45);
-    --shadow-card: 0 4px 20px -4px hsl(222 80% 2% / 0.5);
-    --shadow-fab: 0 12px 30px -6px hsl(var(--primary) / 0.6);
+    --shadow-glow: 0 10px 30px -8px hsl(var(--primary) / 0.35);
+    --shadow-card: 0 1px 3px hsl(215 25% 20% / 0.04), 0 8px 24px -8px hsl(215 25% 20% / 0.08);
+    --shadow-fab: 0 12px 28px -6px hsl(var(--primary) / 0.45);
 
     --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }

@@ -46,7 +46,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg rounded-3xl border-border bg-card p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-2xl">Aggiungi contatto</DialogTitle>
+          <DialogTitle className="text-2xl">Aggiungi Lead</DialogTitle>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
             <CalendarDays className="h-3.5 w-3.5" />
             <span>Oggi · {todayLabel()}</span>
@@ -106,7 +106,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
           </div>
 
           <Button onClick={handleSave} className="w-full h-14 rounded-xl text-base font-semibold gradient-primary text-primary-foreground shadow-glow">
-            Salva contatto
+            Salva Lead
           </Button>
         </div>
       </DialogContent>
