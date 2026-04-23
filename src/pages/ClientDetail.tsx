@@ -38,10 +38,11 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, deleteClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, addTransaction, stopRecurringPayment, markTransactionPaid } = useCrm();
+  const { clients, updateClient, deleteClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, services, addTransaction, stopRecurringPayment, markTransactionPaid } = useCrm();
   const client = clients.find(c => c.id === id);
 
   // Inline payment form state
+  const [payServiceId, setPayServiceId] = useState<string>('');
   const [payAmount, setPayAmount] = useState('');
   const [payType, setPayType] = useState<PaymentType>('Unica Soluzione');
   const [payInstallments, setPayInstallments] = useState(2);
