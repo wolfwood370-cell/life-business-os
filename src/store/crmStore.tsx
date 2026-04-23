@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Client, FIXED_MONTHLY_COST, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
-  ChurnRisk, Gender, Transaction, PaymentType,
+  ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
