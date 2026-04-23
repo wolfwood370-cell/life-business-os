@@ -5,7 +5,8 @@ import {
   Client, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
-  rentForMonth, rentYtd,
+  rentForMonth, rentYtd, FIXED_MONTHLY_COST,
+  PersonalExpense, LifeGoal, DynamicTarget,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
@@ -164,6 +165,50 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         name: r.name,
         price: Number(r.price),
         sort_order: r.sort_order,
+        duration_months: Number(r.duration_months ?? 1),
+      }));
+    },
+  });
+
+  const { data: personalExpenses = [] } = useQuery({
+    queryKey: ['crm', 'personal_expenses'],
+    queryFn: async (): Promise<PersonalExpense[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('personal_expenses')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map((r) => ({
+        id: r.id,
+        name: r.name,
+        amount: Number(r.amount),
+        is_recurring: Boolean(r.is_recurring),
+        category: r.category,
+        created_at: r.created_at,
+      }));
+    },
+  });
+
+  const { data: lifeGoals = [] } = useQuery({
+    queryKey: ['crm', 'life_goals'],
+    queryFn: async (): Promise<LifeGoal[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('life_goals')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map((r) => ({
+        id: r.id,
+        title: r.title,
+        total_target_amount: Number(r.total_target_amount),
+        current_savings: Number(r.current_savings ?? 0),
+        deadline: r.deadline,
+        is_active: Boolean(r.is_active),
+        created_at: r.created_at,
       }));
     },
   });
