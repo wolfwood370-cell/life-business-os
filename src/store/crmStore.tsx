@@ -135,7 +135,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         if (dbPatch[k] === undefined) dbPatch[k] = null;
       });
       if (Object.keys(dbPatch).length > 0) {
-        const { error } = await supabase.from('clients').update(dbPatch).eq('id', id);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error } = await supabase.from('clients').update(dbPatch as any).eq('id', id);
         if (error) throw error;
       }
     },
