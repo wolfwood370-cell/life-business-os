@@ -2,7 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useCrm, daysSince } from '@/store/useCrm';
 import {
   ChevronLeft, Heart, Shield, Eye, Phone, Euro, CalendarClock,
-  Sparkles, Activity, Plus, Trash2, MessageSquare, AlertTriangle, TrendingUp, Receipt, Loader2, CreditCard,
+  Sparkles, Activity, Plus, Trash2, MessageSquare, AlertTriangle, TrendingUp, Receipt, Loader2, CreditCard, Repeat, Ban,
 } from 'lucide-react';
 import { SourceBadge } from '@/components/crm/SourceBadge';
 import { ChurnBadge, LeadScoreBadge } from '@/components/crm/ScoreBadges';
@@ -25,6 +25,10 @@ import {
 } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { ShieldCheck } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
@@ -34,7 +38,7 @@ const todayIso = () => new Date().toISOString().slice(0, 10);
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, addTransaction } = useCrm();
+  const { clients, updateClient, deleteClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, addTransaction, stopRecurringPayment } = useCrm();
   const client = clients.find(c => c.id === id);
 
   // Inline payment form state
