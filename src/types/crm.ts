@@ -88,8 +88,10 @@ export const CHURN_RISKS: ChurnRisk[] = ['Basso', 'Medio', 'Alto'];
 export const FIXED_MONTHLY_COST = 366;
 export const TAX_RATE = 0.249; // 24.90% imposte/contributi
 
-export type PaymentType = 'Unica Soluzione' | 'A Rate';
-export const PAYMENT_TYPES: PaymentType[] = ['Unica Soluzione', 'A Rate'];
+export type PaymentType = 'Unica Soluzione' | 'A Rate' | 'Ricorrente';
+export const PAYMENT_TYPES: PaymentType[] = ['Unica Soluzione', 'A Rate', 'Ricorrente'];
+
+export const RECURRING_INTERVAL_DAYS = 28;
 
 export type PaymentMethod = 'Stripe' | 'Bonifico' | 'Contanti';
 export const PAYMENT_METHODS: PaymentMethod[] = ['Stripe', 'Bonifico', 'Contanti'];
@@ -103,6 +105,8 @@ export interface Transaction {
   installments_count: number;
   payment_date: string; // ISO
   created_at: string;
+  recurring_active?: boolean;
+  recurring_stopped_at?: string;
 }
 
 export interface FinancialSummary {
