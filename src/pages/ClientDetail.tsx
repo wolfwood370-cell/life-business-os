@@ -166,7 +166,9 @@ const ClientDetail = () => {
       toast.success(
         payType === 'A Rate'
           ? `Registrato: ${payInstallments} rate da ${formatEuro(perInstallment)} (${payMethod})`
-          : `Pagamento di ${formatEuro(value)} registrato (${payMethod})`
+          : payType === 'Ricorrente'
+            ? `Pagamento ricorrente di ${formatEuro(value)} attivato (ogni 28 giorni)`
+            : `Pagamento di ${formatEuro(value)} registrato (${payMethod})`
       );
       setPayAmount('');
       setPayType('Unica Soluzione');
@@ -176,6 +178,25 @@ const ClientDetail = () => {
       toast.error('Errore nel salvataggio del pagamento');
     } finally {
       setPaySubmitting(false);
+    }
+  };
+
+  const handleDeleteClient = async () => {
+    try {
+      await deleteClient(client!.id);
+      toast.success('Cliente eliminato');
+      navigate('/clients');
+    } catch {
+      toast.error("Errore durante l'eliminazione");
+    }
+  };
+
+  const handleStopRecurring = async (transactionId: string) => {
+    try {
+      await stopRecurringPayment(transactionId);
+      toast.success('Pagamento ricorrente interrotto');
+    } catch {
+      toast.error("Errore nell'interruzione del pagamento");
     }
   };
 
