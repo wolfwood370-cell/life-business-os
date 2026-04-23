@@ -20,6 +20,8 @@ import {
   GENDERS, Gender, genderLabel,
 } from '@/types/crm';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ShieldCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -45,6 +47,7 @@ const ClientDetail = () => {
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [gdprConsent, setGdprConsent] = useState(false);
 
   // ROI metric form
   const [metricName, setMetricName] = useState('');
@@ -69,6 +72,7 @@ const ClientDetail = () => {
       setEmail(client.email ?? '');
       setFirstName(client.first_name ?? '');
       setLastName(client.last_name ?? '');
+      setGdprConsent(!!client.gdpr_consent);
     }
   }, [client]);
 
@@ -107,6 +111,7 @@ const ClientDetail = () => {
       gym_expiry_date: gymExpiry || undefined,
       phone: phone.trim() || undefined,
       email: email.trim() || undefined,
+      gdpr_consent: gdprConsent,
     });
     toast.success('Profilo aggiornato');
   };
