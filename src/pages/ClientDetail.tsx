@@ -31,8 +31,20 @@ import { toast } from 'sonner';
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading } = useCrm();
+  const { clients, updateClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions } = useCrm();
   const client = clients.find(c => c.id === id);
+  const [paymentOpen, setPaymentOpen] = useState(false);
+
+  const clientTransactions = useMemo(
+    () => transactions.filter(t => t.client_id === id).sort((a, b) =>
+      new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
+    ),
+    [transactions, id]
+  );
+  const totalPaid = useMemo(
+    () => clientTransactions.reduce((s, t) => s + t.amount, 0),
+    [clientTransactions]
+  );
 
   const [motivator, setMotivator] = useState('');
   const [stated, setStated] = useState('');
