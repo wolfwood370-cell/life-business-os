@@ -6,6 +6,7 @@ import { formatEuro } from '@/types/crm';
 type Priority = 'critical' | 'high' | 'medium' | 'low';
 
 interface Task {
+  id: string;
   icon: React.ReactNode;
   title: string;
   subtitle: string;
@@ -61,6 +62,7 @@ export const TaskQueue = () => {
 
     if (diffDays < 0) {
       tasks.push({
+        id: `tx-overdue-${t.id}`,
         icon: <AlertTriangle className="h-4 w-4" />,
         priority: 'critical',
         title: `RATA SCADUTA: ${client.name} è in ritardo col pagamento`,
@@ -69,6 +71,7 @@ export const TaskQueue = () => {
       });
     } else if (diffDays <= 3) {
       tasks.push({
+        id: `tx-imminent-${t.id}`,
         icon: <AlarmClock className="h-4 w-4" />,
         priority: 'high',
         title: `Incasso imminente: tra ${diffDays}g scade la rata di ${client.name}`,
@@ -77,6 +80,7 @@ export const TaskQueue = () => {
       });
     } else if (diffDays === 7) {
       tasks.push({
+        id: `tx-7d-${t.id}`,
         icon: <Receipt className="h-4 w-4" />,
         priority: 'medium',
         title: `Tra 7 giorni scade la rata di ${client.name}`,
@@ -94,6 +98,7 @@ export const TaskQueue = () => {
     // Churn Prevention — Cliente Attivo con churn_risk Alto
     if (c.pipeline_stage === 'Closed Won' && c.churn_risk === 'Alto') {
       tasks.push({
+        id: `churn-${c.id}`,
         icon: <AlertTriangle className="h-4 w-4" />,
         priority: 'critical',
         title: `Rischio Abbandono Alto: Contattare Subito`,
@@ -110,6 +115,7 @@ export const TaskQueue = () => {
       leadAge >= 14
     ) {
       tasks.push({
+        id: `ptpack-${c.id}`,
         icon: <Flame className="h-4 w-4" />,
         priority: 'high',
         title: `Pitch di Vendita Finale - Fine PT Pack`,
@@ -121,6 +127,7 @@ export const TaskQueue = () => {
     // 14-Day Nurture — In Trattativa, last_contacted_at = 1, 3 o 7 giorni
     if (c.pipeline_stage === 'Nurturing' && sinceContact !== null && [1, 3, 7].includes(sinceContact)) {
       tasks.push({
+        id: `nurture-${c.id}-${sinceContact}`,
         icon: <Zap className="h-4 w-4" />,
         priority: 'medium',
         title: `Invia Follow-up Strategico`,
@@ -132,6 +139,7 @@ export const TaskQueue = () => {
     // ROI & Retention — Cliente Attivo, stageDays = 45 o 80
     if (c.pipeline_stage === 'Closed Won' && (stageDays === 45 || stageDays === 80)) {
       tasks.push({
+        id: `roi-${c.id}-${stageDays}`,
         icon: <Trophy className="h-4 w-4" />,
         priority: 'medium',
         title: `Fissare Review Risultati (Dimostrazione ROI)`,
@@ -143,6 +151,7 @@ export const TaskQueue = () => {
     // Pitch Presented in attesa di chiusura
     if (c.pipeline_stage === 'Pitch Presented' && stageDays >= 2) {
       tasks.push({
+        id: `pitch-${c.id}`,
         icon: <Target className="h-4 w-4" />,
         priority: stageDays >= 5 ? 'high' : 'medium',
         title: `Chiudere la Proposta`,
@@ -154,6 +163,7 @@ export const TaskQueue = () => {
     // Nuovo lead da qualificare
     if (c.pipeline_stage === 'Lead Acquired' && stageDays >= 1) {
       tasks.push({
+        id: `qualify-${c.id}`,
         icon: <Clock className="h-4 w-4" />,
         priority: 'low',
         title: `Qualificare il nuovo contatto`,
@@ -175,11 +185,11 @@ export const TaskQueue = () => {
 
   return (
     <div className="space-y-2">
-      {sorted.map((t, i) => {
+      {sorted.map((t) => {
         const s = priorityStyles[t.priority];
         return (
           <button
-            key={i}
+            key={t.id}
             onClick={() => navigate(`/clients/${t.clientId}`)}
             className={`w-full text-left rounded-2xl border p-4 transition-smooth active:scale-[0.99] shadow-card ${s.wrap}`}
           >
