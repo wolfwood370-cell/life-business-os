@@ -56,7 +56,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       setStage('Lead Acquired');
       setGdprConsent(false);
       onOpenChange(false);
-    } catch (e) {
+    } catch {
       toast.error('Errore nel salvataggio');
     }
   };

@@ -42,9 +42,20 @@ const Clients = () => {
   const [sort, setSort] = useState<SortKey>('name_asc');
 
   const filtered = useMemo(() => {
+    const needle = q.trim().toLowerCase();
     const list = clients
       .filter(c => filter === 'All' || c.pipeline_stage === filter)
-      .filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
+      .filter(c => {
+        if (!needle) return true;
+        const hay = [
+          c.name,
+          c.first_name ?? '',
+          c.last_name ?? '',
+          c.email ?? '',
+          c.phone ?? '',
+        ].join(' ').toLowerCase();
+        return hay.includes(needle);
+      });
 
     const sorted = [...list].sort((a, b) => {
       const lastOf = (n: string) => {
@@ -109,6 +120,8 @@ const Clients = () => {
           if (isNaN(bv)) return -1;
           return bv - av;
         }
+        default:
+          return 0;
       }
     });
     return sorted;
