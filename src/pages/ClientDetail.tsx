@@ -831,6 +831,35 @@ const ClientDetail = () => {
         >
           Salva Modifiche
         </Button>
+
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 rounded-xl text-sm font-semibold border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-1.5" /> Elimina cliente
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminare {client.name}?</AlertDialogTitle>
+              <AlertDialogDescription>
+                L'operazione è irreversibile. Verranno cancellati anche pagamenti, metriche ROI e dati anagrafici associati.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteClient}
+                className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Elimina definitivamente
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
