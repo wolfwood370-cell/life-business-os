@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 type SortKey =
   | 'name_asc'
   | 'name_desc'
+  | 'lastname_asc'
+  | 'lastname_desc'
   | 'age_asc'      // giovane > vecchio (nascita più recente prima)
   | 'age_desc'     // vecchio > giovane
   | 'signup_asc'   // vecchi > recenti (iscrizione più vecchia prima)
@@ -21,6 +23,8 @@ type SortKey =
 const SORT_LABELS: Record<SortKey, string> = {
   name_asc: 'Nome (A → Z)',
   name_desc: 'Nome (Z → A)',
+  lastname_asc: 'Cognome (A → Z)',
+  lastname_desc: 'Cognome (Z → A)',
   age_asc: 'Età (giovane → vecchio)',
   age_desc: 'Età (vecchio → giovane)',
   signup_asc: 'Iscrizione (vecchi → recenti)',
@@ -43,11 +47,19 @@ const Clients = () => {
       .filter(c => c.name.toLowerCase().includes(q.toLowerCase()));
 
     const sorted = [...list].sort((a, b) => {
+      const lastOf = (n: string) => {
+        const parts = n.trim().split(/\s+/);
+        return parts.length > 1 ? parts[parts.length - 1] : parts[0] || '';
+      };
       switch (sort) {
         case 'name_asc':
           return a.name.localeCompare(b.name, 'it', { sensitivity: 'base' });
         case 'name_desc':
           return b.name.localeCompare(a.name, 'it', { sensitivity: 'base' });
+        case 'lastname_asc':
+          return (a.last_name || lastOf(a.name)).localeCompare(b.last_name || lastOf(b.name), 'it', { sensitivity: 'base' });
+        case 'lastname_desc':
+          return (b.last_name || lastOf(b.name)).localeCompare(a.last_name || lastOf(a.name), 'it', { sensitivity: 'base' });
         case 'age_asc': {
           // giovane = nato più di recente = data di nascita maggiore
           const av = ts(a.birth_date);
