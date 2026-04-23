@@ -5,7 +5,6 @@ import {
   Client, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
-  rentForMonth, rentYtd, FIXED_MONTHLY_COST,
   PersonalExpense, LifeGoal, DynamicTarget,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
@@ -522,7 +521,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const totalNetNeeded = totalRecurringExpenses + monthlyGoalSaving;
-    const dynamicGrossTarget = (totalNetNeeded + FIXED_MONTHLY_COST) / (1 - TAX_RATE);
+    const dynamicGrossTarget = totalNetNeeded / (1 - TAX_RATE);
 
     return {
       totalRecurringExpenses,
@@ -563,25 +562,23 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       if (d.getMonth() === month) gross_monthly += t.amount;
     }
 
-    const rentCurrentMonth = rentForMonth(year, month);
-    const rentYearToDate = rentYtd(year, month);
-    const net_monthly = gross_monthly - (gross_monthly * TAX_RATE) - rentCurrentMonth;
-    const net_ytd = gross_ytd - (gross_ytd * TAX_RATE) - rentYearToDate;
+    const net_monthly = gross_monthly - (gross_monthly * TAX_RATE);
+    const net_ytd = gross_ytd - (gross_ytd * TAX_RATE);
 
     return {
       gross_monthly,
       net_monthly,
       gross_ytd,
       net_ytd,
-      fixed_monthly_cost: rentCurrentMonth,
+      fixed_monthly_cost: 0,
       monthly_target: effectiveMonthlyTarget,
       current_month_number: monthNum,
     };
   }, [transactions, effectiveMonthlyTarget]);
 
   // Storico mensile a partire da Gennaio 2026 fino al mese corrente.
-  // Il NETTO sottrae per ogni mese: tasse, affitto business (se applicabile),
-  // spese una tantum nel mese, spese ricorrenti attive in quel mese.
+  // Il NETTO sottrae per ogni mese: tasse, spese una tantum nel mese,
+  // spese ricorrenti attive in quel mese.
   const monthlyBreakdown = useMemo<MonthlyBreakdown[]>(() => {
     const now = new Date();
     const endYear = now.getFullYear();
@@ -627,9 +624,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     let m = HISTORY_START_MONTH;
     while (y < endYear || (y === endYear && m <= endMonth)) {
       const gross = grossMap.get(`${y}-${m}`) ?? 0;
-      const rent = rentForMonth(y, m);
       const expenses = monthExpenses(y, m);
-      const net = gross - (gross * TAX_RATE) - rent - expenses;
+      const net = gross - (gross * TAX_RATE) - expenses;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
       months.push({ year: y, month: m, label, gross, net });
       m += 1;
