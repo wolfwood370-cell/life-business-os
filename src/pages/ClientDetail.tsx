@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { SourceBadge } from '@/components/crm/SourceBadge';
 import { ChurnBadge, LeadScoreBadge } from '@/components/crm/ScoreBadges';
+import { AiFollowupGenerator } from '@/components/crm/AiFollowupGenerator';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
@@ -285,6 +286,9 @@ const ClientDetail = () => {
                 </Select>
               </div>
             </section>
+
+            {/* AI Sales Assistant */}
+            <AiFollowupGenerator client={client} />
           </TabsContent>
 
           {/* TAB 2 — Commerciale */}
