@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Client, FIXED_MONTHLY_COST, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
+  Client, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
+  rentForMonth, rentYtd,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
@@ -390,20 +391,17 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       if (d.getMonth() === month) gross_monthly += t.amount;
     }
 
-    // Numero di mesi trascorsi dall'inizio dello storico/anno per il calcolo netto YTD
-    const monthsElapsed = year > HISTORY_START_YEAR
-      ? monthNum
-      : Math.max(1, monthNum - HISTORY_START_MONTH);
-
-    const net_monthly = gross_monthly - (gross_monthly * TAX_RATE) - FIXED_MONTHLY_COST;
-    const net_ytd = gross_ytd - (gross_ytd * TAX_RATE) - (FIXED_MONTHLY_COST * monthsElapsed);
+    const rentCurrentMonth = rentForMonth(year, month);
+    const rentYearToDate = rentYtd(year, month);
+    const net_monthly = gross_monthly - (gross_monthly * TAX_RATE) - rentCurrentMonth;
+    const net_ytd = gross_ytd - (gross_ytd * TAX_RATE) - rentYearToDate;
 
     return {
       gross_monthly,
       net_monthly,
       gross_ytd,
       net_ytd,
-      fixed_monthly_cost: FIXED_MONTHLY_COST,
+      fixed_monthly_cost: rentCurrentMonth,
       monthly_target: monthlyTarget,
       current_month_number: monthNum,
     };
@@ -433,7 +431,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     let m = HISTORY_START_MONTH;
     while (y < endYear || (y === endYear && m <= endMonth)) {
       const gross = map.get(`${y}-${m}`) ?? 0;
-      const net = gross - (gross * TAX_RATE) - FIXED_MONTHLY_COST;
+      const rent = rentForMonth(y, m);
+      const net = gross - (gross * TAX_RATE) - rent;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
       months.push({ year: y, month: m, label, gross, net });
       m += 1;
@@ -446,7 +445,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     clients,
     isLoading,
     financials: {
-      fixed_monthly_cost: FIXED_MONTHLY_COST,
+      fixed_monthly_cost: financialSummary.fixed_monthly_cost,
       current_monthly_revenue,
       monthly_target: monthlyTarget,
     },
