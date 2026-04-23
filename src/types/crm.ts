@@ -26,6 +26,8 @@ export interface RoiMetric {
 export interface Client {
   id: string;
   name: string;
+  first_name?: string;
+  last_name?: string;
   lead_source: LeadSource;
   pipeline_stage: PipelineStage;
   root_motivator: string;

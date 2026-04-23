@@ -10,6 +10,8 @@ export { useCrm, daysSince } from './useCrm';
 type ClientRow = {
   id: string;
   name: string;
+  first_name: string | null;
+  last_name: string | null;
   lead_source: string;
   pipeline_stage: string;
   root_motivator: string;
@@ -44,6 +46,8 @@ type RoiRow = {
 const mapClient = (row: ClientRow, metrics: RoiRow[]): Client => ({
   id: row.id,
   name: row.name,
+  first_name: row.first_name ?? undefined,
+  last_name: row.last_name ?? undefined,
   lead_source: row.lead_source as LeadSource,
   pipeline_stage: row.pipeline_stage as PipelineStage,
   root_motivator: row.root_motivator,
