@@ -11,7 +11,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban } from 'lucide-react';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
 import { toast } from 'sonner';
 
@@ -23,10 +23,13 @@ interface ExpenseFormState {
   amount: string;
   is_recurring: boolean;
   category: string;
+  start_date: string;   // YYYY-MM-DD
 }
 
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
 const emptyExpense = (): ExpenseFormState => ({
-  name: '', amount: '', is_recurring: true, category: 'Altro',
+  name: '', amount: '', is_recurring: true, category: 'Altro', start_date: todayIso(),
 });
 
 interface GoalFormState {
@@ -46,7 +49,7 @@ const emptyGoal = (): GoalFormState => ({
 const FinancialOS = () => {
   const {
     personalExpenses, lifeGoals, dynamicTarget,
-    addPersonalExpense, updatePersonalExpense, deletePersonalExpense,
+    addPersonalExpense, updatePersonalExpense, deletePersonalExpense, endPersonalExpense,
     addLifeGoal, updateLifeGoal, deleteLifeGoal,
   } = useCrm();
 
@@ -65,6 +68,7 @@ const FinancialOS = () => {
     setExpenseForm({
       id: e.id, name: e.name, amount: String(e.amount),
       is_recurring: e.is_recurring, category: e.category,
+      start_date: e.start_date ? e.start_date.slice(0, 10) : todayIso(),
     });
     setExpenseOpen(true);
   };
@@ -74,6 +78,11 @@ const FinancialOS = () => {
       toast.error('Inserisci nome e importo validi');
       return;
     }
+    if (!expenseForm.start_date) {
+      toast.error(expenseForm.is_recurring ? 'Seleziona il mese di inizio' : 'Seleziona la data della spesa');
+      return;
+    }
+    const startIso = new Date(expenseForm.start_date + 'T00:00:00').toISOString();
     try {
       if (expenseForm.id) {
         await updatePersonalExpense(expenseForm.id, {
@@ -81,6 +90,7 @@ const FinancialOS = () => {
           amount,
           is_recurring: expenseForm.is_recurring,
           category: expenseForm.category,
+          start_date: startIso,
         });
         toast.success('Spesa aggiornata');
       } else {
@@ -89,6 +99,7 @@ const FinancialOS = () => {
           amount,
           is_recurring: expenseForm.is_recurring,
           category: expenseForm.category,
+          start_date: startIso,
         });
         toast.success('Spesa aggiunta');
       }
@@ -145,6 +156,10 @@ const FinancialOS = () => {
   const handleDeleteExpense = async (id: string) => {
     try { await deletePersonalExpense(id); toast.success('Spesa eliminata'); }
     catch { toast.error('Errore durante l\'eliminazione'); }
+  };
+  const handleEndExpense = async (id: string) => {
+    try { await endPersonalExpense(id); toast.success('Spesa ricorrente terminata'); }
+    catch { toast.error('Errore nell\'interruzione'); }
   };
   const handleDeleteGoal = async (id: string) => {
     try { await deleteLifeGoal(id); toast.success('Obiettivo eliminato'); }
@@ -296,27 +311,49 @@ const FinancialOS = () => {
           <p className="mt-4 text-sm text-muted-foreground">Aggiungi le tue spese fisse (Netflix, affitto, abbonamenti...) per calcolare il target reale.</p>
         ) : (
           <ul className="mt-4 divide-y divide-border">
-            {personalExpenses.map(e => (
-              <li key={e.id} className="py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground truncate">{e.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {e.category} · {e.is_recurring ? 'Ricorrente' : 'Una tantum'}
+            {personalExpenses.map(e => {
+              const ended = !!e.end_date;
+              const startLabel = e.start_date
+                ? new Date(e.start_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })
+                : '—';
+              const endLabel = e.end_date
+                ? new Date(e.end_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })
+                : null;
+              return (
+                <li key={e.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {e.name}
+                      {ended && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">· terminata</span>}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {e.category} · {e.is_recurring ? `Ricorrente da ${startLabel}${endLabel ? ` a ${endLabel}` : ''}` : `Una tantum · ${startLabel}`}
+                    </p>
+                  </div>
+                  <p className={`text-sm font-bold tabular-nums ${e.is_recurring && !ended ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <PrivacyMask>{formatEuro(e.amount)}</PrivacyMask>
                   </p>
-                </div>
-                <p className={`text-sm font-bold tabular-nums ${e.is_recurring ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  <PrivacyMask>{formatEuro(e.amount)}</PrivacyMask>
-                </p>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => openEditExpense(e)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </li>
-            ))}
+                  <div className="flex gap-1">
+                    {e.is_recurring && !ended && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleEndExpense(e.id)}
+                        title="Termina spesa ricorrente"
+                      >
+                        <Ban className="h-4 w-4 text-warning" />
+                      </Button>
+                    )}
+                    <Button size="icon" variant="ghost" onClick={() => openEditExpense(e)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -391,6 +428,22 @@ const FinancialOS = () => {
                 checked={expenseForm.is_recurring}
                 onCheckedChange={v => setExpenseForm(s => ({ ...s, is_recurring: v }))}
               />
+            </div>
+            <div>
+              <Label htmlFor="exp-start">
+                {expenseForm.is_recurring ? 'Mese di inizio' : 'Data della spesa'}
+              </Label>
+              <Input
+                id="exp-start"
+                type="date"
+                value={expenseForm.start_date}
+                onChange={e => setExpenseForm(s => ({ ...s, start_date: e.target.value }))}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {expenseForm.is_recurring
+                  ? 'Da questa data la spesa rientra nel calcolo dei mesi storici.'
+                  : 'La spesa verrà conteggiata solo nel mese selezionato.'}
+              </p>
             </div>
           </div>
           <DialogFooter>

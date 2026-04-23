@@ -187,6 +187,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         is_recurring: Boolean(r.is_recurring),
         category: r.category,
         created_at: r.created_at,
+        start_date: r.start_date ?? r.created_at,
+        end_date: r.end_date ?? undefined,
       }));
     },
   });
@@ -417,7 +419,12 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: async (e: Omit<PersonalExpense, 'id' | 'created_at'>) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from('personal_expenses').insert({
-        name: e.name, amount: e.amount, is_recurring: e.is_recurring, category: e.category,
+        name: e.name,
+        amount: e.amount,
+        is_recurring: e.is_recurring,
+        category: e.category,
+        start_date: e.start_date,
+        end_date: e.end_date ?? null,
       });
       if (error) throw error;
     },
@@ -427,6 +434,17 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<PersonalExpense> }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from('personal_expenses').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateExpenses,
+  });
+  const endExpenseMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('personal_expenses')
+        .update({ end_date: new Date().toISOString() })
+        .eq('id', id);
       if (error) throw error;
     },
     onSuccess: invalidateExpenses,
@@ -480,15 +498,22 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
 
   // ---------- Dynamic Target ----------
   const dynamicTarget = useMemo<DynamicTarget>(() => {
+    const now = new Date();
+    // Solo le ricorrenti ATTUALMENTE attive (start_date <= oggi e (end_date assente o futuro))
     const totalRecurringExpenses = personalExpenses
-      .filter(e => e.is_recurring)
+      .filter(e => {
+        if (!e.is_recurring) return false;
+        const start = new Date(e.start_date);
+        if (start > now) return false;
+        if (e.end_date && new Date(e.end_date) < now) return false;
+        return true;
+      })
       .reduce((s, e) => s + e.amount, 0);
 
     const activeGoal = lifeGoals.find(g => g.is_active);
     let monthlyGoalSaving = 0;
     let monthsUntilDeadline = 0;
     if (activeGoal) {
-      const now = new Date();
       const deadline = new Date(activeGoal.deadline);
       const diffMs = deadline.getTime() - now.getTime();
       monthsUntilDeadline = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
@@ -554,14 +579,16 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [transactions, effectiveMonthlyTarget]);
 
-  // Storico mensile a partire da Gennaio 2026 fino al mese corrente
+  // Storico mensile a partire da Gennaio 2026 fino al mese corrente.
+  // Il NETTO sottrae per ogni mese: tasse, affitto business (se applicabile),
+  // spese una tantum nel mese, spese ricorrenti attive in quel mese.
   const monthlyBreakdown = useMemo<MonthlyBreakdown[]>(() => {
     const now = new Date();
     const endYear = now.getFullYear();
     const endMonth = now.getMonth();
 
-    // Aggrega per chiave "YYYY-M"
-    const map = new Map<string, number>();
+    // Aggrega lordo per chiave "YYYY-M"
+    const grossMap = new Map<string, number>();
     for (const t of transactions) {
       if (t.status !== 'Saldato') continue;
       const d = new Date(t.payment_date);
@@ -570,23 +597,46 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       if (y < HISTORY_START_YEAR) continue;
       if (y === HISTORY_START_YEAR && m < HISTORY_START_MONTH) continue;
       const key = `${y}-${m}`;
-      map.set(key, (map.get(key) ?? 0) + t.amount);
+      grossMap.set(key, (grossMap.get(key) ?? 0) + t.amount);
     }
+
+    const monthExpenses = (y: number, m: number): number => {
+      const monthStart = new Date(y, m, 1);
+      const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
+      let total = 0;
+      for (const e of personalExpenses) {
+        const start = new Date(e.start_date);
+        const end = e.end_date ? new Date(e.end_date) : null;
+        if (e.is_recurring) {
+          // Attiva nel mese se start <= fine mese E (no end OR end >= inizio mese)
+          if (start <= monthEnd && (!end || end >= monthStart)) {
+            total += e.amount;
+          }
+        } else {
+          // Una tantum: cade nel mese?
+          if (start >= monthStart && start <= monthEnd) {
+            total += e.amount;
+          }
+        }
+      }
+      return total;
+    };
 
     const months: MonthlyBreakdown[] = [];
     let y = HISTORY_START_YEAR;
     let m = HISTORY_START_MONTH;
     while (y < endYear || (y === endYear && m <= endMonth)) {
-      const gross = map.get(`${y}-${m}`) ?? 0;
+      const gross = grossMap.get(`${y}-${m}`) ?? 0;
       const rent = rentForMonth(y, m);
-      const net = gross - (gross * TAX_RATE) - rent;
+      const expenses = monthExpenses(y, m);
+      const net = gross - (gross * TAX_RATE) - rent - expenses;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
       months.push({ year: y, month: m, label, gross, net });
       m += 1;
       if (m > 11) { m = 0; y += 1; }
     }
     return months;
-  }, [transactions]);
+  }, [transactions, personalExpenses]);
 
   const value: CrmContextValue = {
     clients,
@@ -615,6 +665,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     addPersonalExpense: async (e) => { await addExpenseMutation.mutateAsync(e); },
     updatePersonalExpense: async (id, patch) => { await updateExpenseMutation.mutateAsync({ id, patch }); },
     deletePersonalExpense: async (id) => { await deleteExpenseMutation.mutateAsync(id); },
+    endPersonalExpense: async (id) => { await endExpenseMutation.mutateAsync(id); },
     addLifeGoal: async (g) => { await addGoalMutation.mutateAsync(g); },
     updateLifeGoal: async (id, patch) => { await updateGoalMutation.mutateAsync({ id, patch }); },
     deleteLifeGoal: async (id) => { await deleteGoalMutation.mutateAsync(id); },

@@ -172,6 +172,8 @@ export interface PersonalExpense {
   is_recurring: boolean;
   category: string;
   created_at: string;
+  start_date: string;       // ISO date — quando inizia (mese di inizio per ricorrenti / data esatta per una tantum)
+  end_date?: string;        // ISO date — quando termina (solo ricorrenti). Se assente la spesa è ancora attiva.
 }
 
 export interface LifeGoal {

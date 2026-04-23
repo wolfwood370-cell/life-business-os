@@ -151,25 +151,31 @@ export type Database = {
           amount: number
           category: string
           created_at: string
+          end_date: string | null
           id: string
           is_recurring: boolean
           name: string
+          start_date: string
         }
         Insert: {
           amount?: number
           category?: string
           created_at?: string
+          end_date?: string | null
           id?: string
           is_recurring?: boolean
           name: string
+          start_date?: string
         }
         Update: {
           amount?: number
           category?: string
           created_at?: string
+          end_date?: string | null
           id?: string
           is_recurring?: boolean
           name?: string
+          start_date?: string
         }
         Relationships: []
       }
