@@ -286,6 +286,9 @@ const ClientDetail = () => {
                 </Select>
               </div>
             </section>
+
+            {/* AI Sales Assistant */}
+            <AiFollowupGenerator client={client} />
           </TabsContent>
 
           {/* TAB 2 — Commerciale */}
