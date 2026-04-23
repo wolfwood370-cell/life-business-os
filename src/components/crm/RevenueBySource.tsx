@@ -21,7 +21,7 @@ interface SourceRow {
 
 export const RevenueBySource = () => {
   const { clients, transactions } = useCrm();
-  const { isPrivacyMode } = usePrivacyMode();
+  const { privacyMode } = usePrivacyMode();
   const [drill, setDrill] = useState<LeadSource | null>(null);
 
   const rows = useMemo<SourceRow[]>(() => {
@@ -108,7 +108,7 @@ export const RevenueBySource = () => {
                     boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
                   }}
                   formatter={(value: number) => [
-                    isPrivacyMode ? '••••' : formatEuro(value),
+                    privacyMode ? '••••' : formatEuro(value),
                     'Incassi',
                   ]}
                   labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
