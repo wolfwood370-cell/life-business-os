@@ -391,11 +391,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       if (d.getMonth() === month) gross_monthly += t.amount;
     }
 
-    // Numero di mesi trascorsi dall'inizio dello storico/anno per il calcolo netto YTD
-    const monthsElapsed = year > HISTORY_START_YEAR
-      ? monthNum
-      : Math.max(1, monthNum - HISTORY_START_MONTH);
-
     const rentCurrentMonth = rentForMonth(year, month);
     const rentYearToDate = rentYtd(year, month);
     const net_monthly = gross_monthly - (gross_monthly * TAX_RATE) - rentCurrentMonth;
