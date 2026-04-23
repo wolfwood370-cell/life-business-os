@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart3, Sparkles, Loader2, TrendingDown, Trophy, Lightbulb, Target, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { Client, formatEuro } from '@/types/crm';
+import { formatEuro } from '@/types/crm';
 import { ClientsSheet } from '@/components/crm/ClientsSheet';
 
 interface WinLossReport {
@@ -183,26 +183,48 @@ const SalesCoach = () => {
           </div>
         )}
       </section>
+
+      <ClientsSheet
+        open={drill === 'won'}
+        onOpenChange={(v) => { if (!v) setDrill(null); }}
+        title="Clienti Chiusi Vinti"
+        description={`${wonClients.length} client${wonClients.length === 1 ? 'e attivo' : 'i attivi'}`}
+        clients={wonClients}
+      />
+      <ClientsSheet
+        open={drill === 'lost'}
+        onOpenChange={(v) => { if (!v) setDrill(null); }}
+        title="Trattative Perse"
+        description="Obiezione reale e motivazione profonda inline per analisi rapida."
+        clients={lostClients}
+        showLossContext
+      />
     </div>
   );
 };
 
-const KpiCard = ({ icon, label, value, tone }: { icon: React.ReactNode; label: string; value: string; tone: 'primary' | 'destructive' | 'warning' | 'muted' }) => {
+const KpiCard = ({ icon, label, value, tone, onClick }: { icon: React.ReactNode; label: string; value: string; tone: 'primary' | 'destructive' | 'warning' | 'muted'; onClick?: () => void }) => {
   const toneClass = {
     primary: 'bg-primary/10 text-primary',
     destructive: 'bg-destructive/10 text-destructive',
     warning: 'bg-warning/10 text-warning',
     muted: 'bg-muted text-muted-foreground',
   }[tone];
-  return (
-    <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
+  const base = 'rounded-2xl border border-border bg-card p-4 shadow-card text-left';
+  const interactive = onClick ? ' hover:border-primary/40 transition-smooth active:scale-[0.99] w-full' : '';
+  const Inner = (
+    <>
       <div className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${toneClass}`}>
         {icon}
       </div>
       <p className="mt-2 text-[10px] text-muted-foreground uppercase tracking-wider">{label}</p>
       <p className="mt-0.5 text-xl md:text-2xl font-bold text-foreground">{value}</p>
-    </div>
+    </>
   );
+  if (onClick) {
+    return <button type="button" onClick={onClick} className={base + interactive}>{Inner}</button>;
+  }
+  return <div className={base}>{Inner}</div>;
 };
 
 export default SalesCoach;
