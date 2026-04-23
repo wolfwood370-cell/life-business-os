@@ -157,6 +157,10 @@ const FinancialOS = () => {
     try { await deletePersonalExpense(id); toast.success('Spesa eliminata'); }
     catch { toast.error('Errore durante l\'eliminazione'); }
   };
+  const handleEndExpense = async (id: string) => {
+    try { await endPersonalExpense(id); toast.success('Spesa ricorrente terminata'); }
+    catch { toast.error('Errore nell\'interruzione'); }
+  };
   const handleDeleteGoal = async (id: string) => {
     try { await deleteLifeGoal(id); toast.success('Obiettivo eliminato'); }
     catch { toast.error('Errore durante l\'eliminazione'); }
