@@ -391,6 +391,24 @@ const ClientDetail = () => {
               <h3 className="font-bold text-sm text-foreground">Anagrafica & Iscrizione</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nome</label>
+                  <Input
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="es. Mario"
+                    className="h-12 rounded-xl bg-secondary border-0 text-base"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cognome</label>
+                  <Input
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="es. Rossi"
+                    className="h-12 rounded-xl bg-secondary border-0 text-base"
+                  />
+                </div>
+                <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Telefono</label>
                   <Input
                     type="tel"
