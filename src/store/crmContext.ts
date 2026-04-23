@@ -31,6 +31,7 @@ export interface CrmContextValue {
   addPersonalExpense: (e: Omit<PersonalExpense, 'id' | 'created_at'>) => Promise<void>;
   updatePersonalExpense: (id: string, patch: Partial<PersonalExpense>) => Promise<void>;
   deletePersonalExpense: (id: string) => Promise<void>;
+  endPersonalExpense: (id: string) => Promise<void>;
   addLifeGoal: (g: Omit<LifeGoal, 'id' | 'created_at'>) => Promise<void>;
   updateLifeGoal: (id: string, patch: Partial<LifeGoal>) => Promise<void>;
   deleteLifeGoal: (id: string) => Promise<void>;
