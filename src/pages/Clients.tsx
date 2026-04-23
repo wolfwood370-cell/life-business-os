@@ -35,11 +35,41 @@ const SORT_LABELS: Record<SortKey, string> = {
 
 const ts = (d?: string) => (d ? new Date(d).getTime() : NaN);
 
+const VALID_SORTS = new Set<SortKey>([
+  'name_asc', 'name_desc', 'lastname_asc', 'lastname_desc',
+  'age_asc', 'age_desc', 'signup_asc', 'signup_desc', 'expiry_asc', 'expiry_desc',
+]);
+
 const Clients = () => {
   const { clients, isLoading } = useCrm();
-  const [q, setQ] = useState('');
-  const [filter, setFilter] = useState<PipelineStage | 'All'>('All');
-  const [sort, setSort] = useState<SortKey>('name_asc');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const q = searchParams.get('q') ?? '';
+  const filterRaw = searchParams.get('filter') ?? 'All';
+  const filter: PipelineStage | 'All' =
+    filterRaw === 'All' || (PIPELINE_STAGES as readonly string[]).includes(filterRaw)
+      ? (filterRaw as PipelineStage | 'All')
+      : 'All';
+  const sortRaw = (searchParams.get('sort') ?? 'name_asc') as SortKey;
+  const sort: SortKey = VALID_SORTS.has(sortRaw) ? sortRaw : 'name_asc';
+
+  const updateParams = (patch: Record<string, string | null>) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      Object.entries(patch).forEach(([k, v]) => {
+        if (v === null || v === '' || (k === 'sort' && v === 'name_asc') || (k === 'filter' && v === 'All')) {
+          next.delete(k);
+        } else {
+          next.set(k, v);
+        }
+      });
+      return next;
+    }, { replace: true });
+  };
+
+  const setQ = (v: string) => updateParams({ q: v });
+  const setFilter = (v: PipelineStage | 'All') => updateParams({ filter: v });
+  const setSort = (v: SortKey) => updateParams({ sort: v });
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
