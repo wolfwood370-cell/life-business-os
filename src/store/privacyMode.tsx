@@ -18,6 +18,8 @@ export const PrivacyModeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, privacyMode ? '1' : '0');
+    document.documentElement.classList.toggle('privacy-on', privacyMode);
+    return () => { document.documentElement.classList.remove('privacy-on'); };
   }, [privacyMode]);
 
   return (
