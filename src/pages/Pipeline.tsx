@@ -1,10 +1,29 @@
 import { useCrm } from '@/store/useCrm';
-import { PIPELINE_STAGES, stageColorMap, pipelineStageLabel } from '@/types/crm';
+import { PIPELINE_STAGES, stageColorMap, pipelineStageLabel, PipelineStage } from '@/types/crm';
 import { ClientCard } from '@/components/crm/ClientCard';
 import { ClientCardSkeleton } from '@/components/crm/skeletons';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useState } from 'react';
+
+const StageColumn = ({ stage, clients }: { stage: PipelineStage; clients: ReturnType<typeof useCrm>['clients'] }) => {
+  const stageClients = clients.filter(c => c.pipeline_stage === stage);
+  if (stageClients.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-border p-8 text-center">
+        <p className="text-xs text-muted-foreground">Nessun cliente in questa fase</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {stageClients.map(c => <ClientCard key={c.id} client={c} compact />)}
+    </div>
+  );
+};
 
 const Pipeline = () => {
   const { clients, isLoading } = useCrm();
+  const [activeStage, setActiveStage] = useState<PipelineStage>('Lead Acquired');
 
   return (
     <div className="pt-6 pb-4 animate-fade-in">
@@ -14,27 +33,75 @@ const Pipeline = () => {
       </header>
 
       {isLoading ? (
-        <div className="flex md:grid md:grid-cols-3 xl:grid-cols-6 gap-3 overflow-x-auto md:overflow-visible scrollbar-hide px-4 md:px-0 pb-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="w-[78vw] max-w-[300px] md:w-auto md:max-w-none shrink-0 rounded-2xl border border-border bg-card/50 p-3 space-y-2">
-              <div className="mb-3 flex items-center justify-between px-1">
-                <div className="h-3 w-24 rounded-full skeleton-shimmer" />
-                <div className="h-5 w-7 rounded-full skeleton-shimmer" />
+        <>
+          {/* Mobile skeleton */}
+          <div className="lg:hidden px-4 space-y-2">
+            <ClientCardSkeleton compact />
+            <ClientCardSkeleton compact />
+            <ClientCardSkeleton compact />
+          </div>
+          {/* Desktop skeleton */}
+          <div className="hidden lg:grid lg:grid-cols-6 gap-3 px-0 pb-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="rounded-2xl border border-border bg-card/50 p-3 space-y-2">
+                <div className="mb-3 flex items-center justify-between px-1">
+                  <div className="h-3 w-24 rounded-full skeleton-shimmer" />
+                  <div className="h-5 w-7 rounded-full skeleton-shimmer" />
+                </div>
+                <ClientCardSkeleton compact />
+                <ClientCardSkeleton compact />
               </div>
-              <ClientCardSkeleton compact />
-              <ClientCardSkeleton compact />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="flex md:grid md:grid-cols-3 xl:grid-cols-6 gap-3 overflow-x-auto md:overflow-visible scrollbar-hide px-4 md:px-0 pb-4 snap-x snap-mandatory md:snap-none">
-          {PIPELINE_STAGES.map(stage => {
-            const stageClients = clients.filter(c => c.pipeline_stage === stage);
-            const color = stageColorMap[stage];
-            return (
-              <div key={stage} className="w-[78vw] max-w-[300px] md:w-auto md:max-w-none shrink-0 snap-start">
-                <div className="rounded-2xl border border-border bg-card/50 p-3 h-full">
-                  <div className="mb-3 flex items-center justify-between px-1">
+        <>
+          {/* MOBILE / TABLET: Tabs view (no horizontal body scroll) */}
+          <div className="lg:hidden">
+            <Tabs value={activeStage} onValueChange={(v) => setActiveStage(v as PipelineStage)}>
+              <div className="px-4">
+                <div className="overflow-x-auto scrollbar-hide -mx-4 px-4">
+                  <TabsList className="h-auto bg-secondary/60 p-1 inline-flex w-max gap-1">
+                    {PIPELINE_STAGES.map(stage => {
+                      const count = clients.filter(c => c.pipeline_stage === stage).length;
+                      const color = stageColorMap[stage];
+                      return (
+                        <TabsTrigger
+                          key={stage}
+                          value={stage}
+                          className="text-xs px-3 py-2 rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm whitespace-nowrap"
+                        >
+                          <span
+                            className="mr-2 inline-block h-2 w-2 rounded-full"
+                            style={{ backgroundColor: `hsl(var(--${color}))` }}
+                          />
+                          {pipelineStageLabel[stage]}
+                          <span className="ml-2 text-[10px] font-bold text-muted-foreground bg-secondary rounded-full px-1.5 py-0.5">
+                            {count}
+                          </span>
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                </div>
+              </div>
+
+              {PIPELINE_STAGES.map(stage => (
+                <TabsContent key={stage} value={stage} className="mt-4 px-4 pb-4">
+                  <StageColumn stage={stage} clients={clients} />
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+
+          {/* DESKTOP: 6-column grid, fits viewport, internal scroll per column */}
+          <div className="hidden lg:grid lg:grid-cols-6 gap-3 pb-4 h-[calc(100vh-180px)]">
+            {PIPELINE_STAGES.map(stage => {
+              const stageClients = clients.filter(c => c.pipeline_stage === stage);
+              const color = stageColorMap[stage];
+              return (
+                <div key={stage} className="flex flex-col rounded-2xl border border-border bg-card/50 min-h-0">
+                  <div className="shrink-0 p-3 pb-2 flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: `hsl(var(--${color}))` }} />
                       <h3 className="text-sm font-semibold truncate">{pipelineStageLabel[stage]}</h3>
@@ -43,7 +110,7 @@ const Pipeline = () => {
                       {stageClients.length}
                     </span>
                   </div>
-                  <div className="space-y-2">
+                  <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2 min-h-0">
                     {stageClients.length === 0 ? (
                       <div className="rounded-xl border border-dashed border-border p-6 text-center">
                         <p className="text-xs text-muted-foreground">Vuoto</p>
@@ -53,10 +120,10 @@ const Pipeline = () => {
                     )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );
