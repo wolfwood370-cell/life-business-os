@@ -43,6 +43,8 @@ const ClientDetail = () => {
   const [gymExpiry, setGymExpiry] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   // ROI metric form
   const [metricName, setMetricName] = useState('');
@@ -65,6 +67,8 @@ const ClientDetail = () => {
       setGymExpiry(client.gym_expiry_date ? client.gym_expiry_date.slice(0, 10) : '');
       setPhone(client.phone ?? '');
       setEmail(client.email ?? '');
+      setFirstName(client.first_name ?? '');
+      setLastName(client.last_name ?? '');
     }
   }, [client]);
 
@@ -82,7 +86,13 @@ const ClientDetail = () => {
   }
 
   const handleSave = () => {
+    const fn = firstName.trim();
+    const ln = lastName.trim();
+    const fullName = [fn, ln].filter(Boolean).join(' ').trim() || client!.name;
     updateClient(client.id, {
+      name: fullName,
+      first_name: fn || undefined,
+      last_name: ln || undefined,
       root_motivator: motivator,
       objection_stated: stated,
       objection_real: real,
