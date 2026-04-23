@@ -92,4 +92,7 @@
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
   .safe-bottom-nav-spacer { height: max(env(safe-area-inset-bottom), 0.5rem); }
+  .privacy-blur-target { transition: filter 250ms ease; }
+  .privacy-on .privacy-blur-target { filter: blur(8px) saturate(0.5); }
+  .privacy-on .privacy-blur-target:focus-within { filter: none; }
 }
