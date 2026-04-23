@@ -9,9 +9,6 @@ import {
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
-// Back-compat re-exports (some modules may still import from here via HMR cache)
-export { useCrm, daysSince } from './useCrm';
-
 type ClientRow = {
   id: string;
   name: string;
@@ -570,7 +567,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       net_monthly,
       gross_ytd,
       net_ytd,
-      fixed_monthly_cost: 0,
       monthly_target: effectiveMonthlyTarget,
       current_month_number: monthNum,
     };
@@ -638,7 +634,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     clients,
     isLoading,
     financials: {
-      fixed_monthly_cost: financialSummary.fixed_monthly_cost,
       current_monthly_revenue,
       monthly_target: effectiveMonthlyTarget,
     },

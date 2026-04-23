@@ -8,7 +8,6 @@ export interface CrmContextValue {
   clients: Client[];
   isLoading: boolean;
   financials: {
-    fixed_monthly_cost: number;
     current_monthly_revenue: number;
     monthly_target: number;
   };

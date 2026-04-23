@@ -61,7 +61,6 @@ export const genderLabel: Record<Gender, string> = {
 };
 
 export interface Financials {
-  fixed_monthly_cost: number;
   current_monthly_revenue: number;
   monthly_target: number;
 }
@@ -118,7 +117,6 @@ export interface FinancialSummary {
   net_monthly: number;
   gross_ytd: number;
   net_ytd: number;
-  fixed_monthly_cost: number;
   monthly_target: number;
   current_month_number: number;
 }
