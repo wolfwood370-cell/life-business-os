@@ -3,12 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useCrm } from '@/store/crmStore';
 import { LEAD_SOURCES, PIPELINE_STAGES, LeadSource, PipelineStage, leadSourceLabel, pipelineStageLabel } from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
 import { toast } from 'sonner';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDays, ShieldCheck } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -22,6 +23,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
   const [name, setName] = useState('');
   const [source, setSource] = useState<LeadSource>('Gym Floor');
   const [stage, setStage] = useState<PipelineStage>('Lead Acquired');
+  const [gdprConsent, setGdprConsent] = useState(false);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -39,11 +41,13 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
         last_contacted_at: new Date().toISOString(),
         lead_score: baseLeadScore(source),
         churn_risk: 'Basso',
+        gdpr_consent: gdprConsent,
       });
       toast.success(`${name} aggiunto alla pipeline`);
       setName('');
       setSource('Gym Floor');
       setStage('Lead Acquired');
+      setGdprConsent(false);
       onOpenChange(false);
     } catch (e) {
       toast.error('Errore nel salvataggio');
@@ -112,6 +116,23 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
               ))}
             </ToggleGroup>
           </div>
+
+          <label className="flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-3 cursor-pointer hover:bg-secondary/60 transition-smooth">
+            <Checkbox
+              checked={gdprConsent}
+              onCheckedChange={(v) => setGdprConsent(v === true)}
+              className="mt-0.5"
+            />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Consenso Privacy & Marketing Acquisito</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Necessario per attivare l'AI Sales Assistant e l'invio di follow-up.
+              </p>
+            </div>
+          </label>
 
           <Button onClick={handleSave} className="w-full h-14 rounded-xl text-base font-semibold gradient-primary text-primary-foreground shadow-glow">
             Salva Lead
