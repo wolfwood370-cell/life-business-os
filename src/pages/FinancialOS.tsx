@@ -311,27 +311,49 @@ const FinancialOS = () => {
           <p className="mt-4 text-sm text-muted-foreground">Aggiungi le tue spese fisse (Netflix, affitto, abbonamenti...) per calcolare il target reale.</p>
         ) : (
           <ul className="mt-4 divide-y divide-border">
-            {personalExpenses.map(e => (
-              <li key={e.id} className="py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-foreground truncate">{e.name}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {e.category} · {e.is_recurring ? 'Ricorrente' : 'Una tantum'}
+            {personalExpenses.map(e => {
+              const ended = !!e.end_date;
+              const startLabel = e.start_date
+                ? new Date(e.start_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })
+                : '—';
+              const endLabel = e.end_date
+                ? new Date(e.end_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })
+                : null;
+              return (
+                <li key={e.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {e.name}
+                      {ended && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">· terminata</span>}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {e.category} · {e.is_recurring ? `Ricorrente da ${startLabel}${endLabel ? ` a ${endLabel}` : ''}` : `Una tantum · ${startLabel}`}
+                    </p>
+                  </div>
+                  <p className={`text-sm font-bold tabular-nums ${e.is_recurring && !ended ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <PrivacyMask>{formatEuro(e.amount)}</PrivacyMask>
                   </p>
-                </div>
-                <p className={`text-sm font-bold tabular-nums ${e.is_recurring ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  <PrivacyMask>{formatEuro(e.amount)}</PrivacyMask>
-                </p>
-                <div className="flex gap-1">
-                  <Button size="icon" variant="ghost" onClick={() => openEditExpense(e)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              </li>
-            ))}
+                  <div className="flex gap-1">
+                    {e.is_recurring && !ended && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleEndExpense(e.id)}
+                        title="Termina spesa ricorrente"
+                      >
+                        <Ban className="h-4 w-4 text-warning" />
+                      </Button>
+                    )}
+                    <Button size="icon" variant="ghost" onClick={() => openEditExpense(e)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
@@ -406,6 +428,22 @@ const FinancialOS = () => {
                 checked={expenseForm.is_recurring}
                 onCheckedChange={v => setExpenseForm(s => ({ ...s, is_recurring: v }))}
               />
+            </div>
+            <div>
+              <Label htmlFor="exp-start">
+                {expenseForm.is_recurring ? 'Mese di inizio' : 'Data della spesa'}
+              </Label>
+              <Input
+                id="exp-start"
+                type="date"
+                value={expenseForm.start_date}
+                onChange={e => setExpenseForm(s => ({ ...s, start_date: e.target.value }))}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {expenseForm.is_recurring
+                  ? 'Da questa data la spesa rientra nel calcolo dei mesi storici.'
+                  : 'La spesa verrà conteggiata solo nel mese selezionato.'}
+              </p>
             </div>
           </div>
           <DialogFooter>
