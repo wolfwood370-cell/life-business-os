@@ -517,7 +517,7 @@ const ClientDetail = () => {
 
               {/* Grafico progressi */}
               {(client.roi_metrics?.length ?? 0) > 0 && (
-                <RoiChart metrics={client.roi_metrics!} />
+                <RoiChart metrics={client.roi_metrics!} clientName={client.name} />
               )}
 
               {/* Lista metriche */}
