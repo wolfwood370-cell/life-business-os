@@ -96,6 +96,9 @@ export const RECURRING_INTERVAL_DAYS = 28;
 export type PaymentMethod = 'Stripe' | 'Bonifico' | 'Contanti';
 export const PAYMENT_METHODS: PaymentMethod[] = ['Stripe', 'Bonifico', 'Contanti'];
 
+export type TransactionStatus = 'Saldato' | 'In Attesa';
+export const TRANSACTION_STATUSES: TransactionStatus[] = ['Saldato', 'In Attesa'];
+
 export interface Transaction {
   id: string;
   client_id: string;
@@ -107,6 +110,8 @@ export interface Transaction {
   created_at: string;
   recurring_active?: boolean;
   recurring_stopped_at?: string;
+  status: TransactionStatus;
+  due_date: string; // ISO
 }
 
 export interface FinancialSummary {
