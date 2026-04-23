@@ -95,6 +95,8 @@ const ClientDetail = () => {
       gender: (gender || undefined) as Gender | undefined,
       gym_signup_date: gymSignup || undefined,
       gym_expiry_date: gymExpiry || undefined,
+      phone: phone.trim() || undefined,
+      email: email.trim() || undefined,
     });
     toast.success('Profilo aggiornato');
   };
