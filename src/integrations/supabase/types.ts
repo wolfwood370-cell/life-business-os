@@ -20,11 +20,13 @@ export type Database = {
           churn_risk: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           gender: string | null
           gym_expiry_date: string | null
           gym_signup_date: string | null
           id: string
           last_contacted_at: string | null
+          last_name: string | null
           lead_score: number | null
           lead_source: string
           monthly_value: number | null
@@ -44,11 +46,13 @@ export type Database = {
           churn_risk?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           gender?: string | null
           gym_expiry_date?: string | null
           gym_signup_date?: string | null
           id?: string
           last_contacted_at?: string | null
+          last_name?: string | null
           lead_score?: number | null
           lead_source: string
           monthly_value?: number | null
@@ -68,11 +72,13 @@ export type Database = {
           churn_risk?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           gender?: string | null
           gym_expiry_date?: string | null
           gym_signup_date?: string | null
           id?: string
           last_contacted_at?: string | null
+          last_name?: string | null
           lead_score?: number | null
           lead_source?: string
           monthly_value?: number | null
