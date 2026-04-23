@@ -412,7 +412,63 @@ const ClientDetail = () => {
               </div>
             </section>
 
-            {/* Anagrafica & Iscrizione palestra */}
+            {/* Pagamenti / Transazioni */}
+            <section className="rounded-2xl border border-border bg-card p-4 space-y-3 shadow-card">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                    <Receipt className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-foreground">Pagamenti</h3>
+                    <p className="text-[11px] text-muted-foreground">
+                      {clientTransactions.length === 0
+                        ? 'Nessuna transazione registrata'
+                        : `Totale incassato: ${formatEuro(totalPaid)}`}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setPaymentOpen(true)}
+                  className="rounded-xl gradient-primary text-primary-foreground font-semibold"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Registra
+                </Button>
+              </div>
+
+              {clientTransactions.length > 0 && (
+                <div className="space-y-2">
+                  {clientTransactions.slice(0, 5).map(t => (
+                    <div key={t.id} className="flex items-center gap-3 rounded-xl border border-border bg-secondary/40 p-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                        <Euro className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="font-semibold text-sm text-foreground truncate">
+                            {t.payment_type === 'A Rate'
+                              ? `${t.installments_count} rate da ${formatEuro(t.amount / t.installments_count)}`
+                              : 'Unica Soluzione'}
+                          </p>
+                          <p className="font-bold text-sm text-primary shrink-0">{formatEuro(t.amount)}</p>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">
+                          {new Date(t.payment_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  {clientTransactions.length > 5 && (
+                    <p className="text-[11px] text-muted-foreground text-center">
+                      +{clientTransactions.length - 5} altre transazioni
+                    </p>
+                  )}
+                </div>
+              )}
+            </section>
+
+
             <section className="rounded-2xl border border-border bg-card p-4 space-y-4 shadow-card">
               <h3 className="font-bold text-sm text-foreground">Anagrafica & Iscrizione</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
