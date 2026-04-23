@@ -22,7 +22,7 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    document.title = "Accedi · PT CRM";
+    document.title = "Accedi · Life & Business OS";
   }, []);
 
   if (loading) {
@@ -94,7 +94,7 @@ const Auth = () => {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary shadow-glow">
               <Dumbbell className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">PT CRM</h1>
+            <h1 className="text-2xl font-bold text-foreground">Life & Business OS</h1>
           </div>
           <p className="text-muted-foreground text-sm">Centro di Comando</p>
         </div>
@@ -120,7 +120,7 @@ const Auth = () => {
             <div className="flex h-10 w-10 items-center justify-center rounded-xl gradient-primary shadow-glow">
               <Dumbbell className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
             </div>
-            <h1 className="text-xl font-bold text-foreground">PT CRM</h1>
+            <h1 className="text-xl font-bold text-foreground">Life & Business OS</h1>
           </div>
 
           {view === "recovery" ? (

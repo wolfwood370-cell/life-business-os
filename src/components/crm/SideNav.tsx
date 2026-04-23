@@ -33,7 +33,7 @@ export const SideNav = ({ onFabClick }: Props) => {
           <Dumbbell className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
         </div>
         <div>
-          <p className="text-sm font-bold leading-tight">PT CRM</p>
+          <p className="text-sm font-bold leading-tight">Life & Business OS</p>
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Centro di Comando</p>
         </div>
       </div>
