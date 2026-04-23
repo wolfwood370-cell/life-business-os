@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
-import { TAX_RATE, Transaction, formatEuro, HISTORY_START_YEAR, HISTORY_START_MONTH } from '@/types/crm';
+import { Transaction, formatEuro, HISTORY_START_YEAR, HISTORY_START_MONTH } from '@/types/crm';
 import { ArrowDown, ArrowUp, CalendarRange, TrendingUp, Wallet } from 'lucide-react';
 import { PrivacyMask } from './PrivacyMask';
 import { TransactionsSheet } from './TransactionsSheet';
@@ -178,8 +178,6 @@ export const FinancialWidget = () => {
         description={drillDesc}
         transactions={drillTx}
       />
-      {/* Helper to silence unused import in some setups */}
-      {false && <span data-tax={TAX_RATE} />}
     </div>
   );
 };

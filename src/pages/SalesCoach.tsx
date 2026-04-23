@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BarChart3, Sparkles, Loader2, TrendingDown, Trophy, Lightbulb, Target, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatEuro } from '@/types/crm';
+import { Client, formatEuro } from '@/types/crm';
+import { ClientsSheet } from '@/components/crm/ClientsSheet';
 
 interface WinLossReport {
   perche_perdiamo: string[];
