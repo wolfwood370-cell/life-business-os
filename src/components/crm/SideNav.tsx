@@ -1,8 +1,10 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3 } from 'lucide-react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface Props {
   onFabClick: () => void;
@@ -17,6 +19,12 @@ const items = [
 
 export const SideNav = ({ onFabClick }: Props) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success('Disconnesso');
+    navigate('/auth');
+  };
   return (
     <aside className="hidden md:flex md:w-60 lg:w-64 shrink-0 flex-col border-r border-border bg-card/40 sticky top-0 h-screen">
       <div className="flex items-center gap-2 px-5 py-5">
@@ -56,6 +64,14 @@ export const SideNav = ({ onFabClick }: Props) => {
         >
           <Plus className="h-4 w-4 mr-1.5" strokeWidth={3} />
           Aggiungi Lead
+        </Button>
+        <Button
+          onClick={handleLogout}
+          variant="ghost"
+          className="w-full h-10 rounded-xl text-muted-foreground hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4 mr-1.5" />
+          Esci
         </Button>
       </div>
     </aside>
