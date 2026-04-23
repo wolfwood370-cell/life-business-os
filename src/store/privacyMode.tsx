@@ -1,6 +1,9 @@
 import { useEffect, useState, ReactNode } from 'react';
 import { PrivacyModeContext } from './privacyModeContext';
 
+// Back-compat re-export
+export { usePrivacyMode } from './usePrivacyMode';
+
 const STORAGE_KEY = 'pt_crm_privacy_mode';
 
 export const PrivacyModeProvider = ({ children }: { children: ReactNode }) => {
