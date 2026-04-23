@@ -18,15 +18,18 @@ interface PaymentModalProps {
 
 export const PaymentModal = ({ open, onOpenChange, clientId, clientName }: PaymentModalProps) => {
   const { addTransaction } = useCrm();
+  const todayIso = () => new Date().toISOString().slice(0, 10);
   const [amount, setAmount] = useState('');
   const [paymentType, setPaymentType] = useState<PaymentType>('Unica Soluzione');
   const [installments, setInstallments] = useState(2);
+  const [paymentDate, setPaymentDate] = useState<string>(todayIso());
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setAmount('');
     setPaymentType('Unica Soluzione');
     setInstallments(2);
+    setPaymentDate(todayIso());
   };
 
   const handleSubmit = async () => {
