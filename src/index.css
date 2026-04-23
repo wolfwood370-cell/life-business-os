@@ -90,6 +90,15 @@
   .transition-smooth { transition: var(--transition-smooth); }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Premium Kanban horizontal scrollbar — sleek, appears on hover */
+  .kanban-scroll { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.3s ease; }
+  .kanban-scroll:hover { scrollbar-color: hsl(var(--border)) transparent; }
+  .kanban-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+  .kanban-scroll::-webkit-scrollbar-track { background: transparent; }
+  .kanban-scroll::-webkit-scrollbar-thumb { background-color: transparent; border-radius: 9999px; transition: background-color 0.3s ease; }
+  .kanban-scroll:hover::-webkit-scrollbar-thumb { background-color: hsl(var(--border)); }
+  .kanban-scroll::-webkit-scrollbar-thumb:hover { background-color: hsl(var(--muted-foreground) / 0.4); }
   .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
   .safe-bottom-nav-spacer { height: max(env(safe-area-inset-bottom), 0.5rem); }
   .privacy-blur-target { transition: filter 250ms ease; }

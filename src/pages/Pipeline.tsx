@@ -94,25 +94,41 @@ const Pipeline = () => {
             </Tabs>
           </div>
 
-          {/* DESKTOP: 6-column grid, fits viewport, internal scroll per column */}
-          <div className="hidden lg:grid lg:grid-cols-6 gap-3 pb-4 h-[calc(100vh-180px)]">
+          {/* DESKTOP: Premium Kanban — fixed-width columns, horizontal scroll within board */}
+          <div className="hidden lg:flex lg:flex-row gap-6 overflow-x-auto overflow-y-hidden pb-6 h-[calc(100vh-140px)] kanban-scroll">
             {PIPELINE_STAGES.map(stage => {
               const stageClients = clients.filter(c => c.pipeline_stage === stage);
+              const totalValue = stageClients.reduce((sum, c) => sum + (c.monthly_value || 0), 0);
               const color = stageColorMap[stage];
               return (
-                <div key={stage} className="flex flex-col rounded-2xl border border-border bg-card/50 min-h-0">
-                  <div className="shrink-0 p-3 pb-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: `hsl(var(--${color}))` }} />
-                      <h3 className="text-sm font-semibold truncate">{pipelineStageLabel[stage]}</h3>
+                <div
+                  key={stage}
+                  className="flex flex-col shrink-0 min-w-[320px] max-w-[320px] rounded-2xl border border-border/70 bg-secondary/40 min-h-0"
+                >
+                  <div className="shrink-0 p-4 pb-3 flex items-center justify-between border-b border-border/60">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: `hsl(var(--${color}))` }}
+                      />
+                      <h3 className="text-sm font-semibold truncate tracking-tight">
+                        {pipelineStageLabel[stage]}
+                      </h3>
                     </div>
-                    <span className="text-xs font-bold text-muted-foreground bg-secondary rounded-full px-2 py-0.5">
-                      {stageClients.length}
-                    </span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {totalValue > 0 && (
+                        <span className="text-[10px] font-medium text-muted-foreground">
+                          €{totalValue.toLocaleString('it-IT')}
+                        </span>
+                      )}
+                      <span className="text-xs font-bold text-foreground/80 bg-background rounded-full px-2 py-0.5 min-w-[24px] text-center">
+                        {stageClients.length}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2 min-h-0">
+                  <div className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0">
                     {stageClients.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-border p-6 text-center">
+                      <div className="rounded-xl border border-dashed border-border/70 p-6 text-center">
                         <p className="text-xs text-muted-foreground">Vuoto</p>
                       </div>
                     ) : (
