@@ -124,6 +124,25 @@ export interface FinancialSummary {
   current_month_number: number;
 }
 
+export interface MonthlyBreakdown {
+  year: number;
+  month: number;       // 0-11
+  label: string;       // es. "Gen 2026"
+  gross: number;
+  net: number;
+}
+
+export interface Service {
+  id: string;
+  category: string;
+  name: string;
+  price: number;
+  sort_order: number;
+}
+
+export const HISTORY_START_YEAR = 2026;
+export const HISTORY_START_MONTH = 0; // Gennaio
+
 export const leadSourceLabel: Record<LeadSource, string> = {
   'Gym-provided': 'Contatto Palestra',
   'PT Pack 99€': 'PT Pack 99€',

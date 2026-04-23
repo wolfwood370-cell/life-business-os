@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { Client, FinancialSummary, PipelineStage, RoiMetric, Transaction } from '@/types/crm';
+import { Client, FinancialSummary, MonthlyBreakdown, PipelineStage, RoiMetric, Service, Transaction } from '@/types/crm';
 
 export interface CrmContextValue {
   clients: Client[];
@@ -12,6 +12,8 @@ export interface CrmContextValue {
   };
   // Nuovo summary basato sulle transazioni reali
   financialSummary: FinancialSummary;
+  monthlyBreakdown: MonthlyBreakdown[];
+  services: Service[];
   transactions: Transaction[];
   addClient: (c: Omit<Client, 'id' | 'created_at' | 'stage_updated_at'>) => Promise<void>;
   updateClient: (id: string, patch: Partial<Client>) => Promise<void>;
