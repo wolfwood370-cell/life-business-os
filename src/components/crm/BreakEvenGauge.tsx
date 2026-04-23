@@ -1,45 +1,40 @@
 import { useCrm } from '@/store/useCrm';
 import { formatEuro } from '@/types/crm';
-import { Building2, TrendingUp } from 'lucide-react';
+import { Target, TrendingUp } from 'lucide-react';
 import { PrivacyMask } from './PrivacyMask';
 
 export const BreakEvenGauge = () => {
   const { financials, financialSummary } = useCrm();
-  const { fixed_monthly_cost, monthly_target } = financials;
+  const { monthly_target } = financials;
   // Fonte di verità: ricavi lordi del mese dalle transazioni Saldate
   const current_monthly_revenue = financialSummary.gross_monthly;
 
-  const reachedBreakEven = current_monthly_revenue >= fixed_monthly_cost;
-  const surplus = Math.max(0, current_monthly_revenue - fixed_monthly_cost);
+  const safeTarget = Math.max(monthly_target, 1);
+  const reachedTarget = current_monthly_revenue >= safeTarget;
+  const surplus = Math.max(0, current_monthly_revenue - safeTarget);
+  const remainingToTarget = Math.max(0, safeTarget - current_monthly_revenue);
 
-  // Visualizziamo due segmenti sull'anello: 0..366 e 366..target
   const radius = 80;
   const stroke = 14;
   const circumference = 2 * Math.PI * radius;
-
-  const breakEvenPct = Math.min(1, current_monthly_revenue / fixed_monthly_cost);
-  const breakEvenSweep = circumference * 0.5 * breakEvenPct; // metà superiore = base
-
-  const surplusTarget = Math.max(monthly_target - fixed_monthly_cost, 1);
-  const surplusPct = Math.min(1, surplus / surplusTarget);
-  const surplusSweep = circumference * 0.5 * surplusPct;
-
-  // tracciato semi-cerchio: useremo strokeDasharray con 50%
   const halfCircle = circumference / 2;
+
+  const targetPct = Math.min(1, current_monthly_revenue / safeTarget);
+  const targetSweep = halfCircle * targetPct;
 
   return (
     <div className="rounded-3xl border border-border bg-card p-5 shadow-card">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Break-Even Mensile</p>
-          <p className="text-[11px] text-muted-foreground">Affitto fisso <PrivacyMask>{formatEuro(fixed_monthly_cost)}</PrivacyMask> · Target dinamico <PrivacyMask>{formatEuro(monthly_target)}</PrivacyMask></p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Avanzamento Mensile</p>
+          <p className="text-[11px] text-muted-foreground">Target dinamico <PrivacyMask>{formatEuro(monthly_target)}</PrivacyMask></p>
         </div>
         <div
           className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-            reachedBreakEven ? 'bg-primary/15 text-primary' : 'bg-warning/15 text-warning'
+            reachedTarget ? 'bg-primary/15 text-primary' : 'bg-warning/15 text-warning'
           }`}
         >
-          {reachedBreakEven ? 'In Profitto' : 'Sotto Soglia'}
+          {reachedTarget ? 'Target Raggiunto' : 'In Avanzamento'}
         </div>
       </div>
 
@@ -53,35 +48,15 @@ export const BreakEvenGauge = () => {
             strokeWidth={stroke}
             strokeLinecap="round"
           />
-          {/* Segmento 0 → break-even (warning) */}
+          {/* Segmento 0 → target */}
           <path
             d={`M ${100 - radius} 100 A ${radius} ${radius} 0 0 1 ${100 + radius} 100`}
             fill="none"
-            stroke="hsl(var(--warning))"
+            stroke={reachedTarget ? 'hsl(var(--primary))' : 'hsl(var(--warning))'}
             strokeWidth={stroke}
             strokeLinecap="round"
-            strokeDasharray={`${breakEvenSweep} ${halfCircle}`}
+            strokeDasharray={`${targetSweep} ${halfCircle}`}
             className="transition-smooth"
-          />
-          {/* Segmento break-even → target (primary, surplus) */}
-          {reachedBreakEven && (
-            <path
-              d={`M ${100 - radius} 100 A ${radius} ${radius} 0 0 1 ${100 + radius} 100`}
-              fill="none"
-              stroke="hsl(var(--primary))"
-              strokeWidth={stroke}
-              strokeLinecap="round"
-              strokeDasharray={`${halfCircle * 0.5 + surplusSweep} ${halfCircle}`}
-              className="transition-smooth"
-            />
-          )}
-          {/* Tacca break-even */}
-          <line
-            x1="100" y1="20" x2="100" y2="34"
-            stroke="hsl(var(--foreground))"
-            strokeWidth="2"
-            strokeLinecap="round"
-            opacity="0.4"
           />
         </svg>
 
@@ -91,24 +66,24 @@ export const BreakEvenGauge = () => {
           </p>
           <p
             className={`text-xs font-semibold ${
-              reachedBreakEven ? 'text-primary' : 'text-warning'
+              reachedTarget ? 'text-primary' : 'text-warning'
             }`}
           >
-            {reachedBreakEven
-              ? <>+<PrivacyMask>{formatEuro(surplus)}</PrivacyMask> di profitto</>
-              : <><PrivacyMask>{formatEuro(fixed_monthly_cost - current_monthly_revenue)}</PrivacyMask> al pareggio</>}
+            {reachedTarget
+              ? <>+<PrivacyMask>{formatEuro(surplus)}</PrivacyMask> oltre il target</>
+              : <><PrivacyMask>{formatEuro(remainingToTarget)}</PrivacyMask> al target</>}
           </p>
         </div>
       </div>
 
       <div className="mt-4 flex items-center justify-between text-[11px] text-muted-foreground">
         <span className="flex items-center gap-1">
-          <Building2 className="h-3 w-3" />
-          Pareggio <PrivacyMask>{formatEuro(fixed_monthly_cost)}</PrivacyMask>
+          <Target className="h-3 w-3" />
+          Obiettivo <PrivacyMask>{formatEuro(monthly_target)}</PrivacyMask>
         </span>
         <span className="flex items-center gap-1">
           <TrendingUp className="h-3 w-3" />
-          Obiettivo <PrivacyMask>{formatEuro(monthly_target)}</PrivacyMask>
+          {Math.round(targetPct * 100)}%
         </span>
       </div>
     </div>

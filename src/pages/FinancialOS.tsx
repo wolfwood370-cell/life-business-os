@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
-import { formatEuro, FIXED_MONTHLY_COST, TAX_RATE, PersonalExpense, LifeGoal } from '@/types/crm';
+import { formatEuro, TAX_RATE, PersonalExpense, LifeGoal } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -172,7 +172,7 @@ const FinancialOS = () => {
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Life · Finance OS</p>
         <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight text-foreground">Target Dinamico</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Calcola il fatturato lordo che devi generare ogni mese per coprire affitto, tasse, spese personali e obiettivi di vita.
+          Calcola il fatturato lordo che devi generare ogni mese per coprire tasse, spese personali e obiettivi di vita.
         </p>
       </header>
 
@@ -188,10 +188,10 @@ const FinancialOS = () => {
             <PrivacyMask>{formatEuro(dynamicTarget.dynamicGrossTarget)}</PrivacyMask>
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Per ottenere <PrivacyMask>{formatEuro(dynamicTarget.totalNetNeeded)}</PrivacyMask> netti dopo {Math.round(TAX_RATE * 100)}% tasse + {formatEuro(FIXED_MONTHLY_COST)} affitto.
+            Per ottenere <PrivacyMask>{formatEuro(dynamicTarget.totalNetNeeded)}</PrivacyMask> netti dopo {Math.round(TAX_RATE * 100)}% di tasse.
           </p>
 
-          <div className="mt-5 grid grid-cols-3 gap-3">
+          <div className="mt-5 grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-card/60 border border-border p-3">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spese Ricorrenti</p>
               <p className="mt-1 text-lg font-bold text-foreground">
@@ -203,10 +203,6 @@ const FinancialOS = () => {
               <p className="mt-1 text-lg font-bold text-foreground">
                 <PrivacyMask>{formatEuro(dynamicTarget.monthlyGoalSaving)}</PrivacyMask>
               </p>
-            </div>
-            <div className="rounded-xl bg-card/60 border border-border p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Affitto</p>
-              <p className="mt-1 text-lg font-bold text-foreground">{formatEuro(FIXED_MONTHLY_COST)}</p>
             </div>
           </div>
         </div>
@@ -368,7 +364,6 @@ const FinancialOS = () => {
           <p>Spese ricorrenti: <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringExpenses)}</PrivacyMask></p>
           <p>+ Risparmio obiettivo: <PrivacyMask>{formatEuro(dynamicTarget.monthlyGoalSaving)}</PrivacyMask></p>
           <p>= Netto necessario: <PrivacyMask>{formatEuro(dynamicTarget.totalNetNeeded)}</PrivacyMask></p>
-          <p>+ Affitto: {formatEuro(FIXED_MONTHLY_COST)}</p>
           <p>÷ (1 − {Math.round(TAX_RATE * 100)}% tasse)</p>
           <p className="text-foreground font-bold pt-2 border-t border-border">
             = Lordo da fatturare: <PrivacyMask>{formatEuro(dynamicTarget.dynamicGrossTarget)}</PrivacyMask>

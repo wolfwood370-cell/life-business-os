@@ -76,8 +76,6 @@ export const FinancialWidget = () => {
     net_monthly,
     gross_ytd,
     net_ytd,
-    fixed_monthly_cost,
-    current_month_number,
   } = financialSummary;
 
   const aboveBreakEven = net_monthly >= 0;
@@ -114,7 +112,7 @@ export const FinancialWidget = () => {
   const drillNet = drill === 'monthly' ? net_monthly : net_ytd;
   const drillTitle = drill === 'monthly' ? 'Incassi del Mese Corrente' : 'Incassi dal 1° Gennaio (YTD)';
   const drillDesc = drill
-    ? `Lordo ${formatEuro(drillGross)} · Netto ${formatEuro(drillNet)} (dopo 24,9% + ${formatEuro(fixed_monthly_cost * (drill === 'monthly' ? 1 : current_month_number))})`
+    ? `Lordo ${formatEuro(drillGross)} · Netto ${formatEuro(drillNet)} (dopo 24,9% di tasse)`
     : '';
 
   return (
@@ -129,8 +127,8 @@ export const FinancialWidget = () => {
           </p>
           <p className={`mt-1 text-sm font-medium ${aboveBreakEven ? 'text-primary' : 'text-destructive'}`}>
             {aboveBreakEven
-              ? <>+<PrivacyMask>{formatEuro(net_monthly)}</PrivacyMask> netti dopo tasse e affitto</>
-              : <>Mancano <PrivacyMask>{formatEuro(Math.abs(net_monthly))}</PrivacyMask> per coprire tasse + {formatEuro(fixed_monthly_cost)}</>}
+              ? <>+<PrivacyMask>{formatEuro(net_monthly)}</PrivacyMask> netti dopo le tasse</>
+              : <>Mancano <PrivacyMask>{formatEuro(Math.abs(net_monthly))}</PrivacyMask> per coprire le tasse</>}
           </p>
         </div>
       </div>
@@ -147,7 +145,7 @@ export const FinancialWidget = () => {
         />
         <MetricCard
           label="Netto Mese"
-          sublabel={`Dopo 24,9% + ${formatEuro(fixed_monthly_cost)}`}
+          sublabel="Dopo 24,9% di tasse"
           value={net_monthly}
           variant="net"
           icon={<TrendingUp className="h-4 w-4" />}
@@ -163,7 +161,7 @@ export const FinancialWidget = () => {
         />
         <MetricCard
           label="Netto dal 1° Gen"
-          sublabel={`Dopo 24,9% + ${formatEuro(fixed_monthly_cost * current_month_number)} affitti`}
+          sublabel="Dopo 24,9% di tasse"
           value={net_ytd}
           variant="net"
           icon={<TrendingUp className="h-4 w-4" />}
