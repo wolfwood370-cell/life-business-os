@@ -329,10 +329,12 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     transactions,
     addClient: async (c) => { await addMutation.mutateAsync(c); },
     updateClient: async (id, patch) => { await updateMutation.mutateAsync({ id, patch }); },
+    deleteClient: async (id) => { await deleteMutation.mutateAsync(id); },
     moveClient: async (id, stage) => { await moveMutation.mutateAsync({ id, stage }); },
     addRoiMetric: async (clientId, metric) => { await addRoiMutation.mutateAsync({ clientId, metric }); },
     removeRoiMetric: async (clientId, metricId) => { await removeRoiMutation.mutateAsync({ clientId, metricId }); },
     addTransaction: async (t) => { await addTransactionMutation.mutateAsync(t); },
+    stopRecurringPayment: async (transactionId) => { await stopRecurringMutation.mutateAsync(transactionId); },
     setMonthlyTarget,
   };
 
