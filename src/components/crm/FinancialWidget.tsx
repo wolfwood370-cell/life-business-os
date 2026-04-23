@@ -1,7 +1,9 @@
+import { useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
-import { formatEuro } from '@/types/crm';
+import { TAX_RATE, Transaction, formatEuro, HISTORY_START_YEAR, HISTORY_START_MONTH } from '@/types/crm';
 import { ArrowDown, ArrowUp, CalendarRange, TrendingUp, Wallet } from 'lucide-react';
 import { PrivacyMask } from './PrivacyMask';
+import { TransactionsSheet } from './TransactionsSheet';
 
 interface MetricCardProps {
   label: string;
@@ -9,13 +11,13 @@ interface MetricCardProps {
   value: number;
   variant: 'gross' | 'net';
   icon: React.ReactNode;
+  onClick?: () => void;
 }
 
-const MetricCard = ({ label, sublabel, value, variant, icon }: MetricCardProps) => {
+const MetricCard = ({ label, sublabel, value, variant, icon, onClick }: MetricCardProps) => {
   const isNet = variant === 'net';
   const isPositive = value >= 0;
 
-  // Colori condizionali per il netto: rosso se negativo, verde se positivo
   let valueColor = 'text-foreground';
   let badgeBg = 'bg-secondary';
   let badgeText = 'text-muted-foreground';
@@ -32,8 +34,10 @@ const MetricCard = ({ label, sublabel, value, variant, icon }: MetricCardProps) 
   }
 
   return (
-    <div
-      className={`rounded-2xl border p-4 shadow-card ${
+    <button
+      type="button"
+      onClick={onClick}
+      className={`text-left w-full rounded-2xl border p-4 shadow-card hover:border-primary/40 transition-smooth active:scale-[0.99] ${
         isNet
           ? isPositive
             ? 'border-primary/30 bg-primary/5'
@@ -59,12 +63,14 @@ const MetricCard = ({ label, sublabel, value, variant, icon }: MetricCardProps) 
         </p>
         <p className="text-[10px] text-muted-foreground mt-0.5">{sublabel}</p>
       </div>
-    </div>
+    </button>
   );
 };
 
+type DrillKey = 'monthly' | 'ytd' | null;
+
 export const FinancialWidget = () => {
-  const { financialSummary } = useCrm();
+  const { financialSummary, transactions } = useCrm();
   const {
     gross_monthly,
     net_monthly,
@@ -75,6 +81,41 @@ export const FinancialWidget = () => {
   } = financialSummary;
 
   const aboveBreakEven = net_monthly >= 0;
+  const [drill, setDrill] = useState<DrillKey>(null);
+
+  const monthlyTx = useMemo<Transaction[]>(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const m = now.getMonth();
+    return transactions.filter(t => {
+      if (t.status !== 'Saldato') return false;
+      const d = new Date(t.payment_date);
+      return d.getFullYear() === y && d.getMonth() === m;
+    });
+  }, [transactions]);
+
+  const ytdTx = useMemo<Transaction[]>(() => {
+    const now = new Date();
+    const y = now.getFullYear();
+    const ytdStart = new Date(
+      Math.max(y, HISTORY_START_YEAR),
+      y > HISTORY_START_YEAR ? 0 : HISTORY_START_MONTH,
+      1
+    );
+    return transactions.filter(t => {
+      if (t.status !== 'Saldato') return false;
+      const d = new Date(t.payment_date);
+      return d.getFullYear() === y && d >= ytdStart;
+    });
+  }, [transactions]);
+
+  const drillTx = drill === 'monthly' ? monthlyTx : drill === 'ytd' ? ytdTx : [];
+  const drillGross = drill === 'monthly' ? gross_monthly : gross_ytd;
+  const drillNet = drill === 'monthly' ? net_monthly : net_ytd;
+  const drillTitle = drill === 'monthly' ? 'Incassi del Mese Corrente' : 'Incassi dal 1° Gennaio (YTD)';
+  const drillDesc = drill
+    ? `Lordo ${formatEuro(drillGross)} · Netto ${formatEuro(drillNet)} (dopo 24,9% + ${formatEuro(fixed_monthly_cost * (drill === 'monthly' ? 1 : current_month_number))})`
+    : '';
 
   return (
     <div className="space-y-4">
@@ -94,7 +135,7 @@ export const FinancialWidget = () => {
         </div>
       </div>
 
-      {/* Griglia 2x2 */}
+      {/* Griglia 2x2 cliccabile */}
       <div className="grid grid-cols-2 gap-3">
         <MetricCard
           label="Lordo Mese"
@@ -102,6 +143,7 @@ export const FinancialWidget = () => {
           value={gross_monthly}
           variant="gross"
           icon={<Wallet className="h-4 w-4" />}
+          onClick={() => setDrill('monthly')}
         />
         <MetricCard
           label="Netto Mese"
@@ -109,6 +151,7 @@ export const FinancialWidget = () => {
           value={net_monthly}
           variant="net"
           icon={<TrendingUp className="h-4 w-4" />}
+          onClick={() => setDrill('monthly')}
         />
         <MetricCard
           label="Lordo dal 1° Gen"
@@ -116,6 +159,7 @@ export const FinancialWidget = () => {
           value={gross_ytd}
           variant="gross"
           icon={<CalendarRange className="h-4 w-4" />}
+          onClick={() => setDrill('ytd')}
         />
         <MetricCard
           label="Netto dal 1° Gen"
@@ -123,8 +167,19 @@ export const FinancialWidget = () => {
           value={net_ytd}
           variant="net"
           icon={<TrendingUp className="h-4 w-4" />}
+          onClick={() => setDrill('ytd')}
         />
       </div>
+
+      <TransactionsSheet
+        open={drill !== null}
+        onOpenChange={(v) => { if (!v) setDrill(null); }}
+        title={drillTitle}
+        description={drillDesc}
+        transactions={drillTx}
+      />
+      {/* Helper to silence unused import in some setups */}
+      {false && <span data-tax={TAX_RATE} />}
     </div>
   );
 };
