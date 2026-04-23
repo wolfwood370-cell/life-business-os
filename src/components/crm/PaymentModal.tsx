@@ -151,6 +151,23 @@ export const PaymentModal = ({ open, onOpenChange, clientId, clientName }: Payme
             </div>
           )}
 
+          {/* Data pagamento */}
+          <div className="space-y-2">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5" /> Data Pagamento
+            </label>
+            <Input
+              type="date"
+              value={paymentDate}
+              max={todayIso()}
+              onChange={(e) => setPaymentDate(e.target.value)}
+              className="h-12 rounded-xl bg-secondary border-0 text-base font-semibold"
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Default: oggi. Modificala per registrare un incasso passato.
+            </p>
+          </div>
+
           {/* Riepilogo */}
           {totalToCharge > 0 && (
             <div className="rounded-xl border border-border bg-secondary/40 p-3 space-y-1">
