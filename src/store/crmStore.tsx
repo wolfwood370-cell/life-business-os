@@ -396,8 +396,10 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       ? monthNum
       : Math.max(1, monthNum - HISTORY_START_MONTH);
 
-    const net_monthly = gross_monthly - (gross_monthly * TAX_RATE) - FIXED_MONTHLY_COST;
-    const net_ytd = gross_ytd - (gross_ytd * TAX_RATE) - (FIXED_MONTHLY_COST * monthsElapsed);
+    const rentCurrentMonth = rentForMonth(year, month);
+    const rentYearToDate = rentYtd(year, month);
+    const net_monthly = gross_monthly - (gross_monthly * TAX_RATE) - rentCurrentMonth;
+    const net_ytd = gross_ytd - (gross_ytd * TAX_RATE) - rentYearToDate;
 
     return {
       gross_monthly,
