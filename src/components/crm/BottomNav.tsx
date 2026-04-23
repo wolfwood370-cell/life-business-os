@@ -19,7 +19,7 @@ export const BottomNav = ({ onFabClick }: Props) => {
     <nav className="fixed bottom-0 left-0 right-0 z-40 safe-bottom">
       <div className="relative mx-auto max-w-md px-4 pb-3 pt-2">
         <div className="relative flex items-center justify-around rounded-2xl border border-border bg-card/95 backdrop-blur-xl px-2 py-2 shadow-card">
-          {items.slice(0, 1).map(({ to, label, icon: Icon }) => {
+          {items.slice(0, 2).map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
             return (
               <NavLink key={to} to={to} className={cn(
@@ -43,7 +43,7 @@ export const BottomNav = ({ onFabClick }: Props) => {
             </button>
           </div>
 
-          {items.slice(1).map(({ to, label, icon: Icon }) => {
+          {items.slice(2).map(({ to, label, icon: Icon }) => {
             const active = location.pathname === to || (to !== '/' && location.pathname.startsWith(to));
             return (
               <NavLink key={to} to={to} className={cn(
