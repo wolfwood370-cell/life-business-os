@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Euro, Loader2, Receipt } from 'lucide-react';
+import { CalendarClock, Euro, Loader2, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCrm } from '@/store/useCrm';
 import { PaymentType, formatEuro } from '@/types/crm';
