@@ -674,6 +674,13 @@ const ClientDetail = () => {
           Salva Modifiche
         </Button>
       </div>
+
+      <PaymentModal
+        open={paymentOpen}
+        onOpenChange={setPaymentOpen}
+        clientId={client.id}
+        clientName={client.name}
+      />
     </div>
   );
 };
