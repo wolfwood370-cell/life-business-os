@@ -969,6 +969,11 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     addPersonalIncome: async (i) => { await addIncomeMutation.mutateAsync(i); },
     updatePersonalIncome: async (id, patch) => { await updateIncomeMutation.mutateAsync({ id, patch }); },
     deletePersonalIncome: async (id) => { await deleteIncomeMutation.mutateAsync(id); },
+    businessExpenses,
+    addBusinessExpense: async (e) => { await addBusinessExpenseMutation.mutateAsync(e); },
+    updateBusinessExpense: async (id, patch) => { await updateBusinessExpenseMutation.mutateAsync({ id, patch }); },
+    deleteBusinessExpense: async (id) => { await deleteBusinessExpenseMutation.mutateAsync(id); },
+    endBusinessExpense: async (id) => { await endBusinessExpenseMutation.mutateAsync(id); },
     setMonthlyTarget,
   };
 
