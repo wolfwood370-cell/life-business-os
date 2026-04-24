@@ -871,23 +871,20 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       grossMap.set(key, (grossMap.get(key) ?? 0) + t.amount);
     }
 
-    const monthExpenses = (y: number, m: number): number => {
+    const sumMonthExpenses = (
+      list: { is_recurring: boolean; start_date: string; end_date?: string; amount: number }[],
+      y: number, m: number
+    ): number => {
       const monthStart = new Date(y, m, 1);
       const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
       let total = 0;
-      for (const e of personalExpenses) {
+      for (const e of list) {
         const start = new Date(e.start_date);
         const end = e.end_date ? new Date(e.end_date) : null;
         if (e.is_recurring) {
-          // Attiva nel mese se start <= fine mese E (no end OR end >= inizio mese)
-          if (start <= monthEnd && (!end || end >= monthStart)) {
-            total += e.amount;
-          }
+          if (start <= monthEnd && (!end || end >= monthStart)) total += e.amount;
         } else {
-          // Una tantum: cade nel mese?
-          if (start >= monthStart && start <= monthEnd) {
-            total += e.amount;
-          }
+          if (start >= monthStart && start <= monthEnd) total += e.amount;
         }
       }
       return total;
@@ -910,14 +907,17 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     while (y < endYear || (y === endYear && m <= endMonth)) {
       const gross = grossMap.get(`${y}-${m}`) ?? 0;
       const taxes = gross * TAX_RATE;
-      const net_business = gross - taxes;
-      const expenses = monthExpenses(y, m);
+      const biz_expenses = sumMonthExpenses(businessExpenses, y, m);
+      const net_business = gross - taxes - biz_expenses;
+      const expenses = sumMonthExpenses(personalExpenses, y, m);
       const incomes = monthIncomes(y, m);
       const free_cash_flow = net_business + incomes - expenses;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
       months.push({
         year: y, month: m, label,
-        gross, taxes, net_business,
+        gross, taxes,
+        business_expenses: biz_expenses,
+        net_business,
         personal_expenses: expenses,
         personal_incomes: incomes,
         free_cash_flow,
@@ -927,7 +927,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       if (m > 11) { m = 0; y += 1; }
     }
     return months;
-  }, [transactions, personalExpenses, personalIncomes]);
+  }, [transactions, personalExpenses, personalIncomes, businessExpenses]);
 
   const value: CrmContextValue = {
     clients,
