@@ -143,6 +143,15 @@ const ClientDetail = () => {
     );
   }
 
+  // Derive lead_score from base (lead source) + objective behavior checklist, capped at 100
+  const baseScore = baseLeadScore(client.lead_source);
+  const behaviorBonus =
+    (behaviorResponsive ? 10 : 0) +
+    (behaviorBookedSession ? 20 : 0) +
+    (behaviorNoMoneyObjection ? 10 : 0) +
+    (behaviorUrgency ? 10 : 0);
+  const score = Math.min(100, baseScore + behaviorBonus);
+
   const handleSave = () => {
     const fn = firstName.trim();
     const ln = lastName.trim();
