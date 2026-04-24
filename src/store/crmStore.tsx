@@ -756,20 +756,41 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       return total;
     };
 
+    const monthIncomes = (y: number, m: number): number => {
+      const monthStart = new Date(y, m, 1);
+      const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
+      let total = 0;
+      for (const i of personalIncomes) {
+        const d = new Date(i.date);
+        if (d >= monthStart && d <= monthEnd) total += i.amount;
+      }
+      return total;
+    };
+
     const months: MonthlyBreakdown[] = [];
     let y = HISTORY_START_YEAR;
     let m = HISTORY_START_MONTH;
     while (y < endYear || (y === endYear && m <= endMonth)) {
       const gross = grossMap.get(`${y}-${m}`) ?? 0;
+      const taxes = gross * TAX_RATE;
+      const net_business = gross - taxes;
       const expenses = monthExpenses(y, m);
-      const net = gross - (gross * TAX_RATE) - expenses;
+      const incomes = monthIncomes(y, m);
+      const free_cash_flow = net_business + incomes - expenses;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
-      months.push({ year: y, month: m, label, gross, net });
+      months.push({
+        year: y, month: m, label,
+        gross, taxes, net_business,
+        personal_expenses: expenses,
+        personal_incomes: incomes,
+        free_cash_flow,
+        net: free_cash_flow, // backward-compat
+      });
       m += 1;
       if (m > 11) { m = 0; y += 1; }
     }
     return months;
-  }, [transactions, personalExpenses]);
+  }, [transactions, personalExpenses, personalIncomes]);
 
   const value: CrmContextValue = {
     clients,
