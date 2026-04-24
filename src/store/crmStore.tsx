@@ -253,6 +253,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       return (data as any[]).map(r => ({ id: r.id, name: r.name, created_at: r.created_at }));
     },
   });
+
+  const { data: personalIncomes = [] } = useQuery({
     queryKey: ['crm', 'personal_incomes'],
     queryFn: async (): Promise<PersonalIncome[]> => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
