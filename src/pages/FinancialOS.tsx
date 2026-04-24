@@ -27,13 +27,15 @@ interface ExpenseFormState {
   id?: string;
   name: string;
   amount: string;
-  is_recurring: boolean;
+  recurrence_type: RecurrenceType;
+  recurrence_value: string;
   category: string;
-  start_date: string;   // YYYY-MM-DD
+  start_date: string;
 }
 
 const emptyExpense = (): ExpenseFormState => ({
-  name: '', amount: '', is_recurring: true, category: 'Altro', start_date: todayIso(),
+  name: '', amount: '', recurrence_type: 'fixed_day', recurrence_value: '1',
+  category: 'Altro', start_date: todayIso(),
 });
 
 interface GoalFormState {
@@ -54,24 +56,29 @@ interface IncomeFormState {
   id?: string;
   name: string;
   amount: string;
-  date: string;        // YYYY-MM-DD
+  date: string;
   category: string;
+  recurrence_type: RecurrenceType;
+  recurrence_value: string;
 }
 
 const emptyIncome = (): IncomeFormState => ({
   name: '', amount: '', date: todayIso(), category: 'Altro',
+  recurrence_type: 'none', recurrence_value: '',
 });
 
 interface BizExpenseFormState {
   id?: string;
   name: string;
   amount: string;
-  is_recurring: boolean;
+  recurrence_type: RecurrenceType;
+  recurrence_value: string;
   category: string;
   start_date: string;
 }
 const emptyBizExpense = (): BizExpenseFormState => ({
-  name: '', amount: '', is_recurring: true, category: 'Software', start_date: todayIso(),
+  name: '', amount: '', recurrence_type: 'fixed_day', recurrence_value: '1',
+  category: 'Software', start_date: todayIso(),
 });
 
 const FinancialOS = () => {
