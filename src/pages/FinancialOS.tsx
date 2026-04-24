@@ -279,6 +279,8 @@ const FinancialOS = () => {
       id: i.id, name: i.name, amount: String(i.amount),
       date: i.date ? i.date.slice(0, 10) : todayIso(),
       category: i.category || 'Altro',
+      recurrence_type: i.recurrence_type ?? 'none',
+      recurrence_value: i.recurrence_value != null ? String(i.recurrence_value) : '',
     });
     setNewIncomeCategoryName('');
     setIncomeOpen(true);
@@ -286,10 +288,13 @@ const FinancialOS = () => {
   const submitIncome = async () => {
     const amount = Number(incomeForm.amount.replace(',', '.'));
     if (!incomeForm.name.trim() || !Number.isFinite(amount) || amount <= 0) {
-      toast.error('Inserisci nome e importo validi');
-      return;
+      toast.error('Inserisci nome e importo validi'); return;
     }
     if (!incomeForm.date) { toast.error('Seleziona la data'); return; }
+    const recValue = parseRecValue(incomeForm.recurrence_type, incomeForm.recurrence_value);
+    if (incomeForm.recurrence_type !== 'none' && recValue === undefined) {
+      toast.error('Inserisci un valore valido per la ricorrenza'); return;
+    }
     let finalCategory = incomeForm.category;
     if (incomeForm.category === NEW_CATEGORY_SENTINEL) {
       const trimmed = newIncomeCategoryName.trim();
@@ -299,16 +304,16 @@ const FinancialOS = () => {
       if (!exists) { try { await addIncomeCategory(trimmed); } catch { /* silent */ } }
     }
     const dateIso = dateInputToIso(incomeForm.date) ?? new Date().toISOString();
+    const payload = {
+      name: incomeForm.name.trim(), amount, date: dateIso, category: finalCategory,
+      recurrence_type: incomeForm.recurrence_type, recurrence_value: recValue,
+    };
     try {
       if (incomeForm.id) {
-        await updatePersonalIncome(incomeForm.id, {
-          name: incomeForm.name.trim(), amount, date: dateIso, category: finalCategory,
-        });
+        await updatePersonalIncome(incomeForm.id, payload);
         toast.success('Ricavo aggiornato');
       } else {
-        await addPersonalIncome({
-          name: incomeForm.name.trim(), amount, date: dateIso, category: finalCategory,
-        });
+        await addPersonalIncome(payload);
         toast.success('Ricavo aggiunto');
       }
       setIncomeOpen(false);
