@@ -556,7 +556,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       const { error } = await (supabase as any).from('personal_expenses').insert({
         name: e.name,
         amount: e.amount,
-        is_recurring: e.is_recurring,
+        is_recurring: e.recurrence_type !== 'none',
+        recurrence_type: e.recurrence_type,
+        recurrence_value: e.recurrence_value ?? null,
         category: e.category,
         start_date: e.start_date,
         end_date: e.end_date ?? null,
@@ -570,35 +572,30 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
 
-      // Recupera la riga esistente per decidere se fare Copy-on-Write
       const { data: existing, error: fetchErr } = await sb
-        .from('personal_expenses')
-        .select('*')
-        .eq('id', id)
-        .single();
+        .from('personal_expenses').select('*').eq('id', id).single();
       if (fetchErr) throw fetchErr;
 
-      const isRecurring = Boolean(existing?.is_recurring);
-      const amountChanged =
-        patch.amount !== undefined && Number(patch.amount) !== Number(existing?.amount);
+      const wasRecurring = (existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none')) !== 'none';
+      const newRecurrenceType = patch.recurrence_type ?? existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none');
+      const newRecurrenceValue = patch.recurrence_value !== undefined ? patch.recurrence_value : existing?.recurrence_value;
+      const amountChanged = patch.amount !== undefined && Number(patch.amount) !== Number(existing?.amount);
+      const recurrenceChanged =
+        (patch.recurrence_type !== undefined && patch.recurrence_type !== existing?.recurrence_type) ||
+        (patch.recurrence_value !== undefined && patch.recurrence_value !== existing?.recurrence_value);
 
-      // SCD Type 2: se è ricorrente E l'importo cambia, chiudiamo la vecchia riga
-      // (end_date = oggi) e creiamo una nuova riga con il nuovo importo da oggi.
-      if (isRecurring && amountChanged) {
+      // SCD Type 2: snapshot storico se cambia importo o pattern di una ricorrente
+      if (wasRecurring && (amountChanged || recurrenceChanged)) {
         const todayIso = new Date().toISOString();
-
-        // 1) Chiudi storicamente la vecchia spesa
         const { error: closeErr } = await sb
-          .from('personal_expenses')
-          .update({ end_date: todayIso })
-          .eq('id', id);
+          .from('personal_expenses').update({ end_date: todayIso }).eq('id', id);
         if (closeErr) throw closeErr;
-
-        // 2) Crea una nuova riga con i campi aggiornati (merge patch su existing)
         const { error: insertErr } = await sb.from('personal_expenses').insert({
           name: patch.name ?? existing.name,
-          amount: patch.amount,
-          is_recurring: true,
+          amount: patch.amount ?? existing.amount,
+          is_recurring: newRecurrenceType !== 'none',
+          recurrence_type: newRecurrenceType,
+          recurrence_value: newRecurrenceValue ?? null,
           category: patch.category ?? existing.category,
           start_date: todayIso,
           end_date: null,
@@ -607,8 +604,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      // Caso normale: aggiorno in place (rinomina, cambio categoria, ecc.)
-      const { error } = await sb.from('personal_expenses').update(patch).eq('id', id);
+      const dbPatch: Record<string, unknown> = { ...patch };
+      if (patch.recurrence_type !== undefined) dbPatch.is_recurring = patch.recurrence_type !== 'none';
+      const { error } = await sb.from('personal_expenses').update(dbPatch).eq('id', id);
       if (error) throw error;
     },
     onSuccess: invalidateExpenses,
