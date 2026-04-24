@@ -296,7 +296,7 @@ const ClientDetail = () => {
               <h2 className="text-xl font-bold truncate text-foreground">{client.name}</h2>
               <div className="mt-1.5 flex flex-wrap gap-2">
                 <SourceBadge source={client.lead_source} />
-                {client.churn_risk && <ChurnBadge risk={client.churn_risk} />}
+                {client.pipeline_stage === 'Closed Won' && client.churn_risk && <ChurnBadge risk={client.churn_risk} />}
               </div>
             </div>
             {typeof client.lead_score === 'number' && (
