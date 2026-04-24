@@ -64,6 +64,7 @@ export const MonthlyHistory = () => {
                 />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="Lordo" fill={COLOR_GROSS} radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Spese Aziend." fill={COLOR_BIZ_EXPENSES} radius={[6, 6, 0, 0]} />
                 <Bar dataKey="Utile Aziendale" fill={COLOR_NET_BUSINESS} radius={[6, 6, 0, 0]} />
                 <Bar dataKey="Spese" fill={COLOR_EXPENSES} radius={[6, 6, 0, 0]} />
                 <Bar dataKey="Ricavi" fill={COLOR_INCOMES} radius={[6, 6, 0, 0]} />
