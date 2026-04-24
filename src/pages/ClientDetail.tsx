@@ -433,45 +433,124 @@ const ClientDetail = () => {
               </div>
             </section>
 
-            {/* AI Scoring & Churn */}
+            {/* Lead Score guidato + Churn (solo per clienti attivi) */}
             <section className="rounded-2xl border border-border bg-card p-4 space-y-5 shadow-card">
               <div className="flex items-center gap-2">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold text-sm text-foreground">Lead Score & Rischio</h3>
+                <h3 className="font-bold text-sm text-foreground">Lead Score Guidato</h3>
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    Lead Score (probabilità di conversione)
-                  </label>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Punteggio Calcolato
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
+                      Base fonte ({leadSourceLabel[client.lead_source]}): <span className="font-semibold text-foreground">{baseScore}</span> + Comportamenti: <span className="font-semibold text-foreground">+{behaviorBonus}</span>
+                    </p>
+                  </div>
                   <LeadScoreBadge score={score} />
                 </div>
-                <Slider
-                  value={[score]}
-                  onValueChange={(v) => setScore(v[0])}
-                  min={0}
-                  max={100}
-                  step={5}
-                  className="py-2"
-                />
+
+                {/* Progress bar visiva */}
+                <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-300"
+                    style={{ width: `${score}%` }}
+                  />
+                </div>
+
+                {/* Checklist comportamenti oggettivi */}
+                <div className="space-y-2 pt-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Comportamenti osservati
+                  </p>
+
+                  <label
+                    htmlFor="behavior-responsive"
+                    className="flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-3 cursor-pointer active:bg-secondary transition-smooth"
+                  >
+                    <Checkbox
+                      id="behavior-responsive"
+                      checked={behaviorResponsive}
+                      onCheckedChange={(v) => setBehaviorResponsive(v === true)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-tight">Risponde tempestivamente (entro poche ore)</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">+10 pt</p>
+                    </div>
+                  </label>
+
+                  <label
+                    htmlFor="behavior-booked"
+                    className="flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-3 cursor-pointer active:bg-secondary transition-smooth"
+                  >
+                    <Checkbox
+                      id="behavior-booked"
+                      checked={behaviorBookedSession}
+                      onCheckedChange={(v) => setBehaviorBookedSession(v === true)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-tight">Ha fissato la sessione di prova / chiamata</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">+20 pt</p>
+                    </div>
+                  </label>
+
+                  <label
+                    htmlFor="behavior-nomoney"
+                    className="flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-3 cursor-pointer active:bg-secondary transition-smooth"
+                  >
+                    <Checkbox
+                      id="behavior-nomoney"
+                      checked={behaviorNoMoneyObjection}
+                      onCheckedChange={(v) => setBehaviorNoMoneyObjection(v === true)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-tight">Non ha espresso forti obiezioni sui soldi</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">+10 pt</p>
+                    </div>
+                  </label>
+
+                  <label
+                    htmlFor="behavior-urgency"
+                    className="flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-3 cursor-pointer active:bg-secondary transition-smooth"
+                  >
+                    <Checkbox
+                      id="behavior-urgency"
+                      checked={behaviorUrgency}
+                      onCheckedChange={(v) => setBehaviorUrgency(v === true)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-tight">Mostra urgenza o forte dolore / motivazione</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">+10 pt</p>
+                    </div>
+                  </label>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <AlertTriangle className="h-3.5 w-3.5" /> Rischio di Abbandono
-                </label>
-                <Select value={churn} onValueChange={(v) => setChurn(v as ChurnRisk)}>
-                  <SelectTrigger className="h-12 rounded-xl border border-border bg-card text-sm font-semibold">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CHURN_RISKS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Rischio di Abbandono — solo per clienti paganti (Closed Won) */}
+              {isActiveClient && (
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5" /> Rischio di Abbandono
+                  </label>
+                  <Select value={churn} onValueChange={(v) => setChurn(v as ChurnRisk)}>
+                    <SelectTrigger className="h-12 rounded-xl border border-border bg-card text-sm font-semibold">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CHURN_RISKS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
             </section>
 
             {/* AI Sales Assistant */}
