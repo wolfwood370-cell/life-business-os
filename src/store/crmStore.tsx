@@ -722,6 +722,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         amount: i.amount,
         date: i.date,
         category: i.category,
+        recurrence_type: i.recurrence_type ?? 'none',
+        recurrence_value: i.recurrence_value ?? null,
+        end_date: i.end_date ?? null,
       });
       if (error) throw error;
     },
@@ -729,8 +732,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
   });
   const updateIncomeMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<PersonalIncome> }) => {
+      const dbPatch: Record<string, unknown> = { ...patch };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('personal_incomes').update(patch).eq('id', id);
+      const { error } = await (supabase as any).from('personal_incomes').update(dbPatch).eq('id', id);
       if (error) throw error;
     },
     onSuccess: invalidateIncomes,
