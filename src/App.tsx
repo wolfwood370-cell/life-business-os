@@ -13,6 +13,7 @@ import Pipeline from "./pages/Pipeline";
 import Clients from "./pages/Clients";
 import ClientDetail from "./pages/ClientDetail";
 import SalesCoach from "./pages/SalesCoach";
+import SalesStrategy from "./pages/SalesStrategy";
 import FinancialOS from "./pages/FinancialOS";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -38,6 +39,7 @@ const App = () => (
                   <Route path="/clients" element={<Clients />} />
                   <Route path="/clients/:id" element={<ClientDetail />} />
                   <Route path="/coach" element={<SalesCoach />} />
+                  <Route path="/strategy" element={<SalesStrategy />} />
                   <Route path="/finance" element={<FinancialOS />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
