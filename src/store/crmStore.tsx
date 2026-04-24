@@ -182,6 +182,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         name: r.name,
         amount: Number(r.amount),
         is_recurring: Boolean(r.is_recurring),
+        recurrence_type: ((r.recurrence_type as RecurrenceType) ?? (r.is_recurring ? 'fixed_day' : 'none')),
+        recurrence_value: r.recurrence_value ?? undefined,
         category: r.category,
         created_at: r.created_at,
         start_date: r.start_date ?? r.created_at,
