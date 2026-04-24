@@ -660,7 +660,19 @@ const ClientDetail = () => {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-[10px] text-muted-foreground">L'importo si compila automaticamente, ma puoi modificarlo.</p>
+                    {payServiceId && (() => {
+                      const svc = services.find(s => s.id === payServiceId);
+                      return svc ? (
+                        <p className="text-[10px] text-muted-foreground">
+                          Prezzo di listino: <span className="font-semibold text-foreground">{formatEuro(svc.price)}</span> · puoi modificare l'importo qui sotto.
+                        </p>
+                      ) : (
+                        <p className="text-[10px] text-muted-foreground">L'importo si compila automaticamente, ma puoi modificarlo.</p>
+                      );
+                    })()}
+                    {!payServiceId && (
+                      <p className="text-[10px] text-muted-foreground">L'importo si compila automaticamente, ma puoi modificarlo.</p>
+                    )}
                   </div>
 
                   {/* Importo Totale */}
