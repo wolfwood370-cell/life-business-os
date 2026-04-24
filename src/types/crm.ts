@@ -136,11 +136,21 @@ export interface MonthlyBreakdown {
   net: number;
 }
 
+export type RecurrenceType = 'none' | 'fixed_day' | 'interval_days';
+export const RECURRENCE_TYPES: RecurrenceType[] = ['none', 'fixed_day', 'interval_days'];
+export const recurrenceTypeLabel: Record<RecurrenceType, string> = {
+  none: 'Occasionale / Una Tantum',
+  fixed_day: 'Giorno Fisso del Mese',
+  interval_days: 'Intervallo di Giorni',
+};
+
 export interface BusinessExpense {
   id: string;
   name: string;
   amount: number;
-  is_recurring: boolean;
+  is_recurring: boolean;        // legacy/derived: true se recurrence_type !== 'none'
+  recurrence_type: RecurrenceType;
+  recurrence_value?: number;    // day-of-month (1-31) o numero giorni
   category: string;
   created_at: string;
   start_date: string;
