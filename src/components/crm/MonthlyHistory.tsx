@@ -8,18 +8,18 @@ import {
 
 const COLOR_GROSS = 'hsl(160 84% 39%)';        // emerald-600
 const COLOR_NET_BUSINESS = 'hsl(158 64% 52%)'; // emerald-400
+const COLOR_BIZ_EXPENSES = 'hsl(215 28% 45%)'; // slate-600
 const COLOR_EXPENSES = 'hsl(347 77% 50%)';     // rose-600
 const COLOR_INCOMES = 'hsl(43 96% 56%)';       // amber-400
 const COLOR_FCF = 'hsl(221 83% 53%)';          // blue-600
 
 export const MonthlyHistory = () => {
   const { monthlyBreakdown } = useCrm();
-  // Mostra in ordine cronologico inverso (più recente in alto) per la tabella
   const rows = [...monthlyBreakdown].reverse();
-  // Per il grafico mantieni ordine cronologico
   const chartData = monthlyBreakdown.map(m => ({
     label: m.label,
     Lordo: Math.round(m.gross),
+    'Spese Aziend.': Math.round(m.business_expenses),
     'Utile Aziendale': Math.round(m.net_business),
     Spese: Math.round(m.personal_expenses),
     Ricavi: Math.round(m.personal_incomes),
