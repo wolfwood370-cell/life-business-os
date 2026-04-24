@@ -2,7 +2,7 @@ import { createContext } from 'react';
 import {
   Client, FinancialSummary, MonthlyBreakdown, PipelineStage, RoiMetric,
   Service, Transaction, PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory,
-  PersonalIncome, BusinessExpense,
+  PersonalIncome, BusinessExpense, BusinessExpenseCategory, IncomeCategory,
 } from '@/types/crm';
 
 export interface CrmContextValue {
@@ -50,6 +50,14 @@ export interface CrmContextValue {
   updateBusinessExpense: (id: string, patch: Partial<BusinessExpense>) => Promise<void>;
   deleteBusinessExpense: (id: string) => Promise<void>;
   endBusinessExpense: (id: string) => Promise<void>;
+  businessExpenseCategories: BusinessExpenseCategory[];
+  addBusinessExpenseCategory: (name: string) => Promise<BusinessExpenseCategory | null>;
+  updateBusinessExpenseCategory: (id: string, name: string) => Promise<void>;
+  deleteBusinessExpenseCategory: (id: string) => Promise<void>;
+  incomeCategories: IncomeCategory[];
+  addIncomeCategory: (name: string) => Promise<IncomeCategory | null>;
+  updateIncomeCategory: (id: string, name: string) => Promise<void>;
+  deleteIncomeCategory: (id: string) => Promise<void>;
   setMonthlyTarget: (n: number) => void;
 }
 
