@@ -1081,6 +1081,14 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     updateBusinessExpense: async (id, patch) => { await updateBusinessExpenseMutation.mutateAsync({ id, patch }); },
     deleteBusinessExpense: async (id) => { await deleteBusinessExpenseMutation.mutateAsync(id); },
     endBusinessExpense: async (id) => { await endBusinessExpenseMutation.mutateAsync(id); },
+    businessExpenseCategories,
+    addBusinessExpenseCategory: async (name) => await addBizCategoryMutation.mutateAsync(name),
+    updateBusinessExpenseCategory: async (id, name) => { await updateBizCategoryMutation.mutateAsync({ id, name }); },
+    deleteBusinessExpenseCategory: async (id) => { await deleteBizCategoryMutation.mutateAsync(id); },
+    incomeCategories,
+    addIncomeCategory: async (name) => await addIncomeCategoryMutation.mutateAsync(name),
+    updateIncomeCategory: async (id, name) => { await updateIncomeCategoryMutation.mutateAsync({ id, name }); },
+    deleteIncomeCategory: async (id) => { await deleteIncomeCategoryMutation.mutateAsync(id); },
     setMonthlyTarget,
   };
 
