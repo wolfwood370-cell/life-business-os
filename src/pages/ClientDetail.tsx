@@ -167,7 +167,7 @@ const ClientDetail = () => {
       next_renewal_date: renewal ? new Date(renewal).toISOString() : undefined,
       last_contacted_at: lastContact ? new Date(lastContact).toISOString() : undefined,
       lead_score: score,
-      churn_risk: churn,
+      churn_risk: client.pipeline_stage === 'Closed Won' ? churn : undefined,
       birth_date: birthDate || undefined,
       gender: (gender || undefined) as Gender | undefined,
       gym_signup_date: gymSignup || undefined,
