@@ -235,6 +235,39 @@ export type Database = {
           },
         ]
       }
+      sales_coach_config: {
+        Row: {
+          created_at: string
+          free_session_process: string
+          id: string
+          last_report_date: string | null
+          latest_report: Json | null
+          pt_pack_process: string
+          sales_script: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          free_session_process?: string
+          id?: string
+          last_report_date?: string | null
+          latest_report?: Json | null
+          pt_pack_process?: string
+          sales_script?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          free_session_process?: string
+          id?: string
+          last_report_date?: string | null
+          latest_report?: Json | null
+          pt_pack_process?: string
+          sales_script?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       services: {
         Row: {
           category: string
