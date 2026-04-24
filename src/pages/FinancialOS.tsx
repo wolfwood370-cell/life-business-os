@@ -819,6 +819,71 @@ const FinancialOS = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Income Dialog */}
+      <Dialog open={incomeOpen} onOpenChange={setIncomeOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{incomeForm.id ? 'Modifica ricavo' : 'Nuovo ricavo personale'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="inc-name">Nome</Label>
+              <Input
+                id="inc-name"
+                placeholder="es. Regalo compleanno, Consulto extra"
+                value={incomeForm.name}
+                onChange={e => setIncomeForm(s => ({ ...s, name: e.target.value }))}
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="inc-amount">Importo (€)</Label>
+                <Input
+                  id="inc-amount"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={incomeForm.amount}
+                  onChange={e => setIncomeForm(s => ({ ...s, amount: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="inc-cat">Categoria</Label>
+                <Select
+                  value={incomeForm.category}
+                  onValueChange={v => setIncomeForm(s => ({ ...s, category: v }))}
+                >
+                  <SelectTrigger id="inc-cat"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {incomeCategories.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="inc-date">Data</Label>
+              <Input
+                id="inc-date"
+                type="date"
+                value={incomeForm.date}
+                onChange={e => setIncomeForm(s => ({ ...s, date: e.target.value }))}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Il ricavo verrà sommato al Cash Flow del mese selezionato.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIncomeOpen(false)}>Annulla</Button>
+            <Button onClick={submitIncome} className="gradient-primary text-primary-foreground">
+              Salva
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
