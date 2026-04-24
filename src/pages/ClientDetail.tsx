@@ -55,6 +55,59 @@ const ClientDetail = () => {
   const [payDate, setPayDate] = useState<string>(todayIso());
   const [paySubmitting, setPaySubmitting] = useState(false);
 
+  // Edit & delete transaction state
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [editAmount, setEditAmount] = useState('');
+  const [editDueDate, setEditDueDate] = useState('');
+  const [editPaymentDate, setEditPaymentDate] = useState('');
+  const [editStatus, setEditStatus] = useState<TransactionStatus>('Saldato');
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [deletingTxId, setDeletingTxId] = useState<string | null>(null);
+
+  const openEditTx = (t: Transaction) => {
+    setEditingTx(t);
+    setEditAmount(String(t.amount));
+    setEditDueDate(t.due_date ? t.due_date.slice(0, 10) : '');
+    setEditPaymentDate(t.payment_date ? t.payment_date.slice(0, 10) : '');
+    setEditStatus(t.status);
+  };
+
+  const handleSaveEditTx = async () => {
+    if (!editingTx) return;
+    const amt = Number(editAmount);
+    if (!editAmount || isNaN(amt) || amt <= 0) {
+      toast.error('Inserisci un importo valido');
+      return;
+    }
+    setEditSubmitting(true);
+    try {
+      await updateTransaction(editingTx.id, {
+        amount: amt,
+        due_date: editDueDate ? new Date(editDueDate).toISOString() : undefined,
+        payment_date: editStatus === 'Saldato' && editPaymentDate
+          ? new Date(editPaymentDate).toISOString()
+          : undefined,
+        status: editStatus,
+      });
+      toast.success('Pagamento aggiornato');
+      setEditingTx(null);
+    } catch {
+      toast.error("Errore nell'aggiornamento del pagamento");
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
+
+  const handleDeleteTx = async (transactionId: string) => {
+    try {
+      await deleteTransaction(transactionId);
+      toast.success('Pagamento eliminato');
+    } catch {
+      toast.error("Errore durante l'eliminazione");
+    } finally {
+      setDeletingTxId(null);
+    }
+  };
 
   const clientTransactions = useMemo(
     () => transactions.filter(t => t.client_id === id).sort((a, b) =>
