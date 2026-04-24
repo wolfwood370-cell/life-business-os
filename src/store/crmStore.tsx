@@ -899,24 +899,83 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     [clients]
   );
 
-  // ---------- Dynamic Target ----------
+  // ---------- Recurrence engine ----------
+  // Conta quante volte un item ricorrente cade nel mese (y,m), rispettando start/end.
+  // Per 'fixed_day' = 0 o 1 occorrenza nel mese (clamp al last day del mese).
+  // Per 'interval_days' = numero di multipli di N giorni a partire da start_date che cadono nel mese.
+  type RecurringRow = {
+    recurrence_type: RecurrenceType;
+    recurrence_value?: number;
+    start_date: string;
+    end_date?: string;
+    amount: number;
+  };
+  const occurrencesInMonth = (e: RecurringRow, y: number, m: number): number => {
+    const monthStart = new Date(y, m, 1);
+    const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
+    const lastDay = monthEnd.getDate();
+    const start = new Date(e.start_date);
+    const end = e.end_date ? new Date(e.end_date) : null;
+    const winStart = start > monthStart ? start : monthStart;
+    const winEnd = end && end < monthEnd ? end : monthEnd;
+    if (winStart > winEnd) return 0;
+
+    if (e.recurrence_type === 'fixed_day') {
+      const day = Math.min(Math.max(1, e.recurrence_value ?? start.getDate()), lastDay);
+      const occ = new Date(y, m, day, 12, 0, 0);
+      return occ >= winStart && occ <= winEnd ? 1 : 0;
+    }
+    if (e.recurrence_type === 'interval_days') {
+      const interval = Math.max(1, e.recurrence_value ?? 30);
+      const msPerDay = 86_400_000;
+      const diffDays = Math.floor((winStart.getTime() - start.getTime()) / msPerDay);
+      const firstK = Math.max(0, Math.ceil(diffDays / interval));
+      let count = 0;
+      for (let k = firstK; k < 1000; k++) {
+        const occ = new Date(start.getTime() + k * interval * msPerDay);
+        if (occ > winEnd) break;
+        if (occ >= winStart) count++;
+      }
+      return count;
+    }
+    return 0;
+  };
+
+  // ---------- Dynamic Target (Adaptive Buffer) ----------
   const dynamicTarget = useMemo<DynamicTarget>(() => {
     const now = new Date();
-    const isActiveRecurringNow = (e: { is_recurring: boolean; start_date: string; end_date?: string; }) => {
-      if (!e.is_recurring) return false;
-      const start = new Date(e.start_date);
-      if (start > now) return false;
-      if (e.end_date && new Date(e.end_date) < now) return false;
-      return true;
-    };
+    const y = now.getFullYear();
+    const m = now.getMonth();
 
+    // Fixed Baseline: occorrenze previste questo mese × amount
     const totalRecurringExpenses = personalExpenses
-      .filter(isActiveRecurringNow)
-      .reduce((s, e) => s + e.amount, 0);
+      .filter(e => e.recurrence_type !== 'none')
+      .reduce((s, e) => s + e.amount * occurrencesInMonth(e, y, m), 0);
 
     const totalRecurringBusinessExpenses = businessExpenses
-      .filter(isActiveRecurringNow)
-      .reduce((s, e) => s + e.amount, 0);
+      .filter(e => e.recurrence_type !== 'none')
+      .reduce((s, e) => s + e.amount * occurrencesInMonth(e, y, m), 0);
+
+    const fixedBaseline = totalRecurringExpenses + totalRecurringBusinessExpenses;
+
+    // Adaptive Buffer: media mensile delle spese 'none' negli ultimi 90 giorni
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 86_400_000);
+    const occasionalSum =
+      personalExpenses
+        .filter(e => e.recurrence_type === 'none')
+        .filter(e => {
+          const d = new Date(e.start_date);
+          return d >= ninetyDaysAgo && d <= now;
+        })
+        .reduce((s, e) => s + e.amount, 0) +
+      businessExpenses
+        .filter(e => e.recurrence_type === 'none')
+        .filter(e => {
+          const d = new Date(e.start_date);
+          return d >= ninetyDaysAgo && d <= now;
+        })
+        .reduce((s, e) => s + e.amount, 0);
+    const adaptiveBuffer = occasionalSum / 3; // 90gg → media mensile
 
     const activeGoal = lifeGoals.find(g => g.is_active);
     let monthlyGoalSaving = 0;
@@ -929,13 +988,14 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       monthlyGoalSaving = remaining / monthsUntilDeadline;
     }
 
-    // Net necessario copre: spese personali ricorrenti + spese business ricorrenti + risparmio obiettivo
-    const totalNetNeeded = totalRecurringExpenses + totalRecurringBusinessExpenses + monthlyGoalSaving;
+    const totalNetNeeded = fixedBaseline + adaptiveBuffer + monthlyGoalSaving;
     const dynamicGrossTarget = totalNetNeeded / (1 - TAX_RATE);
 
     return {
       totalRecurringExpenses,
       totalRecurringBusinessExpenses,
+      fixedBaseline,
+      adaptiveBuffer,
       monthlyGoalSaving,
       totalNetNeeded,
       dynamicGrossTarget,
