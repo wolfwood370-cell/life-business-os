@@ -698,6 +698,7 @@ const FinancialOS = () => {
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>{expenseForm.id ? 'Modifica spesa' : 'Nuova spesa personale'}</DialogTitle>
+            <DialogDescription>Inserisci nome, importo e categoria. Attiva la ricorrenza per le spese mensili.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -795,6 +796,7 @@ const FinancialOS = () => {
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>{goalForm.id ? 'Modifica obiettivo' : 'Nuovo obiettivo di vita'}</DialogTitle>
+            <DialogDescription>Definisci il traguardo e la scadenza per calcolare il risparmio mensile necessario.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
@@ -863,6 +865,7 @@ const FinancialOS = () => {
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>Gestisci Categorie</DialogTitle>
+            <DialogDescription>Aggiungi, rinomina o elimina le categorie personalizzate per le tue spese.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
@@ -962,6 +965,7 @@ const FinancialOS = () => {
         <DialogContent className="rounded-2xl">
           <DialogHeader>
             <DialogTitle>{incomeForm.id ? 'Modifica ricavo' : 'Nuovo ricavo personale'}</DialogTitle>
+            <DialogDescription>Registra entrate non aziendali (regali, consulti extra) per il calcolo del Cash Flow.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div>
