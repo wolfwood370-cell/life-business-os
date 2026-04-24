@@ -486,35 +486,46 @@ const FinancialOS = () => {
             </div>
           </div>
         ) : (
-          <p className="mt-4 text-sm text-muted-foreground">Nessun obiettivo attivo. Crea il tuo primo obiettivo (es. "Trasferimento a Tokyo") per attivare il calcolo dinamico.</p>
+          <p className="mt-4 text-sm text-muted-foreground">Nessun obiettivo attivo. Crea il tuo primo obiettivo di risparmio per attivare il calcolo dinamico del Lordo Suggerito.</p>
         )}
 
         {/* Inactive goals */}
         {lifeGoals.filter(g => !g.is_active).length > 0 && (
           <div className="mt-5 pt-4 border-t border-border space-y-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Archiviati</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Altri obiettivi</p>
             {lifeGoals.filter(g => !g.is_active).map(g => (
-              <div key={g.id} className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">{g.title}</span>
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={async () => {
-                      try {
-                        await updateLifeGoal(g.id, { is_active: true });
-                        toast.success('Obiettivo riattivato');
-                      } catch { toast.error('Errore durante la riattivazione'); }
-                    }}
-                  >
-                    Riattiva
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => openEditGoal(g)}>
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button size="icon" variant="ghost" onClick={() => handleDeleteGoal(g.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+              <div key={g.id} className="rounded-xl border border-border bg-card p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">{g.title}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Scadenza: {new Date(g.deadline).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 gap-1">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          await updateLifeGoal(g.id, { is_active: true });
+                          toast.success('Obiettivo attivato');
+                        } catch { toast.error('Errore durante l\'attivazione'); }
+                      }}
+                    >
+                      Attiva
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => openEditGoal(g)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteGoal(g.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                  <span><PrivacyMask>{formatEuro(g.current_savings)}</PrivacyMask> / <PrivacyMask>{formatEuro(g.total_target_amount)}</PrivacyMask></span>
+                  <span>{Math.min(100, Math.round((g.current_savings / Math.max(1, g.total_target_amount)) * 100))}%</span>
                 </div>
               </div>
             ))}
@@ -722,7 +733,7 @@ const FinancialOS = () => {
         <div className="space-y-1.5 text-xs text-muted-foreground font-mono">
           <p>Spese personali ricorrenti: <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringExpenses)}</PrivacyMask></p>
           <p>+ Spese aziendali ricorrenti: <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringBusinessExpenses)}</PrivacyMask></p>
-          <p>+ Risparmio obiettivo: <PrivacyMask>{formatEuro(dynamicTarget.monthlyGoalSaving)}</PrivacyMask></p>
+          <p>+ Quota mensile per {activeGoal ? `"${activeGoal.title}"` : 'obiettivo attivo'}: <PrivacyMask>{formatEuro(dynamicTarget.monthlyGoalSaving)}</PrivacyMask></p>
           <p>= Netto necessario: <PrivacyMask>{formatEuro(dynamicTarget.totalNetNeeded)}</PrivacyMask></p>
           <p>÷ (1 − {Math.round(TAX_RATE * 100)}% tasse)</p>
           <p className="text-foreground font-bold pt-2 border-t border-border">
@@ -904,7 +915,7 @@ const FinancialOS = () => {
               <Label htmlFor="goal-title">Titolo</Label>
               <Input
                 id="goal-title"
-                placeholder="es. Trasferimento a Tokyo"
+                placeholder="es. Acquisto casa, Viaggio, Fondo emergenza"
                 value={goalForm.title}
                 onChange={e => setGoalForm(s => ({ ...s, title: e.target.value }))}
                 autoFocus
