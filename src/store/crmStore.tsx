@@ -273,6 +273,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         date: r.date,
         category: r.category ?? 'Altro',
         created_at: r.created_at,
+        recurrence_type: ((r.recurrence_type as RecurrenceType) ?? 'none'),
+        recurrence_value: r.recurrence_value ?? undefined,
+        end_date: r.end_date ?? undefined,
       }));
     },
   });
