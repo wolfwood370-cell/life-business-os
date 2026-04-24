@@ -146,57 +146,58 @@ const FinancialOS = () => {
   const openEditExpense = (e: PersonalExpense) => {
     setExpenseForm({
       id: e.id, name: e.name, amount: String(e.amount),
-      is_recurring: e.is_recurring, category: e.category,
+      recurrence_type: e.recurrence_type ?? (e.is_recurring ? 'fixed_day' : 'none'),
+      recurrence_value: e.recurrence_value != null ? String(e.recurrence_value) : '1',
+      category: e.category,
       start_date: e.start_date ? e.start_date.slice(0, 10) : todayIso(),
     });
     setNewCategoryName('');
     setExpenseOpen(true);
   };
+  const parseRecValue = (rt: RecurrenceType, rv: string): number | undefined => {
+    if (rt === 'none') return undefined;
+    const n = parseInt(rv, 10);
+    if (!Number.isFinite(n)) return undefined;
+    if (rt === 'fixed_day') return Math.min(31, Math.max(1, n));
+    return Math.max(1, n);
+  };
   const submitExpense = async () => {
     const amount = Number(expenseForm.amount.replace(',', '.'));
     if (!expenseForm.name.trim() || !Number.isFinite(amount) || amount < 0) {
-      toast.error('Inserisci nome e importo validi');
-      return;
+      toast.error('Inserisci nome e importo validi'); return;
     }
-    if (!expenseForm.start_date) {
-      toast.error(expenseForm.is_recurring ? 'Seleziona il mese di inizio' : 'Seleziona la data della spesa');
-      return;
+    if (!expenseForm.start_date) { toast.error('Seleziona la data della spesa'); return; }
+    const recValue = parseRecValue(expenseForm.recurrence_type, expenseForm.recurrence_value);
+    if (expenseForm.recurrence_type !== 'none' && recValue === undefined) {
+      toast.error('Inserisci un valore valido per la ricorrenza'); return;
     }
-
-    // Risoluzione categoria: se "Altro..." selezionato, usa il nome libero
     let finalCategory = expenseForm.category;
     if (expenseForm.category === NEW_CATEGORY_SENTINEL) {
       const trimmed = newCategoryName.trim();
-      if (!trimmed) {
-        toast.error('Inserisci il nome della nuova categoria');
-        return;
-      }
+      if (!trimmed) { toast.error('Inserisci il nome della nuova categoria'); return; }
       finalCategory = trimmed;
-      // Crea la categoria se non esiste già (case-insensitive)
       const exists = allCategoryNames.some(n => n.toLowerCase() === trimmed.toLowerCase());
-      if (!exists) {
-        try { await addExpenseCategory(trimmed); } catch { /* silent */ }
-      }
+      if (!exists) { try { await addExpenseCategory(trimmed); } catch { /* silent */ } }
     }
-
     const startIso = dateInputToIso(expenseForm.start_date) ?? new Date().toISOString();
+    const isRec = expenseForm.recurrence_type !== 'none';
     try {
       if (expenseForm.id) {
         await updatePersonalExpense(expenseForm.id, {
-          name: expenseForm.name.trim(),
-          amount,
-          is_recurring: expenseForm.is_recurring,
-          category: finalCategory,
-          start_date: startIso,
+          name: expenseForm.name.trim(), amount,
+          is_recurring: isRec,
+          recurrence_type: expenseForm.recurrence_type,
+          recurrence_value: recValue,
+          category: finalCategory, start_date: startIso,
         });
         toast.success('Spesa aggiornata');
       } else {
         await addPersonalExpense({
-          name: expenseForm.name.trim(),
-          amount,
-          is_recurring: expenseForm.is_recurring,
-          category: finalCategory,
-          start_date: startIso,
+          name: expenseForm.name.trim(), amount,
+          is_recurring: isRec,
+          recurrence_type: expenseForm.recurrence_type,
+          recurrence_value: recValue,
+          category: finalCategory, start_date: startIso,
         });
         toast.success('Spesa aggiunta');
       }
