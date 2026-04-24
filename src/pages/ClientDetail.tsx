@@ -1140,6 +1140,109 @@ const ClientDetail = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Edit Transaction Dialog */}
+        <Dialog open={!!editingTx} onOpenChange={(o) => !o && setEditingTx(null)}>
+          <DialogContent className="rounded-2xl max-w-md">
+            <DialogHeader>
+              <DialogTitle>Modifica pagamento</DialogTitle>
+              <DialogDescription>
+                Aggiorna importo, date e stato di questa transazione. Le modifiche aggiornano subito i grafici e i widget Lordo/Netto.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <Euro className="h-3 w-3" /> Importo
+                </label>
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  className="h-12 rounded-xl bg-secondary border-0 text-base font-semibold"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Stato</label>
+                <Select value={editStatus} onValueChange={(v) => setEditStatus(v as TransactionStatus)}>
+                  <SelectTrigger className="h-12 rounded-xl bg-secondary border-0 text-base font-semibold">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TRANSACTION_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <CalendarClock className="h-3 w-3" /> Scadenza prevista
+                </label>
+                <Input
+                  type="date"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                  className="h-12 rounded-xl bg-secondary border-0 text-base"
+                />
+              </div>
+              {editStatus === 'Saldato' && (
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3 w-3" /> Data incasso effettivo
+                  </label>
+                  <Input
+                    type="date"
+                    value={editPaymentDate}
+                    onChange={(e) => setEditPaymentDate(e.target.value)}
+                    className="h-12 rounded-xl bg-secondary border-0 text-base"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Modificare questa data ricalcola Fatturato Lordo e Netto del mese corrispondente.
+                  </p>
+                </div>
+              )}
+              {editingTx && editingTx.installments_count > 1 && (
+                <p className="text-[10px] text-muted-foreground rounded-lg bg-secondary/60 p-2">
+                  Questa è una rata di un piano da {editingTx.installments_count}. Le modifiche si applicano solo a questa rata.
+                </p>
+              )}
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setEditingTx(null)} className="rounded-xl">Annulla</Button>
+              <Button
+                onClick={handleSaveEditTx}
+                disabled={editSubmitting}
+                className="rounded-xl gradient-primary text-primary-foreground"
+              >
+                {editSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-1.5" />}
+                Salva modifiche
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Transaction AlertDialog */}
+        <AlertDialog open={!!deletingTxId} onOpenChange={(o) => !o && setDeletingTxId(null)}>
+          <AlertDialogContent className="rounded-2xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Eliminare questo pagamento?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Sei sicuro di voler eliminare questo pagamento? L'operazione è irreversibile e aggiornerà immediatamente i totali e i grafici.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="rounded-xl">Annulla</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => deletingTxId && handleDeleteTx(deletingTxId)}
+                className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Elimina pagamento
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );
