@@ -221,27 +221,41 @@ const FinancialOS = () => {
   const submitGoal = async () => {
     const target = Number(goalForm.total_target_amount.replace(',', '.'));
     const savings = Number(goalForm.current_savings.replace(',', '.'));
+    const safeSavings = Number.isFinite(savings) && savings >= 0 ? savings : 0;
     if (!goalForm.title.trim() || !goalForm.deadline || !Number.isFinite(target) || target <= 0) {
       toast.error('Compila titolo, importo e scadenza');
       return;
     }
+    if (safeSavings > target) {
+      toast.error('I risparmi attuali non possono superare l\'importo totale');
+      return;
+    }
+    const deadlineDate = new Date(goalForm.deadline);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (deadlineDate < today) {
+      toast.error('La scadenza deve essere nel futuro');
+      return;
+    }
+    // Auto-attiva se è il primo obiettivo o se nessuno è attivo (escludendo questo in edit)
+    const otherActive = lifeGoals.some(g => g.is_active && g.id !== goalForm.id);
+    const finalActive = goalForm.is_active || !otherActive;
     try {
       if (goalForm.id) {
         await updateLifeGoal(goalForm.id, {
           title: goalForm.title.trim(),
           total_target_amount: target,
-          current_savings: Number.isFinite(savings) ? savings : 0,
+          current_savings: safeSavings,
           deadline: goalForm.deadline,
-          is_active: goalForm.is_active,
+          is_active: finalActive,
         });
         toast.success('Obiettivo aggiornato');
       } else {
         await addLifeGoal({
           title: goalForm.title.trim(),
           total_target_amount: target,
-          current_savings: Number.isFinite(savings) ? savings : 0,
+          current_savings: safeSavings,
           deadline: goalForm.deadline,
-          is_active: goalForm.is_active,
+          is_active: finalActive,
         });
         toast.success('Obiettivo creato');
       }
