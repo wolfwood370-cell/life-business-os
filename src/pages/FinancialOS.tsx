@@ -256,7 +256,6 @@ const FinancialOS = () => {
   };
 
   // ---------- Personal Incomes ----------
-  const incomeCategories = useMemo(() => Array.from(new Set([...STANDARD_INCOME_CATEGORIES])), []);
   const monthlyIncomesTotal = useMemo(() => {
     const now = new Date();
     const y = now.getFullYear(); const m = now.getMonth();
@@ -265,13 +264,14 @@ const FinancialOS = () => {
       .reduce((s, i) => s + i.amount, 0);
   }, [personalIncomes]);
 
-  const openNewIncome = () => { setIncomeForm(emptyIncome()); setIncomeOpen(true); };
+  const openNewIncome = () => { setIncomeForm(emptyIncome()); setNewIncomeCategoryName(''); setIncomeOpen(true); };
   const openEditIncome = (i: PersonalIncome) => {
     setIncomeForm({
       id: i.id, name: i.name, amount: String(i.amount),
       date: i.date ? i.date.slice(0, 10) : todayIso(),
       category: i.category || 'Altro',
     });
+    setNewIncomeCategoryName('');
     setIncomeOpen(true);
   };
   const submitIncome = async () => {
@@ -281,16 +281,24 @@ const FinancialOS = () => {
       return;
     }
     if (!incomeForm.date) { toast.error('Seleziona la data'); return; }
+    let finalCategory = incomeForm.category;
+    if (incomeForm.category === NEW_CATEGORY_SENTINEL) {
+      const trimmed = newIncomeCategoryName.trim();
+      if (!trimmed) { toast.error('Inserisci il nome della nuova categoria'); return; }
+      finalCategory = trimmed;
+      const exists = allIncomeCategoryNames.some(n => n.toLowerCase() === trimmed.toLowerCase());
+      if (!exists) { try { await addIncomeCategory(trimmed); } catch { /* silent */ } }
+    }
     const dateIso = dateInputToIso(incomeForm.date) ?? new Date().toISOString();
     try {
       if (incomeForm.id) {
         await updatePersonalIncome(incomeForm.id, {
-          name: incomeForm.name.trim(), amount, date: dateIso, category: incomeForm.category,
+          name: incomeForm.name.trim(), amount, date: dateIso, category: finalCategory,
         });
         toast.success('Ricavo aggiornato');
       } else {
         await addPersonalIncome({
-          name: incomeForm.name.trim(), amount, date: dateIso, category: incomeForm.category,
+          name: incomeForm.name.trim(), amount, date: dateIso, category: finalCategory,
         });
         toast.success('Ricavo aggiunto');
       }
@@ -303,13 +311,14 @@ const FinancialOS = () => {
   };
 
   // ---------- Business Expenses ----------
-  const openNewBiz = () => { setBizForm(emptyBizExpense()); setBizOpen(true); };
+  const openNewBiz = () => { setBizForm(emptyBizExpense()); setNewBizCategoryName(''); setBizOpen(true); };
   const openEditBiz = (e: BusinessExpense) => {
     setBizForm({
       id: e.id, name: e.name, amount: String(e.amount),
       is_recurring: e.is_recurring, category: e.category,
       start_date: e.start_date ? e.start_date.slice(0, 10) : todayIso(),
     });
+    setNewBizCategoryName('');
     setBizOpen(true);
   };
   const submitBiz = async () => {
