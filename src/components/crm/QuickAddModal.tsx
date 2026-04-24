@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -66,6 +66,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       <DialogContent className="max-w-lg rounded-3xl border-border bg-card p-6 max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Aggiungi Lead</DialogTitle>
+          <DialogDescription className="sr-only">Inserisci nome, fonte e stage del nuovo lead.</DialogDescription>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
             <CalendarDays className="h-3.5 w-3.5" />
             <span>Oggi · {todayLabel()}</span>

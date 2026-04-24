@@ -294,6 +294,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'personal_incomes' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'personal_incomes'] });
       })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_expenses' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['crm', 'business_expenses'] });
+      })
       .subscribe();
     return () => {
       supabase.removeChannel(channel);

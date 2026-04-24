@@ -3,7 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Home, KanbanSquare, Users, Plus, Target, Menu as MenuIcon, LogOut, Dumbbell, BarChart3, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
-import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -103,6 +103,7 @@ export const BottomNav = ({ onFabClick }: Props) => {
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Centro di Comando</p>
                   </div>
                 </div>
+                <SheetDescription className="sr-only">Navigazione principale dell'app.</SheetDescription>
               </SheetHeader>
 
               <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
