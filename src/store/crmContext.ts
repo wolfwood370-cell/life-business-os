@@ -2,7 +2,7 @@ import { createContext } from 'react';
 import {
   Client, FinancialSummary, MonthlyBreakdown, PipelineStage, RoiMetric,
   Service, Transaction, PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory,
-  PersonalIncome,
+  PersonalIncome, BusinessExpense,
 } from '@/types/crm';
 
 export interface CrmContextValue {
