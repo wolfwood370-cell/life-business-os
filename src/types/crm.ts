@@ -191,11 +191,13 @@ export interface PersonalExpense {
   id: string;
   name: string;
   amount: number;
-  is_recurring: boolean;
+  is_recurring: boolean;        // legacy/derived
+  recurrence_type: RecurrenceType;
+  recurrence_value?: number;
   category: string;
   created_at: string;
-  start_date: string;       // ISO date — quando inizia (mese di inizio per ricorrenti / data esatta per una tantum)
-  end_date?: string;        // ISO date — quando termina (solo ricorrenti). Se assente la spesa è ancora attiva.
+  start_date: string;
+  end_date?: string;
 }
 
 export interface ExpenseCategory {
