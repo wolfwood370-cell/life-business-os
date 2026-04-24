@@ -263,7 +263,9 @@ const FinancialOS = () => {
     catch { toast.error('Errore durante l\'eliminazione'); }
   };
 
+  return (
     <div className="px-4 md:px-0 pt-6 pb-24 md:pb-8 space-y-6 animate-fade-in">
+
       <header>
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Life · Finance OS</p>
         <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight text-foreground">Target Dinamico</h1>
