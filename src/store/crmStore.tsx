@@ -756,7 +756,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       const { error } = await (supabase as any).from('business_expenses').insert({
         name: e.name,
         amount: e.amount,
-        is_recurring: e.is_recurring,
+        is_recurring: e.recurrence_type !== 'none',
+        recurrence_type: e.recurrence_type,
+        recurrence_value: e.recurrence_value ?? null,
         category: e.category,
         start_date: e.start_date,
         end_date: e.end_date ?? null,
@@ -772,18 +774,24 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       const { data: existing, error: fetchErr } = await sb
         .from('business_expenses').select('*').eq('id', id).single();
       if (fetchErr) throw fetchErr;
-      const isRecurring = Boolean(existing?.is_recurring);
-      const amountChanged =
-        patch.amount !== undefined && Number(patch.amount) !== Number(existing?.amount);
-      if (isRecurring && amountChanged) {
+      const wasRecurring = (existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none')) !== 'none';
+      const newRecurrenceType = patch.recurrence_type ?? existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none');
+      const newRecurrenceValue = patch.recurrence_value !== undefined ? patch.recurrence_value : existing?.recurrence_value;
+      const amountChanged = patch.amount !== undefined && Number(patch.amount) !== Number(existing?.amount);
+      const recurrenceChanged =
+        (patch.recurrence_type !== undefined && patch.recurrence_type !== existing?.recurrence_type) ||
+        (patch.recurrence_value !== undefined && patch.recurrence_value !== existing?.recurrence_value);
+      if (wasRecurring && (amountChanged || recurrenceChanged)) {
         const todayIso = new Date().toISOString();
         const { error: closeErr } = await sb
           .from('business_expenses').update({ end_date: todayIso }).eq('id', id);
         if (closeErr) throw closeErr;
         const { error: insertErr } = await sb.from('business_expenses').insert({
           name: patch.name ?? existing.name,
-          amount: patch.amount,
-          is_recurring: true,
+          amount: patch.amount ?? existing.amount,
+          is_recurring: newRecurrenceType !== 'none',
+          recurrence_type: newRecurrenceType,
+          recurrence_value: newRecurrenceValue ?? null,
           category: patch.category ?? existing.category,
           start_date: todayIso,
           end_date: null,
@@ -791,7 +799,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         if (insertErr) throw insertErr;
         return;
       }
-      const { error } = await sb.from('business_expenses').update(patch).eq('id', id);
+      const dbPatch: Record<string, unknown> = { ...patch };
+      if (patch.recurrence_type !== undefined) dbPatch.is_recurring = patch.recurrence_type !== 'none';
+      const { error } = await sb.from('business_expenses').update(dbPatch).eq('id', id);
       if (error) throw error;
     },
     onSuccess: invalidateBizExpenses,
