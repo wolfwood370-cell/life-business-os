@@ -6,6 +6,7 @@ import {
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
   PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory, PersonalIncome,
+  BusinessExpense,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
@@ -242,6 +243,29 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         date: r.date,
         category: r.category ?? 'Altro',
         created_at: r.created_at,
+      }));
+    },
+  });
+
+  const { data: businessExpenses = [] } = useQuery({
+    queryKey: ['crm', 'business_expenses'],
+    queryFn: async (): Promise<BusinessExpense[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('business_expenses')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map((r) => ({
+        id: r.id,
+        name: r.name,
+        amount: Number(r.amount),
+        is_recurring: Boolean(r.is_recurring),
+        category: r.category,
+        created_at: r.created_at,
+        start_date: r.start_date ?? r.created_at,
+        end_date: r.end_date ?? undefined,
       }));
     },
   });
