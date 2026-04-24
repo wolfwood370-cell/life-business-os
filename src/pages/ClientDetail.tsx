@@ -14,7 +14,7 @@ import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Label } from '@/components/ui/label';
+
 import {
   PIPELINE_STAGES, PipelineStage, stageColorMap, pipelineStageLabel,
   CHURN_RISKS, ChurnRisk, RoiMetric,
