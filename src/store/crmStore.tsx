@@ -409,6 +409,37 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
   });
 
+  const updateTransactionMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Transaction> }) => {
+      const dbPatch: Record<string, unknown> = {};
+      if (updates.amount !== undefined) dbPatch.amount = updates.amount;
+      if (updates.due_date !== undefined) dbPatch.due_date = updates.due_date;
+      if (updates.payment_date !== undefined) dbPatch.payment_date = updates.payment_date;
+      if (updates.status !== undefined) dbPatch.status = updates.status;
+      if (updates.payment_method !== undefined) dbPatch.payment_method = updates.payment_method;
+      if (Object.keys(dbPatch).length === 0) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('transactions')
+        .update(dbPatch)
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
+  });
+
+  const deleteTransactionMutation = useMutation({
+    mutationFn: async (transactionId: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
+  });
+
   // ---------- Personal Expenses CRUD ----------
   const invalidateExpenses = () => queryClient.invalidateQueries({ queryKey: ['crm', 'personal_expenses'] });
   const addExpenseMutation = useMutation({
@@ -653,6 +684,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     addTransaction: async (t) => { await addTransactionMutation.mutateAsync(t); },
     stopRecurringPayment: async (transactionId) => { await stopRecurringMutation.mutateAsync(transactionId); },
     markTransactionPaid: async (transactionId) => { await markPaidMutation.mutateAsync(transactionId); },
+    updateTransaction: async (transactionId, updates) => { await updateTransactionMutation.mutateAsync({ id: transactionId, updates }); },
+    deleteTransaction: async (transactionId) => { await deleteTransactionMutation.mutateAsync(transactionId); },
     addPersonalExpense: async (e) => { await addExpenseMutation.mutateAsync(e); },
     updatePersonalExpense: async (id, patch) => { await updateExpenseMutation.mutateAsync({ id, patch }); },
     deletePersonalExpense: async (id) => { await deleteExpenseMutation.mutateAsync(id); },

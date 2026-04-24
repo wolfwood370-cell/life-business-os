@@ -27,6 +27,8 @@ export interface CrmContextValue {
   addTransaction: (t: Omit<Transaction, 'id' | 'created_at' | 'payment_date' | 'status' | 'due_date'> & { payment_date?: string; total_amount?: number }) => Promise<void>;
   stopRecurringPayment: (transactionId: string) => Promise<void>;
   markTransactionPaid: (transactionId: string) => Promise<void>;
+  updateTransaction: (transactionId: string, updates: Partial<Transaction>) => Promise<void>;
+  deleteTransaction: (transactionId: string) => Promise<void>;
   addPersonalExpense: (e: Omit<PersonalExpense, 'id' | 'created_at'>) => Promise<void>;
   updatePersonalExpense: (id: string, patch: Partial<PersonalExpense>) => Promise<void>;
   deletePersonalExpense: (id: string) => Promise<void>;
