@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
-import { formatEuro, TAX_RATE, PersonalExpense, LifeGoal } from '@/types/crm';
+import { formatEuro, TAX_RATE, PersonalExpense, LifeGoal, STANDARD_EXPENSE_CATEGORIES } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,11 +11,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban, Settings2, Check, X } from 'lucide-react';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
 import { toast } from 'sonner';
 
-const EXPENSE_CATEGORIES = ['Casa', 'Bollette', 'Trasporti', 'Spesa', 'Tempo Libero', 'Abbonamenti', 'Salute', 'Altro'] as const;
+const NEW_CATEGORY_SENTINEL = '__new__';
 
 interface ExpenseFormState {
   id?: string;
