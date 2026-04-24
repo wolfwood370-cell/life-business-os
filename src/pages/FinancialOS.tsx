@@ -433,18 +433,36 @@ const FinancialOS = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="exp-cat">Categoria</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="exp-cat">Categoria</Label>
+                  <button
+                    type="button"
+                    onClick={() => setManageCategoriesOpen(true)}
+                    className="text-[10px] font-semibold uppercase tracking-wider text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <Settings2 className="h-3 w-3" /> Gestisci
+                  </button>
+                </div>
                 <Select
                   value={expenseForm.category}
                   onValueChange={v => setExpenseForm(s => ({ ...s, category: v }))}
                 >
                   <SelectTrigger id="exp-cat"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {EXPENSE_CATEGORIES.map(c => (
+                    {allCategoryNames.map(c => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
+                    <SelectItem value={NEW_CATEGORY_SENTINEL}>+ Altro...</SelectItem>
                   </SelectContent>
                 </Select>
+                {expenseForm.category === NEW_CATEGORY_SENTINEL && (
+                  <Input
+                    className="mt-2"
+                    placeholder="Nome nuova categoria"
+                    value={newCategoryName}
+                    onChange={e => setNewCategoryName(e.target.value)}
+                  />
+                )}
               </div>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
