@@ -475,7 +475,21 @@ const FinancialOS = () => {
               <div key={g.id} className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{g.title}</span>
                 <div className="flex gap-1">
-                  <Button size="sm" variant="ghost" onClick={() => openEditGoal(g)}>Riattiva</Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={async () => {
+                      try {
+                        await updateLifeGoal(g.id, { is_active: true });
+                        toast.success('Obiettivo riattivato');
+                      } catch { toast.error('Errore durante la riattivazione'); }
+                    }}
+                  >
+                    Riattiva
+                  </Button>
+                  <Button size="icon" variant="ghost" onClick={() => openEditGoal(g)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
                   <Button size="icon" variant="ghost" onClick={() => handleDeleteGoal(g.id)}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
