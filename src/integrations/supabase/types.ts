@@ -59,6 +59,8 @@ export type Database = {
           id: string
           is_recurring: boolean
           name: string
+          recurrence_type: string
+          recurrence_value: number | null
           start_date: string
         }
         Insert: {
@@ -69,6 +71,8 @@ export type Database = {
           id?: string
           is_recurring?: boolean
           name: string
+          recurrence_type?: string
+          recurrence_value?: number | null
           start_date?: string
         }
         Update: {
@@ -79,6 +83,8 @@ export type Database = {
           id?: string
           is_recurring?: boolean
           name?: string
+          recurrence_type?: string
+          recurrence_value?: number | null
           start_date?: string
         }
         Relationships: []
@@ -242,6 +248,8 @@ export type Database = {
           id: string
           is_recurring: boolean
           name: string
+          recurrence_type: string
+          recurrence_value: number | null
           start_date: string
         }
         Insert: {
@@ -252,6 +260,8 @@ export type Database = {
           id?: string
           is_recurring?: boolean
           name: string
+          recurrence_type?: string
+          recurrence_value?: number | null
           start_date?: string
         }
         Update: {
@@ -262,6 +272,8 @@ export type Database = {
           id?: string
           is_recurring?: boolean
           name?: string
+          recurrence_type?: string
+          recurrence_value?: number | null
           start_date?: string
         }
         Relationships: []
@@ -274,6 +286,8 @@ export type Database = {
           date: string
           id: string
           name: string
+          recurrence_type: string
+          recurrence_value: number | null
         }
         Insert: {
           amount?: number
@@ -282,6 +296,8 @@ export type Database = {
           date?: string
           id?: string
           name: string
+          recurrence_type?: string
+          recurrence_value?: number | null
         }
         Update: {
           amount?: number
@@ -290,6 +306,8 @@ export type Database = {
           date?: string
           id?: string
           name?: string
+          recurrence_type?: string
+          recurrence_value?: number | null
         }
         Relationships: []
       }
