@@ -628,6 +628,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidateIncomes,
   });
 
+  const current_monthly_revenue = useMemo(
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
   );
