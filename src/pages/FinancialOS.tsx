@@ -347,11 +347,17 @@ const FinancialOS = () => {
             Per ottenere <PrivacyMask>{formatEuro(dynamicTarget.totalNetNeeded)}</PrivacyMask> netti dopo {Math.round(TAX_RATE * 100)}% di tasse.
           </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="mt-5 grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-card/60 border border-border p-3">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spese Ricorrenti</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spese Personali</p>
               <p className="mt-1 text-lg font-bold text-foreground">
                 <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringExpenses)}</PrivacyMask>
+              </p>
+            </div>
+            <div className="rounded-xl bg-card/60 border border-border p-3">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Spese Aziendali</p>
+              <p className="mt-1 text-lg font-bold text-foreground">
+                <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringBusinessExpenses)}</PrivacyMask>
               </p>
             </div>
             <div className="rounded-xl bg-card/60 border border-border p-3">
