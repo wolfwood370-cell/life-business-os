@@ -48,12 +48,25 @@ const emptyGoal = (): GoalFormState => ({
   deadline: '', is_active: true,
 });
 
+interface IncomeFormState {
+  id?: string;
+  name: string;
+  amount: string;
+  date: string;        // YYYY-MM-DD
+  category: string;
+}
+
+const emptyIncome = (): IncomeFormState => ({
+  name: '', amount: '', date: todayIso(), category: 'Altro',
+});
+
 const FinancialOS = () => {
   const {
     personalExpenses, lifeGoals, dynamicTarget,
     addPersonalExpense, updatePersonalExpense, deletePersonalExpense, endPersonalExpense,
     addLifeGoal, updateLifeGoal, deleteLifeGoal,
     expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory,
+    personalIncomes, addPersonalIncome, updatePersonalIncome, deletePersonalIncome,
   } = useCrm();
 
   const [expenseOpen, setExpenseOpen] = useState(false);
@@ -64,6 +77,8 @@ const FinancialOS = () => {
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [incomeOpen, setIncomeOpen] = useState(false);
+  const [incomeForm, setIncomeForm] = useState<IncomeFormState>(emptyIncome());
 
   // Unione categorie standard + custom (deduplicate case-insensitive)
   const allCategoryNames = useMemo(() => {
