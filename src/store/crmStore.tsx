@@ -746,6 +746,10 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     addLifeGoal: async (g) => { await addGoalMutation.mutateAsync(g); },
     updateLifeGoal: async (id, patch) => { await updateGoalMutation.mutateAsync({ id, patch }); },
     deleteLifeGoal: async (id) => { await deleteGoalMutation.mutateAsync(id); },
+    expenseCategories,
+    addExpenseCategory: async (name) => await addCategoryMutation.mutateAsync(name),
+    updateExpenseCategory: async (id, name) => { await updateCategoryMutation.mutateAsync({ id, name }); },
+    deleteExpenseCategory: async (id) => { await deleteCategoryMutation.mutateAsync(id); },
     setMonthlyTarget,
   };
 
