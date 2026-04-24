@@ -5,7 +5,7 @@ import {
   Client, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
-  PersonalExpense, LifeGoal, DynamicTarget,
+  PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
@@ -211,7 +211,19 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
-  // Realtime subscription
+  const { data: expenseCategories = [] } = useQuery({
+    queryKey: ['crm', 'expense_categories'],
+    queryFn: async (): Promise<ExpenseCategory[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('expense_categories')
+        .select('*')
+        .order('name', { ascending: true });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({ id: r.id, name: r.name, created_at: r.created_at }));
+    },
+  });
   useEffect(() => {
     const channel = supabase
       .channel('crm-realtime')
