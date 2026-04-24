@@ -3,6 +3,7 @@ import { useCrm } from '@/store/useCrm';
 import {
   formatEuro, TAX_RATE, PersonalExpense, LifeGoal, PersonalIncome, BusinessExpense,
   STANDARD_EXPENSE_CATEGORIES, STANDARD_INCOME_CATEGORIES, STANDARD_BUSINESS_EXPENSE_CATEGORIES,
+  RecurrenceType, recurrenceTypeLabel,
 } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
