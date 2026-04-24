@@ -51,12 +51,27 @@ const FinancialOS = () => {
     personalExpenses, lifeGoals, dynamicTarget,
     addPersonalExpense, updatePersonalExpense, deletePersonalExpense, endPersonalExpense,
     addLifeGoal, updateLifeGoal, deleteLifeGoal,
+    expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory,
   } = useCrm();
 
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(emptyExpense());
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [goalOpen, setGoalOpen] = useState(false);
   const [goalForm, setGoalForm] = useState<GoalFormState>(emptyGoal());
+  const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+
+  // Unione categorie standard + custom (deduplicate case-insensitive)
+  const allCategoryNames = useMemo(() => {
+    const set = new Map<string, string>();
+    STANDARD_EXPENSE_CATEGORIES.forEach(c => set.set(c.toLowerCase(), c));
+    expenseCategories.forEach(c => {
+      if (!set.has(c.name.toLowerCase())) set.set(c.name.toLowerCase(), c.name);
+    });
+    return Array.from(set.values());
+  }, [expenseCategories]);
 
   const activeGoal = useMemo(() => lifeGoals.find(g => g.is_active), [lifeGoals]);
   const goalProgress = activeGoal
