@@ -2,6 +2,7 @@ import { createContext } from 'react';
 import {
   Client, FinancialSummary, MonthlyBreakdown, PipelineStage, RoiMetric,
   Service, Transaction, PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory,
+  PersonalIncome,
 } from '@/types/crm';
 
 export interface CrmContextValue {
@@ -40,6 +41,10 @@ export interface CrmContextValue {
   addExpenseCategory: (name: string) => Promise<ExpenseCategory | null>;
   updateExpenseCategory: (id: string, name: string) => Promise<void>;
   deleteExpenseCategory: (id: string) => Promise<void>;
+  personalIncomes: PersonalIncome[];
+  addPersonalIncome: (i: Omit<PersonalIncome, 'id' | 'created_at'>) => Promise<void>;
+  updatePersonalIncome: (id: string, patch: Partial<PersonalIncome>) => Promise<void>;
+  deletePersonalIncome: (id: string) => Promise<void>;
   setMonthlyTarget: (n: number) => void;
 }
 

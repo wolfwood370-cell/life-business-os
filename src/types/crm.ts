@@ -123,11 +123,30 @@ export interface FinancialSummary {
 
 export interface MonthlyBreakdown {
   year: number;
-  month: number;       // 0-11
-  label: string;       // es. "Gen 2026"
-  gross: number;
+  month: number;            // 0-11
+  label: string;            // es. "Gen 2026"
+  gross: number;            // ricavi business totali (Saldato)
+  taxes: number;            // gross * TAX_RATE
+  net_business: number;     // gross - taxes
+  personal_expenses: number;// somma spese personali del mese
+  personal_incomes: number; // somma ricavi personali del mese
+  free_cash_flow: number;   // (net_business + personal_incomes) - personal_expenses
+  // Backward compat: alcuni vecchi consumer leggono `net` come utile residuo dopo spese
   net: number;
 }
+
+export interface PersonalIncome {
+  id: string;
+  name: string;
+  amount: number;
+  date: string;          // ISO
+  category: string;
+  created_at: string;
+}
+
+export const STANDARD_INCOME_CATEGORIES = [
+  'Regalo', 'Consulto Extra', 'Rimborso', 'Investimento', 'Altro',
+] as const;
 
 export interface Service {
   id: string;

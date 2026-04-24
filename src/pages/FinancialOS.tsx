@@ -1,17 +1,20 @@
 import { useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
-import { formatEuro, TAX_RATE, PersonalExpense, LifeGoal, STANDARD_EXPENSE_CATEGORIES } from '@/types/crm';
+import {
+  formatEuro, TAX_RATE, PersonalExpense, LifeGoal, PersonalIncome,
+  STANDARD_EXPENSE_CATEGORIES, STANDARD_INCOME_CATEGORIES,
+} from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban, Settings2, Check, X } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban, Settings2, Check, X, ArrowDownToLine } from 'lucide-react';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
 import { toast } from 'sonner';
 import { todayIso, dateInputToIso } from '@/lib/date';
@@ -45,12 +48,25 @@ const emptyGoal = (): GoalFormState => ({
   deadline: '', is_active: true,
 });
 
+interface IncomeFormState {
+  id?: string;
+  name: string;
+  amount: string;
+  date: string;        // YYYY-MM-DD
+  category: string;
+}
+
+const emptyIncome = (): IncomeFormState => ({
+  name: '', amount: '', date: todayIso(), category: 'Altro',
+});
+
 const FinancialOS = () => {
   const {
     personalExpenses, lifeGoals, dynamicTarget,
     addPersonalExpense, updatePersonalExpense, deletePersonalExpense, endPersonalExpense,
     addLifeGoal, updateLifeGoal, deleteLifeGoal,
     expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory,
+    personalIncomes, addPersonalIncome, updatePersonalIncome, deletePersonalIncome,
   } = useCrm();
 
   const [expenseOpen, setExpenseOpen] = useState(false);
@@ -61,6 +77,8 @@ const FinancialOS = () => {
   const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [incomeOpen, setIncomeOpen] = useState(false);
+  const [incomeForm, setIncomeForm] = useState<IncomeFormState>(emptyIncome());
 
   // Unione categorie standard + custom (deduplicate case-insensitive)
   const allCategoryNames = useMemo(() => {
@@ -198,8 +216,56 @@ const FinancialOS = () => {
     catch { toast.error('Errore durante l\'eliminazione'); }
   };
 
+  // ---------- Personal Incomes ----------
+  const incomeCategories = useMemo(() => Array.from(new Set([...STANDARD_INCOME_CATEGORIES])), []);
+  const monthlyIncomesTotal = useMemo(() => {
+    const now = new Date();
+    const y = now.getFullYear(); const m = now.getMonth();
+    return personalIncomes
+      .filter(i => { const d = new Date(i.date); return d.getFullYear() === y && d.getMonth() === m; })
+      .reduce((s, i) => s + i.amount, 0);
+  }, [personalIncomes]);
+
+  const openNewIncome = () => { setIncomeForm(emptyIncome()); setIncomeOpen(true); };
+  const openEditIncome = (i: PersonalIncome) => {
+    setIncomeForm({
+      id: i.id, name: i.name, amount: String(i.amount),
+      date: i.date ? i.date.slice(0, 10) : todayIso(),
+      category: i.category || 'Altro',
+    });
+    setIncomeOpen(true);
+  };
+  const submitIncome = async () => {
+    const amount = Number(incomeForm.amount.replace(',', '.'));
+    if (!incomeForm.name.trim() || !Number.isFinite(amount) || amount <= 0) {
+      toast.error('Inserisci nome e importo validi');
+      return;
+    }
+    if (!incomeForm.date) { toast.error('Seleziona la data'); return; }
+    const dateIso = dateInputToIso(incomeForm.date) ?? new Date().toISOString();
+    try {
+      if (incomeForm.id) {
+        await updatePersonalIncome(incomeForm.id, {
+          name: incomeForm.name.trim(), amount, date: dateIso, category: incomeForm.category,
+        });
+        toast.success('Ricavo aggiornato');
+      } else {
+        await addPersonalIncome({
+          name: incomeForm.name.trim(), amount, date: dateIso, category: incomeForm.category,
+        });
+        toast.success('Ricavo aggiunto');
+      }
+      setIncomeOpen(false);
+    } catch { toast.error('Errore durante il salvataggio'); }
+  };
+  const handleDeleteIncome = async (id: string) => {
+    try { await deletePersonalIncome(id); toast.success('Ricavo eliminato'); }
+    catch { toast.error('Errore durante l\'eliminazione'); }
+  };
+
   return (
     <div className="px-4 md:px-0 pt-6 pb-24 md:pb-8 space-y-6 animate-fade-in">
+
       <header>
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Life · Finance OS</p>
         <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight text-foreground">Target Dinamico</h1>
@@ -386,11 +452,63 @@ const FinancialOS = () => {
         )}
       </section>
 
-      {/* Math breakdown */}
+      {/* Personal Incomes */}
+      <section className="rounded-3xl border border-border bg-card p-5 shadow-card">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ArrowDownToLine className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Ricavi Personali</h2>
+          </div>
+          <Button size="sm" variant="outline" onClick={openNewIncome} className="rounded-xl">
+            <Plus className="h-4 w-4 mr-1" />
+            Aggiungi
+          </Button>
+        </div>
+
+        <div className="mt-4 flex items-baseline justify-between">
+          <p className="text-xs text-muted-foreground">Totale del mese corrente</p>
+          <p className="text-2xl font-bold text-foreground">
+            <PrivacyMask>{formatEuro(monthlyIncomesTotal)}</PrivacyMask>
+          </p>
+        </div>
+
+        {personalIncomes.length === 0 ? (
+          <p className="mt-4 text-sm text-muted-foreground">
+            Aggiungi entrate non legate al business (es. regali, consulti extra, rimborsi). Verranno sommate al Cash Flow nei mesi storici.
+          </p>
+        ) : (
+          <ul className="mt-4 divide-y divide-border">
+            {personalIncomes.map(i => {
+              const dateLabel = new Date(i.date).toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' });
+              return (
+                <li key={i.id} className="py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-foreground truncate">{i.name}</p>
+                    <p className="text-[11px] text-muted-foreground">{i.category} · {dateLabel}</p>
+                  </div>
+                  <p className="text-sm font-bold tabular-nums text-foreground">
+                    +<PrivacyMask>{formatEuro(i.amount)}</PrivacyMask>
+                  </p>
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => openEditIncome(i)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => handleDeleteIncome(i.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      {/* Math breakdown — Target dinamico */}
       <section className="rounded-3xl border border-dashed border-border bg-secondary/40 p-5">
         <div className="flex items-center gap-2 mb-3">
           <TrendingUp className="h-4 w-4 text-primary" />
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Come si calcola</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Come si calcola il target</h2>
         </div>
         <div className="space-y-1.5 text-xs text-muted-foreground font-mono">
           <p>Spese ricorrenti: <PrivacyMask>{formatEuro(dynamicTarget.totalRecurringExpenses)}</PrivacyMask></p>
@@ -402,6 +520,41 @@ const FinancialOS = () => {
           </p>
         </div>
       </section>
+
+      {/* Waterfall legend */}
+      <section className="rounded-3xl border border-dashed border-border bg-secondary/40 p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <TrendingUp className="h-4 w-4 text-primary" />
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Waterfall: dal Lordo al Cash Flow Libero</h2>
+        </div>
+        <ol className="space-y-2 text-xs">
+          <li className="flex items-center gap-2">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: 'hsl(160 84% 39%)' }} />
+            <span><b className="text-foreground">Lordo</b> — incassi business (Saldato).</span>
+          </li>
+          <li className="flex items-center gap-2 pl-3">
+            <span className="text-muted-foreground">−</span>
+            <span><b className="text-foreground">Tasse ({Math.round(TAX_RATE * 100)}%)</b></span>
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: 'hsl(158 64% 52%)' }} />
+            <span><b className="text-foreground">Utile Aziendale</b> — quello che resta dell'attività.</span>
+          </li>
+          <li className="flex items-center gap-2 pl-3">
+            <span className="text-muted-foreground">−</span>
+            <span><b className="text-foreground">Spese Personali</b> (ricorrenti + una tantum del mese)</span>
+          </li>
+          <li className="flex items-center gap-2 pl-3">
+            <span className="text-muted-foreground">+</span>
+            <span><b className="text-foreground">Ricavi Personali</b> (regali, extra, rimborsi)</span>
+          </li>
+          <li className="flex items-center gap-2 pt-2 border-t border-border">
+            <span className="inline-block h-2.5 w-2.5 rounded-sm" style={{ background: 'hsl(221 83% 53%)' }} />
+            <span><b className="text-foreground">Cash Flow Libero</b> — i soldi davvero in tasca.</span>
+          </li>
+        </ol>
+      </section>
+
 
       {/* Expense Dialog */}
       <Dialog open={expenseOpen} onOpenChange={setExpenseOpen}>
@@ -663,6 +816,71 @@ const FinancialOS = () => {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setManageCategoriesOpen(false)}>Chiudi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Income Dialog */}
+      <Dialog open={incomeOpen} onOpenChange={setIncomeOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>{incomeForm.id ? 'Modifica ricavo' : 'Nuovo ricavo personale'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="inc-name">Nome</Label>
+              <Input
+                id="inc-name"
+                placeholder="es. Regalo compleanno, Consulto extra"
+                value={incomeForm.name}
+                onChange={e => setIncomeForm(s => ({ ...s, name: e.target.value }))}
+                autoFocus
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="inc-amount">Importo (€)</Label>
+                <Input
+                  id="inc-amount"
+                  inputMode="decimal"
+                  placeholder="0,00"
+                  value={incomeForm.amount}
+                  onChange={e => setIncomeForm(s => ({ ...s, amount: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="inc-cat">Categoria</Label>
+                <Select
+                  value={incomeForm.category}
+                  onValueChange={v => setIncomeForm(s => ({ ...s, category: v }))}
+                >
+                  <SelectTrigger id="inc-cat"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {incomeCategories.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="inc-date">Data</Label>
+              <Input
+                id="inc-date"
+                type="date"
+                value={incomeForm.date}
+                onChange={e => setIncomeForm(s => ({ ...s, date: e.target.value }))}
+              />
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Il ricavo verrà sommato al Cash Flow del mese selezionato.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setIncomeOpen(false)}>Annulla</Button>
+            <Button onClick={submitIncome} className="gradient-primary text-primary-foreground">
+              Salva
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

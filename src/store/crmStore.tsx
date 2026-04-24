@@ -5,7 +5,7 @@ import {
   Client, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
-  PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory,
+  PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory, PersonalIncome,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
@@ -224,6 +224,28 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       return (data as any[]).map(r => ({ id: r.id, name: r.name, created_at: r.created_at }));
     },
   });
+
+  const { data: personalIncomes = [] } = useQuery({
+    queryKey: ['crm', 'personal_incomes'],
+    queryFn: async (): Promise<PersonalIncome[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('personal_incomes')
+        .select('*')
+        .order('date', { ascending: false });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({
+        id: r.id,
+        name: r.name,
+        amount: Number(r.amount),
+        date: r.date,
+        category: r.category ?? 'Altro',
+        created_at: r.created_at,
+      }));
+    },
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel('crm-realtime')
@@ -244,6 +266,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_categories' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'expense_categories'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'personal_incomes' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['crm', 'personal_incomes'] });
       })
       .subscribe();
     return () => {
@@ -571,6 +596,38 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidateCategories,
   });
 
+  // ---------- Personal Incomes CRUD ----------
+  const invalidateIncomes = () => queryClient.invalidateQueries({ queryKey: ['crm', 'personal_incomes'] });
+  const addIncomeMutation = useMutation({
+    mutationFn: async (i: Omit<PersonalIncome, 'id' | 'created_at'>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('personal_incomes').insert({
+        name: i.name,
+        amount: i.amount,
+        date: i.date,
+        category: i.category,
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidateIncomes,
+  });
+  const updateIncomeMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<PersonalIncome> }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('personal_incomes').update(patch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateIncomes,
+  });
+  const deleteIncomeMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('personal_incomes').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateIncomes,
+  });
+
   const current_monthly_revenue = useMemo(
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
@@ -699,20 +756,41 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       return total;
     };
 
+    const monthIncomes = (y: number, m: number): number => {
+      const monthStart = new Date(y, m, 1);
+      const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
+      let total = 0;
+      for (const i of personalIncomes) {
+        const d = new Date(i.date);
+        if (d >= monthStart && d <= monthEnd) total += i.amount;
+      }
+      return total;
+    };
+
     const months: MonthlyBreakdown[] = [];
     let y = HISTORY_START_YEAR;
     let m = HISTORY_START_MONTH;
     while (y < endYear || (y === endYear && m <= endMonth)) {
       const gross = grossMap.get(`${y}-${m}`) ?? 0;
+      const taxes = gross * TAX_RATE;
+      const net_business = gross - taxes;
       const expenses = monthExpenses(y, m);
-      const net = gross - (gross * TAX_RATE) - expenses;
+      const incomes = monthIncomes(y, m);
+      const free_cash_flow = net_business + incomes - expenses;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
-      months.push({ year: y, month: m, label, gross, net });
+      months.push({
+        year: y, month: m, label,
+        gross, taxes, net_business,
+        personal_expenses: expenses,
+        personal_incomes: incomes,
+        free_cash_flow,
+        net: free_cash_flow, // backward-compat
+      });
       m += 1;
       if (m > 11) { m = 0; y += 1; }
     }
     return months;
-  }, [transactions, personalExpenses]);
+  }, [transactions, personalExpenses, personalIncomes]);
 
   const value: CrmContextValue = {
     clients,
@@ -750,6 +828,10 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     addExpenseCategory: async (name) => await addCategoryMutation.mutateAsync(name),
     updateExpenseCategory: async (id, name) => { await updateCategoryMutation.mutateAsync({ id, name }); },
     deleteExpenseCategory: async (id) => { await deleteCategoryMutation.mutateAsync(id); },
+    personalIncomes,
+    addPersonalIncome: async (i) => { await addIncomeMutation.mutateAsync(i); },
+    updatePersonalIncome: async (id, patch) => { await updateIncomeMutation.mutateAsync({ id, patch }); },
+    deletePersonalIncome: async (id) => { await deleteIncomeMutation.mutateAsync(id); },
     setMonthlyTarget,
   };
 
