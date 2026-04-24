@@ -50,6 +50,7 @@ const Dashboard = () => {
 
           <MonthlyHistory />
 
+          <SalesFunnel />
 
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-2xl border border-border bg-card p-4 shadow-card">
