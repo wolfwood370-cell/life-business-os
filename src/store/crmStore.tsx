@@ -795,7 +795,77 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidateBizExpenses,
   });
 
-  const current_monthly_revenue = useMemo(
+  // ---------- Business Expense Categories CRUD ----------
+  const invalidateBizCategories = () => queryClient.invalidateQueries({ queryKey: ['crm', 'business_expense_categories'] });
+  const addBizCategoryMutation = useMutation({
+    mutationFn: async (name: string): Promise<BusinessExpenseCategory | null> => {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('business_expense_categories').insert({ name: trimmed }).select().single();
+      if (error) {
+        if ((error as { code?: string }).code === '23505') return null;
+        throw error;
+      }
+      return data ? { id: data.id, name: data.name, created_at: data.created_at } : null;
+    },
+    onSuccess: invalidateBizCategories,
+  });
+  const updateBizCategoryMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('business_expense_categories').update({ name: name.trim() }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateBizCategories,
+  });
+  const deleteBizCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('business_expense_categories').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateBizCategories,
+  });
+
+  // ---------- Income Categories CRUD ----------
+  const invalidateIncomeCategories = () => queryClient.invalidateQueries({ queryKey: ['crm', 'income_categories'] });
+  const addIncomeCategoryMutation = useMutation({
+    mutationFn: async (name: string): Promise<IncomeCategory | null> => {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('income_categories').insert({ name: trimmed }).select().single();
+      if (error) {
+        if ((error as { code?: string }).code === '23505') return null;
+        throw error;
+      }
+      return data ? { id: data.id, name: data.name, created_at: data.created_at } : null;
+    },
+    onSuccess: invalidateIncomeCategories,
+  });
+  const updateIncomeCategoryMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any)
+        .from('income_categories').update({ name: name.trim() }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateIncomeCategories,
+  });
+  const deleteIncomeCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('income_categories').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateIncomeCategories,
+  });
+
+
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
   );
