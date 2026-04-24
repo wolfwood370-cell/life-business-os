@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 import {
   Client, FinancialSummary, MonthlyBreakdown, PipelineStage, RoiMetric,
-  Service, Transaction, PersonalExpense, LifeGoal, DynamicTarget,
+  Service, Transaction, PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory,
 } from '@/types/crm';
 
 export interface CrmContextValue {
@@ -36,6 +36,10 @@ export interface CrmContextValue {
   addLifeGoal: (g: Omit<LifeGoal, 'id' | 'created_at'>) => Promise<void>;
   updateLifeGoal: (id: string, patch: Partial<LifeGoal>) => Promise<void>;
   deleteLifeGoal: (id: string) => Promise<void>;
+  expenseCategories: ExpenseCategory[];
+  addExpenseCategory: (name: string) => Promise<ExpenseCategory | null>;
+  updateExpenseCategory: (id: string, name: string) => Promise<void>;
+  deleteExpenseCategory: (id: string) => Promise<void>;
   setMonthlyTarget: (n: number) => void;
 }
 

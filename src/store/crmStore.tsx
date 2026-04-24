@@ -5,7 +5,7 @@ import {
   Client, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
-  PersonalExpense, LifeGoal, DynamicTarget,
+  PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
@@ -211,7 +211,19 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
-  // Realtime subscription
+  const { data: expenseCategories = [] } = useQuery({
+    queryKey: ['crm', 'expense_categories'],
+    queryFn: async (): Promise<ExpenseCategory[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('expense_categories')
+        .select('*')
+        .order('name', { ascending: true });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({ id: r.id, name: r.name, created_at: r.created_at }));
+    },
+  });
   useEffect(() => {
     const channel = supabase
       .channel('crm-realtime')
@@ -229,6 +241,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'life_goals' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'life_goals'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_categories' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['crm', 'expense_categories'] });
       })
       .subscribe();
     return () => {
@@ -518,6 +533,44 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidateGoals,
   });
 
+  // ---------- Expense Categories CRUD ----------
+  const invalidateCategories = () => queryClient.invalidateQueries({ queryKey: ['crm', 'expense_categories'] });
+  const addCategoryMutation = useMutation({
+    mutationFn: async (name: string): Promise<ExpenseCategory | null> => {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('expense_categories')
+        .insert({ name: trimmed })
+        .select()
+        .single();
+      if (error) {
+        // Unique violation → ignora silenziosamente
+        if ((error as { code?: string }).code === '23505') return null;
+        throw error;
+      }
+      return data ? { id: data.id, name: data.name, created_at: data.created_at } : null;
+    },
+    onSuccess: invalidateCategories,
+  });
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, name }: { id: string; name: string }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('expense_categories').update({ name: name.trim() }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateCategories,
+  });
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('expense_categories').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateCategories,
+  });
+
   const current_monthly_revenue = useMemo(
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
@@ -693,6 +746,10 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     addLifeGoal: async (g) => { await addGoalMutation.mutateAsync(g); },
     updateLifeGoal: async (id, patch) => { await updateGoalMutation.mutateAsync({ id, patch }); },
     deleteLifeGoal: async (id) => { await deleteGoalMutation.mutateAsync(id); },
+    expenseCategories,
+    addExpenseCategory: async (name) => await addCategoryMutation.mutateAsync(name),
+    updateExpenseCategory: async (id, name) => { await updateCategoryMutation.mutateAsync({ id, name }); },
+    deleteExpenseCategory: async (id) => { await deleteCategoryMutation.mutateAsync(id); },
     setMonthlyTarget,
   };
 

@@ -149,6 +149,16 @@ export interface PersonalExpense {
   end_date?: string;        // ISO date — quando termina (solo ricorrenti). Se assente la spesa è ancora attiva.
 }
 
+export interface ExpenseCategory {
+  id: string;
+  name: string;
+  created_at: string;
+}
+
+export const STANDARD_EXPENSE_CATEGORIES = [
+  'Casa', 'Bollette', 'Trasporti', 'Spesa', 'Tempo Libero', 'Abbonamenti', 'Salute', 'Altro',
+] as const;
+
 export interface LifeGoal {
   id: string;
   title: string;

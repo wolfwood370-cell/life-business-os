@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
-import { formatEuro, TAX_RATE, PersonalExpense, LifeGoal } from '@/types/crm';
+import { formatEuro, TAX_RATE, PersonalExpense, LifeGoal, STANDARD_EXPENSE_CATEGORIES } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,11 +11,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban, Settings2, Check, X } from 'lucide-react';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
 import { toast } from 'sonner';
 
-const EXPENSE_CATEGORIES = ['Casa', 'Bollette', 'Trasporti', 'Spesa', 'Tempo Libero', 'Abbonamenti', 'Salute', 'Altro'] as const;
+const NEW_CATEGORY_SENTINEL = '__new__';
 
 interface ExpenseFormState {
   id?: string;
@@ -51,25 +51,41 @@ const FinancialOS = () => {
     personalExpenses, lifeGoals, dynamicTarget,
     addPersonalExpense, updatePersonalExpense, deletePersonalExpense, endPersonalExpense,
     addLifeGoal, updateLifeGoal, deleteLifeGoal,
+    expenseCategories, addExpenseCategory, updateExpenseCategory, deleteExpenseCategory,
   } = useCrm();
 
   const [expenseOpen, setExpenseOpen] = useState(false);
   const [expenseForm, setExpenseForm] = useState<ExpenseFormState>(emptyExpense());
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [goalOpen, setGoalOpen] = useState(false);
   const [goalForm, setGoalForm] = useState<GoalFormState>(emptyGoal());
+  const [manageCategoriesOpen, setManageCategoriesOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+
+  // Unione categorie standard + custom (deduplicate case-insensitive)
+  const allCategoryNames = useMemo(() => {
+    const set = new Map<string, string>();
+    STANDARD_EXPENSE_CATEGORIES.forEach(c => set.set(c.toLowerCase(), c));
+    expenseCategories.forEach(c => {
+      if (!set.has(c.name.toLowerCase())) set.set(c.name.toLowerCase(), c.name);
+    });
+    return Array.from(set.values());
+  }, [expenseCategories]);
 
   const activeGoal = useMemo(() => lifeGoals.find(g => g.is_active), [lifeGoals]);
   const goalProgress = activeGoal
     ? Math.min(100, (activeGoal.current_savings / Math.max(1, activeGoal.total_target_amount)) * 100)
     : 0;
 
-  const openNewExpense = () => { setExpenseForm(emptyExpense()); setExpenseOpen(true); };
+  const openNewExpense = () => { setExpenseForm(emptyExpense()); setNewCategoryName(''); setExpenseOpen(true); };
   const openEditExpense = (e: PersonalExpense) => {
     setExpenseForm({
       id: e.id, name: e.name, amount: String(e.amount),
       is_recurring: e.is_recurring, category: e.category,
       start_date: e.start_date ? e.start_date.slice(0, 10) : todayIso(),
     });
+    setNewCategoryName('');
     setExpenseOpen(true);
   };
   const submitExpense = async () => {
@@ -82,6 +98,23 @@ const FinancialOS = () => {
       toast.error(expenseForm.is_recurring ? 'Seleziona il mese di inizio' : 'Seleziona la data della spesa');
       return;
     }
+
+    // Risoluzione categoria: se "Altro..." selezionato, usa il nome libero
+    let finalCategory = expenseForm.category;
+    if (expenseForm.category === NEW_CATEGORY_SENTINEL) {
+      const trimmed = newCategoryName.trim();
+      if (!trimmed) {
+        toast.error('Inserisci il nome della nuova categoria');
+        return;
+      }
+      finalCategory = trimmed;
+      // Crea la categoria se non esiste già (case-insensitive)
+      const exists = allCategoryNames.some(n => n.toLowerCase() === trimmed.toLowerCase());
+      if (!exists) {
+        try { await addExpenseCategory(trimmed); } catch { /* silent */ }
+      }
+    }
+
     const startIso = new Date(expenseForm.start_date + 'T00:00:00').toISOString();
     try {
       if (expenseForm.id) {
@@ -89,7 +122,7 @@ const FinancialOS = () => {
           name: expenseForm.name.trim(),
           amount,
           is_recurring: expenseForm.is_recurring,
-          category: expenseForm.category,
+          category: finalCategory,
           start_date: startIso,
         });
         toast.success('Spesa aggiornata');
@@ -98,7 +131,7 @@ const FinancialOS = () => {
           name: expenseForm.name.trim(),
           amount,
           is_recurring: expenseForm.is_recurring,
-          category: expenseForm.category,
+          category: finalCategory,
           start_date: startIso,
         });
         toast.success('Spesa aggiunta');
@@ -400,18 +433,36 @@ const FinancialOS = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="exp-cat">Categoria</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="exp-cat">Categoria</Label>
+                  <button
+                    type="button"
+                    onClick={() => setManageCategoriesOpen(true)}
+                    className="text-[10px] font-semibold uppercase tracking-wider text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <Settings2 className="h-3 w-3" /> Gestisci
+                  </button>
+                </div>
                 <Select
                   value={expenseForm.category}
                   onValueChange={v => setExpenseForm(s => ({ ...s, category: v }))}
                 >
                   <SelectTrigger id="exp-cat"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {EXPENSE_CATEGORIES.map(c => (
+                    {allCategoryNames.map(c => (
                       <SelectItem key={c} value={c}>{c}</SelectItem>
                     ))}
+                    <SelectItem value={NEW_CATEGORY_SENTINEL}>+ Altro...</SelectItem>
                   </SelectContent>
                 </Select>
+                {expenseForm.category === NEW_CATEGORY_SENTINEL && (
+                  <Input
+                    className="mt-2"
+                    placeholder="Nome nuova categoria"
+                    value={newCategoryName}
+                    onChange={e => setNewCategoryName(e.target.value)}
+                  />
+                )}
               </div>
             </div>
             <div className="flex items-center justify-between rounded-xl border border-border p-3">
@@ -514,6 +565,105 @@ const FinancialOS = () => {
             <Button onClick={submitGoal} className="gradient-primary text-primary-foreground">
               Salva
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manage Categories Dialog */}
+      <Dialog open={manageCategoriesOpen} onOpenChange={setManageCategoriesOpen}>
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>Gestisci Categorie</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Le categorie standard non sono modificabili. Puoi rinominare o eliminare quelle personalizzate.
+              Le spese assegnate a una categoria eliminata mostreranno il vecchio nome finché non le modifichi.
+            </p>
+
+            {/* Standard */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Standard</p>
+              <div className="flex flex-wrap gap-1.5">
+                {STANDARD_EXPENSE_CATEGORIES.map(c => (
+                  <span key={c} className="text-xs rounded-full bg-secondary text-secondary-foreground px-2.5 py-1">
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Custom */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Personalizzate</p>
+              {expenseCategories.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Nessuna categoria personalizzata. Verranno create automaticamente quando aggiungi una spesa con "+ Altro...".</p>
+              ) : (
+                <ul className="divide-y divide-border rounded-xl border border-border">
+                  {expenseCategories.map(c => {
+                    const isEditing = editingCategoryId === c.id;
+                    return (
+                      <li key={c.id} className="flex items-center gap-2 p-2.5">
+                        {isEditing ? (
+                          <>
+                            <Input
+                              value={editingCategoryName}
+                              onChange={e => setEditingCategoryName(e.target.value)}
+                              className="h-9"
+                              autoFocus
+                            />
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={async () => {
+                                const trimmed = editingCategoryName.trim();
+                                if (!trimmed) { toast.error('Nome non valido'); return; }
+                                try {
+                                  await updateExpenseCategory(c.id, trimmed);
+                                  toast.success('Categoria rinominata');
+                                  setEditingCategoryId(null);
+                                } catch { toast.error('Errore durante la modifica'); }
+                              }}
+                            >
+                              <Check className="h-4 w-4 text-primary" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => setEditingCategoryId(null)}>
+                              <X className="h-4 w-4 text-muted-foreground" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="flex-1 text-sm font-medium text-foreground truncate">{c.name}</span>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => { setEditingCategoryId(c.id); setEditingCategoryName(c.name); }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              onClick={async () => {
+                                try {
+                                  await deleteExpenseCategory(c.id);
+                                  toast.success('Categoria eliminata');
+                                } catch { toast.error('Errore durante l\'eliminazione'); }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setManageCategoriesOpen(false)}>Chiudi</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
