@@ -10,6 +10,11 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
 import { usePrivacyMode } from '@/store/usePrivacyMode';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+
+type Timeframe = 'year' | 'all';
 
 interface SourceRow {
   source: LeadSource;
