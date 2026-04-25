@@ -109,6 +109,24 @@ const FinancialOS = () => {
   const [bizOpen, setBizOpen] = useState(false);
   const [bizForm, setBizForm] = useState<BizExpenseFormState>(emptyBizExpense());
   const [newBizCategoryName, setNewBizCategoryName] = useState('');
+  const [openBizCats, setOpenBizCats] = useState<Record<string, boolean>>({});
+  const [openPersCats, setOpenPersCats] = useState<Record<string, boolean>>({});
+  const [openIncomeCats, setOpenIncomeCats] = useState<Record<string, boolean>>({});
+
+  const groupBy = <T extends { category: string }>(items: T[]): Array<[string, T[]]> => {
+    const map = new Map<string, T[]>();
+    for (const it of items) {
+      const k = it.category || 'Altro';
+      const arr = map.get(k) ?? [];
+      arr.push(it);
+      map.set(k, arr);
+    }
+    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0], 'it'));
+  };
+  const groupedBiz = useMemo(() => groupBy(businessExpenses), [businessExpenses]);
+  const groupedPers = useMemo(() => groupBy(personalExpenses), [personalExpenses]);
+  const groupedIncomes = useMemo(() => groupBy(personalIncomes), [personalIncomes]);
+  const sumAmount = <T extends { amount: number }>(items: T[]) => items.reduce((s, x) => s + (x.amount || 0), 0);
 
   // Unione categorie standard + custom (deduplicate case-insensitive)
   const allCategoryNames = useMemo(() => {
