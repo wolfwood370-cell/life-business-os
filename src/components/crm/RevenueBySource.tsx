@@ -70,20 +70,37 @@ export const RevenueBySource = () => {
 
   return (
     <div className="rounded-3xl border border-border bg-card p-5 shadow-card">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Valore per Fonte</p>
-          <p className="text-[11px] text-muted-foreground">Incassi reali per canale di acquisizione</p>
+          <p className="text-[11px] text-muted-foreground">
+            {timeframe === 'year'
+              ? `Incassi ${currentYear} per canale di acquisizione`
+              : 'Incassi totali per canale di acquisizione'}
+          </p>
         </div>
-        <p className="text-sm font-bold text-foreground">
-          <PrivacyMask>{formatEuro(grandTotal)}</PrivacyMask>
-        </p>
+        <div className="flex items-center gap-2 shrink-0">
+          <Select value={timeframe} onValueChange={(v) => setTimeframe(v as Timeframe)}>
+            <SelectTrigger className="h-8 w-[140px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="year">Quest'anno</SelectItem>
+              <SelectItem value="all">Tutto il tempo</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm font-bold text-foreground tabular-nums">
+            <PrivacyMask>{formatEuro(grandTotal)}</PrivacyMask>
+          </p>
+        </div>
       </div>
 
       {grandTotal === 0 ? (
         <div className="mt-4 rounded-xl border border-dashed border-border p-6 text-center">
           <p className="text-xs text-muted-foreground">
-            Nessun incasso registrato. Registra il primo pagamento per popolare il grafico.
+            {timeframe === 'year'
+              ? `Nessun incasso registrato per il ${currentYear}.`
+              : 'Nessun incasso registrato. Registra il primo pagamento per popolare il grafico.'}
           </p>
         </div>
       ) : (
