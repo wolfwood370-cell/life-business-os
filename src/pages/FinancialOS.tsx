@@ -673,51 +673,64 @@ const FinancialOS = () => {
         {personalExpenses.length === 0 ? (
           <p className="mt-4 text-sm text-muted-foreground">Aggiungi le tue spese fisse (Netflix, affitto, abbonamenti...) per calcolare il target reale.</p>
         ) : (
-          <ul className="mt-4 divide-y divide-border">
-            {personalExpenses.map(e => {
-              const ended = !!e.end_date;
-              const startLabel = e.start_date
-                ? new Date(e.start_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })
-                : '—';
-              const endLabel = e.end_date
-                ? new Date(e.end_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })
-                : null;
+          <div className="mt-4 space-y-2">
+            {groupedPers.map(([cat, items]) => {
+              const isOpen = openPersCats[cat] ?? false;
+              const catTotal = sumAmount(items.filter(x => !x.end_date));
               return (
-                <li key={e.id} className="py-3 flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-foreground truncate">
-                      {e.name}
-                      {ended && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">· terminata</span>}
-                    </p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {e.category} · {e.is_recurring ? `Ricorrente da ${startLabel}${endLabel ? ` a ${endLabel}` : ''}` : `Una tantum · ${startLabel}`}
-                    </p>
-                  </div>
-                  <p className={`text-sm font-bold tabular-nums ${e.is_recurring && !ended ? 'text-foreground' : 'text-muted-foreground'}`}>
-                    <PrivacyMask>{formatEuro(e.amount)}</PrivacyMask>
-                  </p>
-                  <div className="flex gap-1">
-                    {e.is_recurring && !ended && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => handleEndExpense(e.id)}
-                        title="Termina spesa ricorrente"
-                      >
-                        <Ban className="h-4 w-4 text-warning" />
-                      </Button>
-                    )}
-                    <Button size="icon" variant="ghost" onClick={() => openEditExpense(e)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  </div>
-                </li>
+                <Collapsible key={cat} open={isOpen} onOpenChange={(o) => setOpenPersCats(s => ({ ...s, [cat]: o }))}>
+                  <CollapsibleTrigger className="w-full flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/40 px-3 py-2 hover:bg-secondary transition-colors">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isOpen ? '' : '-rotate-90'}`} />
+                      <span className="text-sm font-semibold text-foreground truncate">{cat}</span>
+                      <span className="text-[11px] text-muted-foreground">({items.length})</span>
+                    </div>
+                    <span className="text-sm font-bold tabular-nums text-foreground">
+                      <PrivacyMask>{formatEuro(catTotal)}</PrivacyMask>
+                    </span>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <ul className="mt-1 ml-2 divide-y divide-border border-l border-border pl-3">
+                      {items.map(e => {
+                        const ended = !!e.end_date;
+                        const startLabel = e.start_date ? new Date(e.start_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' }) : '—';
+                        const endLabel = e.end_date ? new Date(e.end_date).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' }) : null;
+                        return (
+                          <li key={e.id} className="py-2 flex items-center justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-foreground truncate">
+                                {e.name}
+                                {ended && <span className="ml-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">· terminata</span>}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {e.is_recurring ? `Ricorrente da ${startLabel}${endLabel ? ` a ${endLabel}` : ''}` : `Una tantum · ${startLabel}`}
+                              </p>
+                            </div>
+                            <p className={`text-sm font-bold tabular-nums ${e.is_recurring && !ended ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              <PrivacyMask>{formatEuro(e.amount)}</PrivacyMask>
+                            </p>
+                            <div className="flex gap-1">
+                              {e.is_recurring && !ended && (
+                                <Button size="icon" variant="ghost" onClick={() => handleEndExpense(e.id)} title="Termina spesa ricorrente">
+                                  <Ban className="h-4 w-4 text-warning" />
+                                </Button>
+                              )}
+                              <Button size="icon" variant="ghost" onClick={() => openEditExpense(e)}>
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" onClick={() => handleDeleteExpense(e.id)}>
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </CollapsibleContent>
+                </Collapsible>
               );
             })}
-          </ul>
+          </div>
         )}
       </section>
 
