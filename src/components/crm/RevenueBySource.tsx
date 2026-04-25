@@ -28,6 +28,9 @@ export const RevenueBySource = () => {
   const { clients, transactions } = useCrm();
   const { privacyMode } = usePrivacyMode();
   const [drill, setDrill] = useState<LeadSource | null>(null);
+  const [timeframe, setTimeframe] = useState<Timeframe>('year');
+
+  const currentYear = new Date().getFullYear();
 
   const rows = useMemo<SourceRow[]>(() => {
     const clientSource = new Map<string, LeadSource>();
@@ -43,6 +46,10 @@ export const RevenueBySource = () => {
 
     for (const t of transactions) {
       if (t.status !== 'Saldato') continue;
+      if (timeframe === 'year') {
+        const d = new Date(t.payment_date);
+        if (isNaN(d.getTime()) || d.getFullYear() !== currentYear) continue;
+      }
       const src = clientSource.get(t.client_id);
       if (!src) continue;
       acc[src].value += t.amount;
@@ -56,7 +63,7 @@ export const RevenueBySource = () => {
       color: `hsl(var(--${sourceColorMap[src]}))`,
       txs: acc[src].txs,
     }));
-  }, [clients, transactions]);
+  }, [clients, transactions, timeframe, currentYear]);
 
   const grandTotal = rows.reduce((s, r) => s + r.value, 0);
   const drillRow = drill ? rows.find(r => r.source === drill) : null;
