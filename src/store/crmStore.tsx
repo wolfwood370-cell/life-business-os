@@ -344,24 +344,15 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<Client> }) => {
-      // Handle roi_metrics separately if present
-      const {
-        roi_metrics,
-        service_sold,
-        actual_price,
-        training_start_date,
-        training_end_date,
-        ...rest
-      } = patch;
-      const dbPatch: Record<string, unknown> = { ...rest };
-      if ('service_sold' in patch) dbPatch.service_sold = service_sold ?? null;
-      if ('actual_price' in patch) dbPatch.actual_price = actual_price ?? null;
-      if ('training_start_date' in patch) dbPatch.training_start_date = training_start_date ?? null;
-      if ('training_end_date' in patch) dbPatch.training_end_date = training_end_date ?? null;
-      // Normalize undefined → null for nullable columns
-      Object.keys(dbPatch).forEach(k => {
-        if (dbPatch[k] === undefined) dbPatch[k] = null;
-      });
+      // Handle roi_metrics separately (not a column) and skip undefined fields
+      // entirely so callers cannot accidentally null out existing data by passing
+      // `field: undefined`. Only fields explicitly set to null are cleared.
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { roi_metrics, ...rest } = patch;
+      const dbPatch: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(rest)) {
+        if (v !== undefined) dbPatch[k] = v;
+      }
       if (Object.keys(dbPatch).length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { error } = await supabase.from('clients').update(dbPatch as any).eq('id', id);
