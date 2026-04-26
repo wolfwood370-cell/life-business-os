@@ -13,6 +13,8 @@ export type ServiceType =
   | 'Programmazione Avanzata'
   | 'NC Nutrition'
   | 'PT Pack 99€'
+  | 'Percorso Online'
+  | 'Founders Circle'
   | 'Altro';
 
 export const SERVICE_TYPES: ServiceType[] = [
@@ -23,6 +25,8 @@ export const SERVICE_TYPES: ServiceType[] = [
   'Programmazione Avanzata',
   'NC Nutrition',
   'PT Pack 99€',
+  'Percorso Online',
+  'Founders Circle',
   'Altro',
 ];
 
@@ -86,8 +90,13 @@ export const SERVICE_GROUPS: { label: string; items: ServiceType[] }[] = [
   { label: 'Programmazione', items: ['Programmazione Avanzata'] },
   { label: 'Nutrizione', items: ['NC Nutrition'] },
   { label: 'Entry Level', items: ['PT Pack 99€'] },
+  { label: 'Coaching Online', items: ['Percorso Online'] },
+  { label: 'Programmi Esclusivi', items: ['Founders Circle'] },
   { label: 'Altro', items: ['Altro'] },
 ];
+
+// Services with custom pricing (no default price, fully editable)
+export const CUSTOM_PRICE_SERVICES: ServiceType[] = ['Founders Circle', 'Percorso Online'];
 
 export type Gender = 'M' | 'F' | 'Altro';
 export const GENDERS: Gender[] = ['M', 'F', 'Altro'];
