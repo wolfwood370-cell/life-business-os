@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { AreaChart } from '@tremor/react';
+import { AreaChart, type CustomTooltipProps } from '@tremor/react';
 import { useCrm } from '@/store/useCrm';
 import { formatEuro } from '@/types/crm';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
@@ -14,15 +14,8 @@ interface ChartPoint {
   'Costi Necessari': number;
 }
 
-interface TooltipPayload {
-  payload: ChartPoint;
-  active: boolean;
-  label: string;
-  categoryPayload: Array<{ value: number; color: string; dataKey: string }>;
-}
-
-const CustomTooltip = ({ payload, active, label }: TooltipPayload) => {
-  if (!active || !payload?.length) return null;
+const CustomTooltip = ({ payload, active, label }: CustomTooltipProps) => {
+  if (!active || !payload || payload.length === 0) return null;
   const point = payload[0].payload as ChartPoint;
   const actual = point['Costi Effettivi'] ?? 0;
   const necessary = point['Costi Necessari'] ?? 0;
