@@ -14,10 +14,8 @@ interface AccountStat {
   count: number;
 }
 
-const accountIcon = (name: string) => {
-  if (name.toLowerCase().includes('business')) return Building2;
-  return Wallet;
-};
+const accountIcon = (account: BankAccount) =>
+  account.type === 'business' ? Building2 : Wallet;
 
 interface Props {
   year: number;
@@ -51,7 +49,7 @@ export const BankAccountCards = ({ year, month }: Props) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
       {stats.map(({ account, credits, debits, net, count }) => {
-        const Icon = accountIcon(account.name);
+        const Icon = accountIcon(account);
         const isBusiness = account.type === 'business';
         return (
           <Card

@@ -31,6 +31,12 @@ export const MovementImportDialog = ({ open, onOpenChange }: Props) => {
     if (inputRef.current) inputRef.current.value = '';
   };
 
+  const fullReset = () => {
+    reset();
+    setAccountId('');
+    setFormat('generic');
+  };
+
   const handleFile = async (file: File) => {
     const text = await file.text();
     try {
@@ -70,10 +76,15 @@ export const MovementImportDialog = ({ open, onOpenChange }: Props) => {
         external_ref: r.external_ref,
       })));
       toast.success(`Importati ${n} movimenti su ${account?.name}.`);
-      reset();
+      fullReset();
       onOpenChange(false);
-    } catch (err) {
-      toast.error('Errore durante l\'import.');
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code;
+      if (code === '23505') {
+        toast.error('Alcuni movimenti risultano già importati su questo conto. Import annullato.');
+      } else {
+        toast.error('Errore durante l\'import.');
+      }
       console.error(err);
     } finally {
       setImporting(false);
@@ -81,7 +92,7 @@ export const MovementImportDialog = ({ open, onOpenChange }: Props) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) fullReset(); onOpenChange(v); }}>
       <DialogContent className="max-w-3xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Importa Movimenti Bancari</DialogTitle>
