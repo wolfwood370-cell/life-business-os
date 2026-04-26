@@ -232,7 +232,16 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
                   />
                 </div>
 
-                {serviceSold && SHORT_DURATION_SERVICES.includes(serviceSold) ? (
+                {serviceSold && NO_DURATION_SERVICES.includes(serviceSold) ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </Label>
+                    <div className="h-12 rounded-xl bg-muted/40 border border-border flex items-center px-3 text-sm font-semibold text-muted-foreground">
+                      Nessuna durata
+                    </div>
+                  </div>
+                ) : serviceSold && SHORT_DURATION_SERVICES.includes(serviceSold) ? (
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                       <CalendarClock className="h-3 w-3" /> Durata Percorso
@@ -244,7 +253,7 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
                 ) : (
                   <div className="space-y-1.5">
                     <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso (1m = 28gg)
                     </Label>
                     <Select value={String(contractDuration)} onValueChange={(v) => setContractDuration(Number(v) as ContractDurationMonths)}>
                       <SelectTrigger className="h-12 rounded-xl bg-card border border-border text-sm font-semibold">
