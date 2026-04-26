@@ -47,7 +47,7 @@ const ClientDetail = () => {
   const client = clients.find(c => c.id === id);
 
   // Inline payment form state
-  const [payServiceId, setPayServiceId] = useState<string>('');
+  const [payServiceId, setPayServiceId] = useState<string | undefined>(undefined);
   const [payAmount, setPayAmount] = useState('');
   const [payType, setPayType] = useState<PaymentType>('Unica Soluzione');
   const [payInstallments, setPayInstallments] = useState(2);
@@ -131,7 +131,7 @@ const ClientDetail = () => {
   
   const [churn, setChurn] = useState<ChurnRisk>('Basso');
   const [birthDate, setBirthDate] = useState('');
-  const [gender, setGender] = useState<Gender | ''>('');
+  const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [gymSignup, setGymSignup] = useState('');
   const [gymExpiry, setGymExpiry] = useState('');
   const [phone, setPhone] = useState('');
@@ -139,7 +139,7 @@ const ClientDetail = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gdprConsent, setGdprConsent] = useState(false);
-  const [serviceSold, setServiceSold] = useState<ServiceType | ''>('');
+  const [serviceSold, setServiceSold] = useState<ServiceType | undefined>(undefined);
   const [actualPrice, setActualPrice] = useState('');
   const [trainingStart, setTrainingStart] = useState('');
   const [trainingEnd, setTrainingEnd] = useState('');
@@ -154,6 +154,7 @@ const ClientDetail = () => {
   const [metricName, setMetricName] = useState('');
   const [metricValue, setMetricValue] = useState('');
   const [metricNote, setMetricNote] = useState('');
+  const [formInitialized, setFormInitialized] = useState(false);
 
   useEffect(() => {
     if (client) {
@@ -178,7 +179,7 @@ const ClientDetail = () => {
       setBehaviorUrgency(urgency);
       setChurn(client.churn_risk ?? 'Basso');
       setBirthDate(client.birth_date ? client.birth_date.slice(0, 10) : '');
-      setGender(client.gender ?? '');
+      setGender(client.gender ?? undefined);
       setGymSignup(client.gym_signup_date ? client.gym_signup_date.slice(0, 10) : '');
       setGymExpiry(client.gym_expiry_date ? client.gym_expiry_date.slice(0, 10) : '');
       setPhone(client.phone ?? '');
@@ -186,10 +187,11 @@ const ClientDetail = () => {
       setFirstName(client.first_name ?? '');
       setLastName(client.last_name ?? '');
       setGdprConsent(!!client.gdpr_consent);
-      setServiceSold((client.service_sold as ServiceType) ?? '');
+      setServiceSold((client.service_sold as ServiceType | undefined) ?? undefined);
       setActualPrice(client.actual_price !== undefined && client.actual_price !== null ? String(client.actual_price) : '');
       setTrainingStart(client.training_start_date ? client.training_start_date.slice(0, 10) : '');
       setTrainingEnd(client.training_end_date ? client.training_end_date.slice(0, 10) : '');
+      setFormInitialized(true);
     }
   }, [client]);
 
@@ -271,7 +273,7 @@ const ClientDetail = () => {
             : `Pagamento di ${formatEuro(value)} registrato (${payMethod})`
       );
       setPayAmount('');
-      setPayServiceId('');
+      setPayServiceId(undefined);
       setPayType('Unica Soluzione');
       setPayInstallments(2);
       setPayDate(todayIso());
@@ -636,7 +638,8 @@ const ClientDetail = () => {
                     <Sparkles className="h-3 w-3" /> Servizio Venduto
                   </label>
                   <Select
-                    value={serviceSold || undefined}
+                    key={`svc-${formInitialized ? 'r' : 'i'}`}
+                    value={serviceSold}
                     onValueChange={(v) => setServiceSold(v as ServiceType)}
                   >
                     <SelectTrigger className="h-12 rounded-xl bg-card border border-border text-sm font-semibold">
@@ -718,7 +721,7 @@ const ClientDetail = () => {
                       <Sparkles className="h-3 w-3" /> Servizio (opzionale)
                     </label>
                     <Select
-                      value={payServiceId || undefined}
+                      value={payServiceId}
                       onValueChange={(v) => {
                         setPayServiceId(v);
                         const svc = services.find(s => s.id === v);
@@ -1042,7 +1045,7 @@ const ClientDetail = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sesso</label>
-                  <Select value={gender || undefined} onValueChange={(v) => setGender(v as Gender)}>
+                  <Select key={`gnd-${formInitialized ? 'r' : 'i'}`} value={gender} onValueChange={(v) => setGender(v as Gender)}>
                     <SelectTrigger className="h-12 rounded-xl bg-secondary border-0 text-base font-semibold">
                       <SelectValue placeholder="Seleziona…" />
                     </SelectTrigger>
