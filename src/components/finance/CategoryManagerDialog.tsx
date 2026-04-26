@@ -65,7 +65,7 @@ export const CategoryManagerDialog = ({ open, onOpenChange }: Props) => {
         <DialogHeader>
           <DialogTitle>Gestisci Categorie</DialogTitle>
           <DialogDescription>
-            Crea, modifica o elimina le categorie del Ledger Unificato.
+            Crea, modifica o elimina le categorie dei Movimenti.
           </DialogDescription>
         </DialogHeader>
 

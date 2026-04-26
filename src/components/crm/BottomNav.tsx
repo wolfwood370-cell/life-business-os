@@ -18,14 +18,14 @@ const primaryItems = [
 ];
 
 const secondaryItems = [
-  { to: '/finance', label: 'Finance', icon: Target },
+  { to: '/finance', label: 'Hub', icon: Target },
 ];
 
 const allItems = [
   { to: '/', label: 'Dashboard', icon: Home },
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/clients', label: 'Clienti', icon: Users },
-  { to: '/finance', label: 'Finance OS', icon: Target },
+  { to: '/finance', label: 'Finance Hub', icon: Target },
   { to: '/finance-coach', label: 'CFO Globale', icon: BrainCircuit },
   { to: '/strategy', label: 'Strategia di Vendita', icon: Brain },
   { to: '/coach', label: 'Sales Coach', icon: BarChart3 },

@@ -245,7 +245,7 @@ export default function FinanceCoach() {
           <CardDescription className="text-xs">
             {activeGoal
               ? <>Obiettivo attivo: <b className="text-foreground">{activeGoal.title}</b> — Target {formatEuro(Number(activeGoal.total_target_amount))} (di cui salvati {formatEuro(Number(activeGoal.current_savings))})</>
-              : 'Nessun obiettivo attivo. Imposta un Life Goal nel Finance OS per attivare il simulatore.'}
+              : 'Nessun obiettivo attivo. Imposta un Life Goal nel Finance Hub per attivare il simulatore.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">

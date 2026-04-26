@@ -71,7 +71,7 @@ export const ManualMovementDialog = ({ open, onOpenChange, defaultDate }: Props)
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Aggiungi Movimento Manualmente</DialogTitle>
-          <DialogDescription>Registra una nuova entrata o uscita nel Ledger Unificato.</DialogDescription>
+          <DialogDescription>Registra una nuova entrata o uscita nei Movimenti.</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
