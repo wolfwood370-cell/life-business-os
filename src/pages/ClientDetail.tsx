@@ -200,14 +200,15 @@ const ClientDetail = () => {
       setTrainingStart(client.training_start_date ? client.training_start_date.slice(0, 10) : '');
       setTrainingEnd(client.training_end_date ? client.training_end_date.slice(0, 10) : '');
 
-      // Phase 37 polish: derive contractDuration from existing dates so the select
-      // reflects the real saved contract length when re-opening a client.
+      // Phase 39: derive contractDuration in 28-day months from existing dates.
       if (client.training_start_date && client.training_end_date) {
         const ms = new Date(client.training_end_date).getTime() - new Date(client.training_start_date).getTime();
         const days = Math.round(ms / 86_400_000);
-        // Months ≈ days/30.44; snap to nearest available option (3,6,12).
-        const months = days / 30.44;
-        const snapped: ContractDurationMonths = months <= 4 ? 3 : months <= 9 ? 6 : 12;
+        const months = Math.round(days / 28);
+        const allowed: ContractDurationMonths[] = [1, 3, 6, 12];
+        const snapped = allowed.reduce((best, opt) =>
+          Math.abs(opt - months) < Math.abs(best - months) ? opt : best
+        , 3 as ContractDurationMonths);
         setContractDuration(snapped);
       } else {
         setContractDuration(3);
