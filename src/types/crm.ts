@@ -331,10 +331,10 @@ export const movementTypeLabel: Record<MovementType, string> = {
 
 export const leadSourceLabel: Record<LeadSource, string> = {
   'Gym-provided': 'Contatto Palestra',
-  'PT Pack 99€': 'PT Pack 99€',
   'Gym Floor': 'Approccio Sala',
   'Referral': 'Passaparola',
   'Social Media': 'Social Media',
+  'Other': 'Altro',
 };
 
 export const pipelineStageLabel: Record<PipelineStage, string> = {
@@ -348,10 +348,10 @@ export const pipelineStageLabel: Record<PipelineStage, string> = {
 
 export const sourceColorMap: Record<LeadSource, string> = {
   'Gym-provided': 'source-gym',
-  'PT Pack 99€': 'source-pack',
   'Gym Floor': 'source-floor',
   'Referral': 'source-referral',
   'Social Media': 'source-social',
+  'Other': 'source-pack',
 };
 
 export const stageColorMap: Record<PipelineStage, string> = {

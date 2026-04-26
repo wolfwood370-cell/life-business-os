@@ -18,7 +18,7 @@ const primaryItems = [
 ];
 
 const secondaryItems = [
-  { to: '/finance', label: 'Hub', icon: Target },
+  { to: '/finance', label: 'Finance Hub', icon: Target },
 ];
 
 const allItems = [

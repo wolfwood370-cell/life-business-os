@@ -38,10 +38,10 @@ export const RevenueBySource = () => {
 
     const acc: Record<LeadSource, { value: number; txs: Transaction[] }> = {
       'Gym-provided': { value: 0, txs: [] },
-      'PT Pack 99€': { value: 0, txs: [] },
       'Gym Floor': { value: 0, txs: [] },
       'Referral': { value: 0, txs: [] },
       'Social Media': { value: 0, txs: [] },
+      'Other': { value: 0, txs: [] },
     };
 
     for (const t of transactions) {
