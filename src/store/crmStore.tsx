@@ -314,7 +314,13 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         churn_risk: c.churn_risk ?? null,
         notes: c.notes ?? null,
         phone: c.phone ?? null,
+        email: c.email ?? null,
         gdpr_consent: c.gdpr_consent ?? false,
+        // Contract fields (Phase 37: ensure they persist on insert)
+        service_sold: c.service_sold ?? null,
+        actual_price: c.actual_price ?? null,
+        training_start_date: c.training_start_date ?? null,
+        training_end_date: c.training_end_date ?? null,
       });
       if (error) throw error;
     },
