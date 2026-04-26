@@ -780,48 +780,16 @@ const ClientDetail = () => {
                     </label>
                   </div>
 
-                  {/* Servizio del Catalogo */}
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                      <Sparkles className="h-3 w-3" /> Servizio (opzionale)
-                    </label>
-                    <Select
-                      value={payServiceId}
-                      onValueChange={(v) => {
-                        setPayServiceId(v);
-                        const svc = services.find(s => s.id === v);
-                        if (svc) setPayAmount(String(svc.price));
-                      }}
-                    >
-                      <SelectTrigger className="h-12 rounded-xl bg-secondary border-0 text-sm font-semibold">
-                        <SelectValue placeholder="Seleziona dal catalogo…" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from(new Set(services.map(s => s.category))).map(cat => (
-                          <div key={cat}>
-                            <div className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{cat}</div>
-                            {services.filter(s => s.category === cat).map(s => (
-                              <SelectItem key={s.id} value={s.id}>
-                                {s.name} — {formatEuro(s.price)}
-                              </SelectItem>
-                            ))}
-                          </div>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {payServiceId && (() => {
-                      const svc = services.find(s => s.id === payServiceId);
-                      return svc ? (
-                        <p className="text-[10px] text-muted-foreground">
-                          Prezzo di listino: <span className="font-semibold text-foreground">{formatEuro(svc.price)}</span> · puoi modificare l'importo qui sotto.
-                        </p>
-                      ) : (
-                        <p className="text-[10px] text-muted-foreground">L'importo si compila automaticamente, ma puoi modificarlo.</p>
-                      );
-                    })()}
-                    {!payServiceId && (
-                      <p className="text-[10px] text-muted-foreground">L'importo si compila automaticamente, ma puoi modificarlo.</p>
-                    )}
+                  {/* Servizio del Contratto (ereditato dal profilo cliente) */}
+                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-2.5 flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <p className="text-[11px] text-foreground leading-tight">
+                      Servizio:{' '}
+                      <span className="font-bold">{client.service_sold ?? 'Non assegnato'}</span>
+                      {contractRemaining > 0 && (
+                        <span className="text-muted-foreground"> · Residuo: <span className="font-semibold text-foreground tabular-nums">{formatEuro(contractRemaining)}</span></span>
+                      )}
+                    </p>
                   </div>
 
                   {/* Importo Totale */}
