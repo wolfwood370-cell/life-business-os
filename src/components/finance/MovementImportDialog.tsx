@@ -217,4 +217,5 @@ export const MovementImportDialog = forwardRef<HTMLDivElement, Props>(({ open, o
       </DialogContent>
     </Dialog>
   );
-};
+});
+MovementImportDialog.displayName = 'MovementImportDialog';
