@@ -434,14 +434,22 @@ const ClientDetail = () => {
     }
   };
 
-  const handleSourceChange = (s: LeadSource) => {
-    updateClient(client!.id, { lead_source: s });
-    toast.success(`Fonte aggiornata: ${leadSourceLabel[s]}`);
+  const handleSourceChange = async (s: LeadSource) => {
+    try {
+      await updateClient(client!.id, { lead_source: s });
+      toast.success(`Fonte aggiornata: ${leadSourceLabel[s]}`);
+    } catch {
+      toast.error('Impossibile aggiornare la fonte');
+    }
   };
 
-  const handleStageChange = (s: PipelineStage) => {
-    moveClient(client.id, s);
-    toast.success(`Spostato in "${pipelineStageLabel[s]}"`);
+  const handleStageChange = async (s: PipelineStage) => {
+    try {
+      await moveClient(client!.id, s);
+      toast.success(`Spostato in "${pipelineStageLabel[s]}"`);
+    } catch {
+      toast.error('Impossibile aggiornare la fase');
+    }
   };
 
   const handleAddRoi = async () => {
