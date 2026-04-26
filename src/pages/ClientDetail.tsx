@@ -319,8 +319,6 @@ const ClientDetail = () => {
       toast.error('Errore nel salvataggio');
     }
   };
-    toast.success('Profilo aggiornato');
-  };
 
   const handleRegisterPayment = async () => {
     const value = Number(payAmount);
