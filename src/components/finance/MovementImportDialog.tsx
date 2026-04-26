@@ -217,5 +217,4 @@ export const MovementImportDialog = ({ open, onOpenChange }: Props) => {
       </DialogContent>
     </Dialog>
   );
-});
-MovementImportDialog.displayName = 'MovementImportDialog';
+};
