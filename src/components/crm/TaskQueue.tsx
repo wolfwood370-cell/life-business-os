@@ -107,9 +107,9 @@ export const TaskQueue = () => {
       });
     }
 
-    // PT Pack Conversion — service_sold = "PT Pack 99€" con leadAge >= 14g (escluse chiusure)
+    // PT Pack Conversion — service_sold = "PT Pack Premium" con leadAge >= 14g (escluse chiusure)
     if (
-      c.service_sold === 'PT Pack 99€' &&
+      c.service_sold === 'PT Pack Premium' &&
       c.pipeline_stage !== 'Closed Won' &&
       c.pipeline_stage !== 'Closed Lost' &&
       leadAge >= 14

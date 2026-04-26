@@ -12,7 +12,7 @@ export type ServiceType =
   | 'Percorso Premium'
   | 'Programmazione Avanzata'
   | 'NC Nutrition'
-  | 'PT Pack 99€'
+  | 'PT Pack Premium'
   | 'Percorso Online'
   | 'Founders Circle'
   | 'Altro';
@@ -24,7 +24,7 @@ export const SERVICE_TYPES: ServiceType[] = [
   'Percorso Premium',
   'Programmazione Avanzata',
   'NC Nutrition',
-  'PT Pack 99€',
+  'PT Pack Premium',
   'Percorso Online',
   'Founders Circle',
   'Altro',
@@ -89,7 +89,7 @@ export const SERVICE_GROUPS: { label: string; items: ServiceType[] }[] = [
   { label: 'Percorsi Premium', items: ['Percorso Premium'] },
   { label: 'Programmazione', items: ['Programmazione Avanzata'] },
   { label: 'Nutrizione', items: ['NC Nutrition'] },
-  { label: 'Entry Level', items: ['PT Pack 99€'] },
+  { label: 'Entry Level', items: ['PT Pack Premium'] },
   { label: 'Coaching Online', items: ['Percorso Online'] },
   { label: 'Programmi Esclusivi', items: ['Founders Circle'] },
   { label: 'Altro', items: ['Altro'] },
@@ -102,12 +102,17 @@ export const CUSTOM_PRICE_SERVICES: ServiceType[] = ['Founders Circle', 'Percors
 export const SHORT_DURATION_SERVICES: ServiceType[] = [
   'Founders Circle',
   'Programmazione Avanzata',
-  'PT Pack 99€',
 ];
 
-// Opzioni durata in mesi per i servizi standard
-export type ContractDurationMonths = 3 | 6 | 12;
+// Servizi senza durata configurabile (training_end_date non viene calcolata)
+export const NO_DURATION_SERVICES: ServiceType[] = [
+  'PT Pack Premium',
+];
+
+// Opzioni durata in mesi per i servizi standard (1 mese = 28 giorni)
+export type ContractDurationMonths = 1 | 3 | 6 | 12;
 export const CONTRACT_DURATION_OPTIONS: { value: ContractDurationMonths; label: string }[] = [
+  { value: 1, label: '1 Mese' },
   { value: 3, label: '3 Mesi' },
   { value: 6, label: '6 Mesi' },
   { value: 12, label: '12 Mesi' },

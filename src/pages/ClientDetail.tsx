@@ -27,7 +27,7 @@ import {
   PaymentType, PaymentMethod, PAYMENT_METHODS,
   Transaction, TransactionStatus, TRANSACTION_STATUSES,
   SERVICE_GROUPS, ServiceType, CUSTOM_PRICE_SERVICES,
-  SHORT_DURATION_SERVICES, CONTRACT_DURATION_OPTIONS, ContractDurationMonths,
+  SHORT_DURATION_SERVICES, NO_DURATION_SERVICES, CONTRACT_DURATION_OPTIONS, ContractDurationMonths,
   formatEuro,
 } from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
@@ -200,14 +200,15 @@ const ClientDetail = () => {
       setTrainingStart(client.training_start_date ? client.training_start_date.slice(0, 10) : '');
       setTrainingEnd(client.training_end_date ? client.training_end_date.slice(0, 10) : '');
 
-      // Phase 37 polish: derive contractDuration from existing dates so the select
-      // reflects the real saved contract length when re-opening a client.
+      // Phase 39: derive contractDuration in 28-day months from existing dates.
       if (client.training_start_date && client.training_end_date) {
         const ms = new Date(client.training_end_date).getTime() - new Date(client.training_start_date).getTime();
         const days = Math.round(ms / 86_400_000);
-        // Months ≈ days/30.44; snap to nearest available option (3,6,12).
-        const months = days / 30.44;
-        const snapped: ContractDurationMonths = months <= 4 ? 3 : months <= 9 ? 6 : 12;
+        const months = Math.round(days / 28);
+        const allowed: ContractDurationMonths[] = [1, 3, 6, 12];
+        const snapped = allowed.reduce((best, opt) =>
+          Math.abs(opt - months) < Math.abs(best - months) ? opt : best
+        , 3 as ContractDurationMonths);
         setContractDuration(snapped);
       } else {
         setContractDuration(3);
@@ -878,8 +879,20 @@ const ClientDetail = () => {
                   />
                 </div>
 
-                {/* Smart Duration: 28gg fissi per servizi short, altrimenti select Mesi */}
-                {serviceSold && SHORT_DURATION_SERVICES.includes(serviceSold) ? (
+                {/* Smart Duration: nessuna durata, 28gg fissi, oppure select Mesi */}
+                {serviceSold && NO_DURATION_SERVICES.includes(serviceSold) ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </label>
+                    <div className="h-12 rounded-xl bg-muted/40 border border-border flex items-center px-3 text-sm font-semibold text-muted-foreground">
+                      Nessuna durata
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      <span className="font-semibold text-foreground">{serviceSold}</span> non prevede una scadenza.
+                    </p>
+                  </div>
+                ) : serviceSold && SHORT_DURATION_SERVICES.includes(serviceSold) ? (
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                       <CalendarClock className="h-3 w-3" /> Durata Percorso
@@ -894,7 +907,7 @@ const ClientDetail = () => {
                 ) : (
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso (1 mese = 28 giorni)
                     </label>
                     <Select
                       value={String(contractDuration)}

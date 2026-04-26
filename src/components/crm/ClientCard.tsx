@@ -10,6 +10,7 @@ import {
   SERVICE_GROUPS,
   ServiceType,
   SHORT_DURATION_SERVICES,
+  NO_DURATION_SERVICES,
 } from '@/types/crm';
 import { SourceBadge } from './SourceBadge';
 import { LeadScoreBadge } from './ScoreBadges';
@@ -264,14 +265,18 @@ export const ClientCard = ({ client, compact = false }: { client: Client; compac
             </div>
           </div>
 
-          {closeService && SHORT_DURATION_SERVICES.includes(closeService) ? (
+          {closeService && NO_DURATION_SERVICES.includes(closeService) ? (
+            <div className="h-12 rounded-xl bg-muted/40 border border-border flex items-center px-3 text-sm font-semibold text-muted-foreground">
+              Durata: nessuna
+            </div>
+          ) : closeService && SHORT_DURATION_SERVICES.includes(closeService) ? (
             <div className="h-12 rounded-xl bg-primary/5 border border-primary/20 flex items-center px-3 text-sm font-semibold text-foreground">
               Durata: 28 giorni (auto)
             </div>
           ) : (
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                <CalendarClock className="h-3 w-3" /> Durata Percorso
+                <CalendarClock className="h-3 w-3" /> Durata Percorso (1m = 28gg)
               </Label>
               <Select value={String(closeDuration)} onValueChange={(v) => setCloseDuration(Number(v) as ContractDurationMonths)}>
                 <SelectTrigger className="h-12 rounded-xl bg-secondary border-0 text-sm font-semibold">
