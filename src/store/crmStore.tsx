@@ -878,6 +878,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     },
     importMovements: async (rows) => await importMovementsMutation.mutateAsync(rows),
     addUnifiedCategory: async (name, scope, kind) => await addUnifiedCategoryMutation.mutateAsync({ name, scope, kind }),
+    updateUnifiedCategory: async (id, patch) => { await updateUnifiedCategoryMutation.mutateAsync({ id, patch }); },
+    deleteUnifiedCategory: async (id) => { await deleteUnifiedCategoryMutation.mutateAsync(id); },
   };
 
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>;
