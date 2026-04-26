@@ -307,7 +307,63 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
-  useEffect(() => {
+  // ============ Phase 28: Unified Ledger queries ============
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: ['crm', 'bank_accounts'],
+    queryFn: async (): Promise<BankAccount[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('bank_accounts').select('*').order('sort_order', { ascending: true });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({
+        id: r.id, name: r.name, type: r.type as BankAccountType,
+        sort_order: r.sort_order, created_at: r.created_at,
+      }));
+    },
+  });
+
+  const { data: unifiedCategories = [] } = useQuery({
+    queryKey: ['crm', 'categories'],
+    queryFn: async (): Promise<UnifiedCategory[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('categories').select('*').order('name', { ascending: true });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({
+        id: r.id, name: r.name, scope: r.scope as CategoryScope, kind: r.kind as CategoryKind,
+      }));
+    },
+  });
+
+  const { data: movements = [] } = useQuery({
+    queryKey: ['crm', 'movements'],
+    queryFn: async (): Promise<FinancialMovement[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('financial_movements').select('*').order('date', { ascending: false }).limit(5000);
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({
+        id: r.id,
+        account_id: r.account_id,
+        date: r.date,
+        description: r.description ?? '',
+        amount: Number(r.amount),
+        type: r.type as MovementType,
+        classification: r.classification as MovementClassification,
+        category_id: r.category_id ?? undefined,
+        client_id: r.client_id ?? undefined,
+        is_recurring: Boolean(r.is_recurring),
+        is_reviewed: Boolean(r.is_reviewed),
+        source: (r.source ?? 'manual') as MovementSource,
+        external_ref: r.external_ref ?? undefined,
+        notes: r.notes ?? undefined,
+        created_at: r.created_at,
+      }));
+    },
+  });
     const channel = supabase
       .channel('crm-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => {
