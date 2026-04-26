@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
 import { TAX_RATE } from '@/types/crm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import {
   BrainCircuit, TrendingUp, TrendingDown, Target as TargetIcon,
-  Users, Wallet, AlertTriangle, Sparkles, Activity, BarChart3,
+  Users, Wallet, AlertTriangle, Sparkles, Activity, BarChart3, Clock3, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -177,9 +177,30 @@ export default function FinanceCoach() {
     };
   }, [daysToDeadline, activeGoal, snapshot]);
 
-  // ============ AI Briefing ============
+  // ============ AI Briefing (persistente) ============
   const [briefing, setBriefing] = useState<string>('');
   const [briefingLoading, setBriefingLoading] = useState(false);
+  const [briefingDate, setBriefingDate] = useState<string | null>(null);
+  const [configId, setConfigId] = useState<string | null>(null);
+
+  // Carica l'ultimo briefing salvato al mount
+  useEffect(() => {
+    const load = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data } = await (supabase as any)
+        .from('finance_coach_config')
+        .select('id, latest_briefing, last_briefing_date')
+        .order('created_at', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setConfigId(data.id);
+        if (data.latest_briefing) setBriefing(data.latest_briefing);
+        setBriefingDate(data.last_briefing_date ?? null);
+      }
+    };
+    load();
+  }, []);
 
   const generateBriefing = async () => {
     setBriefingLoading(true);
@@ -228,7 +249,28 @@ export default function FinanceCoach() {
       if (error) throw error;
       const payload = (data ?? {}) as { error?: string; briefing?: string };
       if (payload.error) throw new Error(payload.error);
-      setBriefing(payload.briefing ?? '');
+      const newBriefing = payload.briefing ?? '';
+      setBriefing(newBriefing);
+
+      // Persisti l'ultimo briefing
+      const nowIso = new Date().toISOString();
+      if (configId) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from('finance_coach_config')
+          .update({ latest_briefing: newBriefing, last_briefing_date: nowIso })
+          .eq('id', configId);
+      } else {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: ins } = await (supabase as any)
+          .from('finance_coach_config')
+          .insert({ latest_briefing: newBriefing, last_briefing_date: nowIso })
+          .select('id')
+          .single();
+        if (ins?.id) setConfigId(ins.id);
+      }
+      setBriefingDate(nowIso);
+
       toast.success('Briefing generato');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Errore generazione briefing');
@@ -366,48 +408,83 @@ export default function FinanceCoach() {
         </CardContent>
       </Card>
 
-      {/* AI Briefing */}
-      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent backdrop-blur">
-        <CardHeader>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <div>
-              <CardTitle className="text-base font-bold flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" /> Briefing Strategico AI
-              </CardTitle>
-              <CardDescription className="text-xs">CFO autonomo — diagnosi, vendita, spese</CardDescription>
+      {/* AI Briefing — Tech-Premium Bento */}
+      <section className="bento-stagger grid grid-cols-1 md:grid-cols-6 gap-3 auto-rows-min">
+        {/* Header / Action — full width with shimmer button */}
+        <div className="md:col-span-6 ai-beam-border p-[1px]">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card to-accent/5 p-4 md:p-5">
+            <div className="ai-glow-halo" aria-hidden />
+            <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-accent/20 blur-3xl" aria-hidden />
+            <div className="relative flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex items-start gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent to-primary-glow text-white shadow-glow">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider bg-gradient-to-r from-accent to-primary-glow bg-clip-text text-transparent">
+                    AI · Orizzonte Strategico
+                  </p>
+                  <h2 className="text-base md:text-lg font-bold text-foreground leading-tight">Briefing Strategico AI</h2>
+                  <p className="text-[11px] text-muted-foreground">CFO autonomo — diagnosi, vendita, spese</p>
+                </div>
+              </div>
+              <Button
+                onClick={generateBriefing}
+                disabled={briefingLoading}
+                className="shimmer-button h-12 px-5 rounded-xl text-sm font-semibold border-0 hover:text-white disabled:opacity-60"
+              >
+                {briefingLoading ? (
+                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Analizzo…</>
+                ) : (
+                  <><Sparkles className="h-4 w-4 mr-2" /> {briefing ? 'Rigenera Briefing' : 'Genera Briefing Strategico'}</>
+                )}
+              </Button>
             </div>
-            <Button
-              onClick={generateBriefing}
-              disabled={briefingLoading}
-              className="gradient-primary text-primary-foreground font-semibold shadow-glow"
-            >
-              <Sparkles className="h-4 w-4 mr-1.5" />
-              {briefingLoading ? 'Analizzo...' : 'Genera Briefing Strategico'}
-            </Button>
+            {briefingDate && !briefingLoading && (
+              <div className="relative mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <Clock3 className="h-3 w-3" />
+                Ultimo briefing del {new Date(briefingDate).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })} alle {new Date(briefingDate).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}
+              </div>
+            )}
           </div>
-        </CardHeader>
-        <CardContent>
-          {briefingLoading && (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-11/12" />
-              <Skeleton className="h-4 w-10/12" />
-              <Skeleton className="h-4 w-9/12" />
+        </div>
+
+        {/* Briefing body — full width premium card */}
+        <div className="md:col-span-6 ai-beam-border p-[1px]">
+          <div className="relative overflow-hidden rounded-2xl bg-card p-4 md:p-6 min-h-[200px]">
+            <div className="ai-glow-halo" aria-hidden />
+            <div className="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-primary-glow/15 blur-3xl" aria-hidden />
+            <div className="relative">
+              {briefingLoading && (
+                <div className="space-y-2" aria-busy="true" aria-live="polite">
+                  <Skeleton className="h-4 w-32 rounded-full" />
+                  <Skeleton className="h-4 w-full rounded-full" />
+                  <Skeleton className="h-4 w-11/12 rounded-full" />
+                  <Skeleton className="h-4 w-10/12 rounded-full" />
+                  <div className="h-2" />
+                  <Skeleton className="h-4 w-40 rounded-full" />
+                  <Skeleton className="h-4 w-full rounded-full" />
+                  <Skeleton className="h-4 w-9/12 rounded-full" />
+                  <p className="text-[11px] text-center text-muted-foreground italic pt-2">
+                    Il modello Pro sta analizzando i pattern… può richiedere qualche secondo.
+                  </p>
+                </div>
+              )}
+              {!briefingLoading && briefing && (
+                <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h3:text-sm prose-h3:uppercase prose-h3:tracking-wider prose-h3:bg-gradient-to-r prose-h3:from-accent prose-h3:to-primary-glow prose-h3:bg-clip-text prose-h3:text-transparent">
+                  <ReactMarkdown>{briefing}</ReactMarkdown>
+                </article>
+              )}
+              {!briefingLoading && !briefing && (
+                <div className="flex flex-col items-center text-center py-8 text-muted-foreground">
+                  <BrainCircuit className="h-12 w-12 mb-3 opacity-30" />
+                  <p className="text-sm">Premi <b>Genera Briefing Strategico</b> per ricevere la tua analisi personalizzata.</p>
+                </div>
+              )}
             </div>
-          )}
-          {!briefingLoading && briefing && (
-            <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h3:text-primary prose-h3:text-sm prose-h3:uppercase prose-h3:tracking-wider">
-              <ReactMarkdown>{briefing}</ReactMarkdown>
-            </article>
-          )}
-          {!briefingLoading && !briefing && (
-            <div className="flex flex-col items-center text-center py-8 text-muted-foreground">
-              <BrainCircuit className="h-12 w-12 mb-3 opacity-30" />
-              <p className="text-sm">Premi <b>Genera Briefing</b> per ricevere la tua analisi strategica personalizzata</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </div>
+        </div>
+      </section>
 
       {/* Context Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -176,6 +176,30 @@ export type Database = {
         }
         Relationships: []
       }
+      finance_coach_config: {
+        Row: {
+          created_at: string
+          id: string
+          last_briefing_date: string | null
+          latest_briefing: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_briefing_date?: string | null
+          latest_briefing?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_briefing_date?: string | null
+          latest_briefing?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       financial_movements: {
         Row: {
           account_id: string
