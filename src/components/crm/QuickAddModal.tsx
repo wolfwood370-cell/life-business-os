@@ -53,6 +53,10 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       toast.error('Nome o Cognome obbligatorio');
       return;
     }
+    if (stage === 'Closed Won' && !serviceSold) {
+      toast.error('Seleziona il servizio venduto per attivare il contratto');
+      return;
+    }
     const fullName = [fn, ln].filter(Boolean).join(' ');
     const priceNum = parseCurrencyInput(actualPrice);
     const effectiveStart = stage === 'Closed Won' && serviceSold ? (trainingStart || todayIso()) : undefined;
