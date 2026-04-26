@@ -90,15 +90,23 @@ export default function FinanceCoach() {
   }, [movements, clients, unifiedCategories]);
 
   // ============ Adaptive Simulator ============
-  const defaultDaysLeft = useMemo(() => {
+  // Real days left to deadline (read-only, derived from goal)
+  const realDaysLeft = useMemo(() => {
     if (!activeGoal) return 180;
     const ms = new Date(activeGoal.deadline).getTime() - Date.now();
     return Math.max(30, Math.round(ms / (1000 * 60 * 60 * 24)));
   }, [activeGoal]);
 
-  const [daysToDeadline, setDaysToDeadline] = useState<number>(defaultDaysLeft);
-  // sync slider when goal changes (proper effect, no setState during render)
-  useEffect(() => { setDaysToDeadline(defaultDaysLeft); }, [defaultDaysLeft]);
+  // Simulated days — initialised ONCE from real days; user controls it freely.
+  // We reset only when the active goal id changes (different goal = different baseline).
+  const [simulatedDays, setSimulatedDays] = useState<number>(() => realDaysLeft);
+  const [lastGoalId, setLastGoalId] = useState<string | undefined>(activeGoal?.id);
+  if (activeGoal?.id !== lastGoalId) {
+    setLastGoalId(activeGoal?.id);
+    setSimulatedDays(realDaysLeft);
+  }
+  const daysToDeadline = simulatedDays;
+  const setDaysToDeadline = setSimulatedDays;
 
   const sim = useMemo(() => {
     const monthsLeft = Math.max(0.5, daysToDeadline / 30);
