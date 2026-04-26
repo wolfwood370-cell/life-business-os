@@ -97,8 +97,8 @@ export default function FinanceCoach() {
   }, [activeGoal]);
 
   const [daysToDeadline, setDaysToDeadline] = useState<number>(defaultDaysLeft);
-  // sync slider when goal changes
-  useMemo(() => setDaysToDeadline(defaultDaysLeft), [defaultDaysLeft]);
+  // sync slider when goal changes (proper effect, no setState during render)
+  useEffect(() => { setDaysToDeadline(defaultDaysLeft); }, [defaultDaysLeft]);
 
   const sim = useMemo(() => {
     const monthsLeft = Math.max(0.5, daysToDeadline / 30);
