@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
-import { formatEuro, TAX_RATE, LifeGoal } from '@/types/crm';
+import { formatEuro, TAX_RATE, LifeGoal, HISTORY_START_YEAR, HISTORY_START_MONTH } from '@/types/crm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
