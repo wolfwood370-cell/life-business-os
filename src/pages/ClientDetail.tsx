@@ -148,6 +148,8 @@ const ClientDetail = () => {
   const [actualPrice, setActualPrice] = useState('');
   const [trainingStart, setTrainingStart] = useState('');
   const [trainingEnd, setTrainingEnd] = useState('');
+  const [contractDuration, setContractDuration] = useState<ContractDurationMonths>(3);
+  const [incassatoOggi, setIncassatoOggi] = useState('');
 
   // Lead score behavior checklist (objective scoring)
   const [behaviorResponsive, setBehaviorResponsive] = useState(false);
