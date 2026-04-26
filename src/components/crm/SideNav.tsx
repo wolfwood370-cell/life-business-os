@@ -15,6 +15,7 @@ const items = [
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/clients', label: 'Clienti', icon: Users },
   { to: '/finance', label: 'Finance OS', icon: Target },
+  { to: '/finance-coach', label: 'CFO Globale', icon: BrainCircuit },
   { to: '/strategy', label: 'Sales Strategy', icon: Brain },
   { to: '/coach', label: 'Sales Coach', icon: BarChart3 },
 ];
