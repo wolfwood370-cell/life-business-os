@@ -6,10 +6,26 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useCrm } from '@/store/useCrm';
-import { LEAD_SOURCES, PIPELINE_STAGES, LeadSource, PipelineStage, leadSourceLabel, pipelineStageLabel } from '@/types/crm';
+import {
+  CONTRACT_DURATION_OPTIONS,
+  ContractDurationMonths,
+  CUSTOM_PRICE_SERVICES,
+  LEAD_SOURCES,
+  LeadSource,
+  PipelineStage,
+  PIPELINE_STAGES,
+  ServiceType,
+  SERVICE_GROUPS,
+  SHORT_DURATION_SERVICES,
+  leadSourceLabel,
+  pipelineStageLabel,
+} from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
 import { toast } from 'sonner';
-import { CalendarDays, ShieldCheck } from 'lucide-react';
+import { CalendarClock, CalendarDays, Euro, ShieldCheck, Sparkles } from 'lucide-react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { computeContractEndDate, parseCurrencyInput } from '@/lib/contracts';
+import { todayIso } from '@/lib/date';
 
 interface Props {
   open: boolean;
@@ -25,6 +41,10 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
   const [source, setSource] = useState<LeadSource>('Gym Floor');
   const [stage, setStage] = useState<PipelineStage>('Lead Acquired');
   const [gdprConsent, setGdprConsent] = useState(false);
+  const [serviceSold, setServiceSold] = useState<ServiceType | undefined>(undefined);
+  const [actualPrice, setActualPrice] = useState('');
+  const [trainingStart, setTrainingStart] = useState(todayIso());
+  const [contractDuration, setContractDuration] = useState<ContractDurationMonths>(3);
 
   const handleSave = async () => {
     const fn = firstName.trim();
@@ -34,6 +54,11 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       return;
     }
     const fullName = [fn, ln].filter(Boolean).join(' ');
+    const priceNum = parseCurrencyInput(actualPrice);
+    const effectiveStart = stage === 'Closed Won' && serviceSold ? (trainingStart || todayIso()) : undefined;
+    const effectiveEnd = effectiveStart
+      ? computeContractEndDate(effectiveStart, serviceSold, contractDuration)
+      : undefined;
     try {
       await addClient({
         name: fullName,
@@ -48,6 +73,10 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
         lead_score: baseLeadScore(source),
         churn_risk: 'Basso',
         gdpr_consent: gdprConsent,
+        service_sold: stage === 'Closed Won' ? serviceSold : undefined,
+        actual_price: stage === 'Closed Won' ? priceNum : undefined,
+        training_start_date: effectiveStart,
+        training_end_date: effectiveEnd,
       });
       toast.success(`${fullName} aggiunto alla pipeline`);
       setFirstName('');
@@ -55,6 +84,10 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       setSource('Gym Floor');
       setStage('Lead Acquired');
       setGdprConsent(false);
+      setServiceSold(undefined);
+      setActualPrice('');
+      setTrainingStart(todayIso());
+      setContractDuration(3);
       onOpenChange(false);
     } catch {
       toast.error('Errore nel salvataggio');
