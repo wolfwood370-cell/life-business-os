@@ -50,19 +50,22 @@ const parseAmount = (raw: string): number => {
   return Number.isFinite(n) ? n : 0;
 };
 
-// Tenta di parsare la data (DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD)
+// Tenta di parsare la data (DD/MM/YYYY, DD-MM-YYYY, YYYY-MM-DD).
+// Sempre normalizzata a mezzogiorno locale per evitare slittamenti di fuso orario.
 const parseDate = (raw: string): string | null => {
   const s = raw.trim();
   if (!s) return null;
-  // ISO già pronto
-  const iso = new Date(s);
-  if (!Number.isNaN(iso.getTime()) && /^\d{4}-\d{2}-\d{2}/.test(s)) {
-    return iso.toISOString();
+  // ISO YYYY-MM-DD (priorità: matcha PRIMA del pattern DD-MM)
+  const isoMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, yyyy, mm, dd] = isoMatch;
+    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd), 12, 0, 0);
+    if (!Number.isNaN(d.getTime())) return d.toISOString();
   }
-  // DD/MM/YYYY o DD-MM-YYYY
+  // DD/MM/YYYY o DD-MM-YYYY (anche YY)
   const m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
   if (m) {
-    let [_, dd, mm, yyyy] = m;
+    let [, dd, mm, yyyy] = m;
     if (yyyy.length === 2) yyyy = '20' + yyyy;
     const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd), 12, 0, 0);
     if (!Number.isNaN(d.getTime())) return d.toISOString();
@@ -131,7 +134,8 @@ export const parseCsv = (text: string, _format: BankFormat = 'generic'): ParsedR
       description,
       amount,
       type,
-      external_ref: `${dateRaw}|${description}|${amount}`,
+      // includo l'indice di riga per garantire l'unicità tra movimenti identici nello stesso giorno
+      external_ref: `${dateRaw}|${description}|${amount}|${i}`,
     });
   }
 
