@@ -1,5 +1,5 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3, LogOut, Target, Brain } from 'lucide-react';
+import { Home, KanbanSquare, Users, Plus, Dumbbell, BarChart3, LogOut, Target, Brain, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
