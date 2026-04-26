@@ -60,6 +60,18 @@ export interface CrmContextValue {
   updateIncomeCategory: (id: string, name: string) => Promise<void>;
   deleteIncomeCategory: (id: string) => Promise<void>;
   setMonthlyTarget: (n: number) => void;
+
+  // ============ Phase 28: Unified Ledger ============
+  bankAccounts: BankAccount[];
+  movements: FinancialMovement[];
+  unifiedCategories: UnifiedCategory[];
+  addMovement: (m: Omit<FinancialMovement, 'id' | 'created_at'>) => Promise<void>;
+  updateMovement: (id: string, patch: Partial<FinancialMovement>) => Promise<void>;
+  deleteMovement: (id: string) => Promise<void>;
+  setMovementClassification: (id: string, classification: MovementClassification) => Promise<void>;
+  toggleMovementReviewed: (id: string, reviewed: boolean) => Promise<void>;
+  importMovements: (movements: Array<Omit<FinancialMovement, 'id' | 'created_at' | 'source'>>) => Promise<number>;
+  addUnifiedCategory: (name: string, scope: 'personal' | 'business' | 'both', kind: 'expense' | 'income' | 'both') => Promise<UnifiedCategory | null>;
 }
 
 export const CrmContext = createContext<CrmContextValue | null>(null);
