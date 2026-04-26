@@ -638,6 +638,7 @@ const ClientDetail = () => {
                     <Sparkles className="h-3 w-3" /> Servizio Venduto
                   </label>
                   <Select
+                    key={`svc-${formInitialized ? 'r' : 'i'}`}
                     value={serviceSold}
                     onValueChange={(v) => setServiceSold(v as ServiceType)}
                   >
@@ -1044,7 +1045,7 @@ const ClientDetail = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sesso</label>
-                  <Select value={gender} onValueChange={(v) => setGender(v as Gender)}>
+                  <Select key={`gnd-${formInitialized ? 'r' : 'i'}`} value={gender} onValueChange={(v) => setGender(v as Gender)}>
                     <SelectTrigger className="h-12 rounded-xl bg-secondary border-0 text-base font-semibold">
                       <SelectValue placeholder="Seleziona…" />
                     </SelectTrigger>
