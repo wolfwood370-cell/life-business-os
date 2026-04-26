@@ -551,6 +551,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         source: m.source ?? 'manual',
         external_ref: m.external_ref ?? null,
         notes: m.notes ?? null,
+        recurrence_type: m.recurrence_type ?? 'none',
+        recurrence_value: m.recurrence_value ?? null,
       });
       if (error) throw error;
     },
@@ -571,6 +573,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       if (patch.is_recurring !== undefined) dbPatch.is_recurring = patch.is_recurring;
       if (patch.is_reviewed !== undefined) dbPatch.is_reviewed = patch.is_reviewed;
       if (patch.notes !== undefined) dbPatch.notes = patch.notes;
+      if (patch.recurrence_type !== undefined) dbPatch.recurrence_type = patch.recurrence_type;
+      if (patch.recurrence_value !== undefined) dbPatch.recurrence_value = patch.recurrence_value ?? null;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from('financial_movements').update(dbPatch).eq('id', id);
       if (error) throw error;
@@ -604,6 +608,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         source: 'import' as MovementSource,
         external_ref: m.external_ref ?? null,
         notes: m.notes ?? null,
+        recurrence_type: m.recurrence_type ?? 'none',
+        recurrence_value: m.recurrence_value ?? null,
       }));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error, data } = await (supabase as any).from('financial_movements').insert(payload).select('id');
@@ -627,6 +633,35 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       return data ? { id: data.id, name: data.name, scope: data.scope, kind: data.kind } : null;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'categories'] }),
+  });
+
+  const updateUnifiedCategoryMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<UnifiedCategory> }) => {
+      const dbPatch: Record<string, unknown> = {};
+      if (patch.name !== undefined) dbPatch.name = patch.name.trim();
+      if (patch.scope !== undefined) dbPatch.scope = patch.scope;
+      if (patch.kind !== undefined) dbPatch.kind = patch.kind;
+      if (Object.keys(dbPatch).length === 0) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('categories').update(dbPatch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'categories'] }),
+  });
+
+  const deleteUnifiedCategoryMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      // unset references first to avoid orphan FK / constraint issues
+      await sb.from('financial_movements').update({ category_id: null }).eq('category_id', id);
+      const { error } = await sb.from('categories').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'categories'] });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
+    },
   });
 
   const current_monthly_revenue = useMemo(
