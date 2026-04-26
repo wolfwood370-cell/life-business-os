@@ -1,111 +1,26 @@
-## Diagnosi
+# Ottimizzazione routing modelli AI
 
-Il messaggio resta visibile perché la sezione **Registra pagamento** legge esclusivamente `client.service_sold` dal profilo cliente. Per il cliente attuale (`Alan Spagnolo`) il database contiene ancora:
+Tre modifiche a un solo parametro `model` in altrettante edge function. Nessuna modifica a prompt, schema, persistenza o UI. Nessun cambio al frontend (`AiFollowupGenerator.tsx` chiama già `generate-sales-copy`, basta cambiare il modello nell'edge function).
 
-```text
-service_sold: null
-actual_price: null
-training_start_date: null
-training_end_date: null
-```
+## Modifiche
 
-Il pagamento è stato invece salvato correttamente come transazione:
+| File | Modello attuale | Nuovo modello | Motivazione |
+|---|---|---|---|
+| `supabase/functions/generate-global-cfo/index.ts` (riga 110) | `google/gemini-2.5-pro` | `google/gemini-3.1-pro-preview` | Briefing strategico CFO: serve top-tier reasoning su dati finanziari complessi |
+| `supabase/functions/analyze-win-loss/index.ts` (riga 168) | `google/gemini-2.5-pro` | `google/gemini-3-flash-preview` | Sales Coach Win/Loss: bilanciato, più veloce ed economico mantenendo qualità di analisi |
+| `supabase/functions/generate-sales-copy/index.ts` (riga 113) | `google/gemini-3-flash-preview` | `google/gemini-2.5-flash-lite` | Follow-up email/messaggi (usato da `AiFollowupGenerator.tsx`): testo breve, latenza minima e costo contenuto |
 
-```text
-amount: 450
-payment_type: Unica Soluzione
-status: Saldato
-```
+## Note tecniche
 
-ma il movimento contabile generato ha ereditato un contratto vuoto:
+- Le edge function vengono ridepoiate automaticamente al salvataggio.
+- I briefing già salvati in `finance_coach_config.latest_briefing` e i report in `sales_coach_config.latest_report` restano intatti — la modifica vale solo sulle nuove generazioni.
+- Gli error handler 429 / 402 / 500 rimangono invariati.
+- `google/gemini-3.1-pro-preview` è un preview di nuova generazione: qualità superiore, costo per token più alto del 2.5-pro. Se vuoi un'opzione più conservativa posso usare `google/gemini-3-flash-preview` anche per il CFO.
 
-```text
-description: Rata - Servizio
-service_sold: null
-actual_price: 450
-```
+## Trade-off di costo (per generazione)
 
-### Perché succede
+- CFO: leggermente **più caro** (preview top-tier) → giustificato dal valore strategico del briefing.
+- Sales Coach: **più economico** e **più veloce** del 2.5-pro precedente.
+- Follow-up: **molto più economico** e quasi istantaneo (Flash-Lite è il più rapido della famiglia 2.5).
 
-Ci sono due cause principali:
-
-1. **Registrare un pagamento non assegna automaticamente un contratto.**
-   La funzione `handleRegisterPayment` crea solo una transazione. Il servizio viene recuperato dal profilo cliente già salvato. Se il profilo ha `service_sold = null`, anche la transazione e il ledger restano senza servizio.
-
-2. **Possibile UX disallineata tra campi modificati e stato salvato.**
-   Se l’utente seleziona un servizio nella tab Commerciale ma poi clicca direttamente **Registra Pagamento** nella stessa schermata, il pagamento parte prima che i campi contratto vengano persistiti sul cliente. Il sistema quindi legge ancora `service_sold = null` e mostra “Nessun servizio assegnato”.
-
-Nota tecnica aggiuntiva: nei log c’è anche un warning React sui `<Select>` che passano da uncontrolled a controlled. Non è la causa primaria del bug, ma può rendere meno affidabile la percezione dello stato del form e va ripulito.
-
-## Soluzione proposta
-
-### 1. Rendere “Registra Pagamento” contract-aware
-
-In `ClientDetail.tsx`, prima di creare la transazione:
-
-- calcolare un `effectiveService` usando prima il valore salvato su `client.service_sold`, poi il valore appena selezionato nel form `serviceSold`;
-- se esiste un servizio selezionato ma non ancora salvato, salvare prima il profilo cliente con:
-  - `service_sold`
-  - `actual_price`
-  - `training_start_date`
-  - `training_end_date`
-- attendere il completamento di `updateClient` prima di chiamare `addTransaction`.
-
-Flusso corretto:
-
-```text
-Utente seleziona servizio/prezzo/date
-        ↓
-Clicca “Registra Pagamento”
-        ↓
-Salva contratto cliente se necessario
-        ↓
-Crea pagamento
-        ↓
-Ledger eredita il servizio corretto
-        ↓
-UI mostra “Contratto Attivo”
-```
-
-### 2. Bloccare il pagamento se manca davvero il servizio
-
-Se non esiste né `client.service_sold` né `serviceSold` nel form:
-
-- mostrare un messaggio chiaro: “Seleziona prima un servizio nella sezione Dati Commerciali.”
-- non registrare il pagamento con contratto vuoto.
-
-Questo evita altri movimenti “Rata - Servizio” senza contesto.
-
-### 3. Aggiornare `addTransaction` per accettare il servizio effettivo come fallback sicuro
-
-In `crmContext.ts` e `crmStore.tsx`, estendere il payload interno di `addTransaction` con campi opzionali:
-
-- `service_sold?: string`
-- `actual_price?: number`
-
-Poi in `addTransactionMutation`:
-
-- leggere comunque il contratto dal cliente come fonte principale;
-- usare il servizio passato dal form solo come fallback quando il database non è ancora aggiornato;
-- aggiornare `financial_movements.description` in modo professionale: `Rata - [Nome Servizio]`.
-
-Questo rende la logica robusta anche in caso di latenza/invalidation della cache.
-
-### 4. Aggiornare subito la cache cliente dopo `updateClient`
-
-Dopo il salvataggio del contratto, invalidare e/o aggiornare in modo ottimistico la query `['crm', 'clients']`, così la schermata non continua a leggere il vecchio `client.service_sold = null` fino al refetch successivo.
-
-### 5. Correggere i warning UI correlati
-
-- Normalizzare i valori dei `<Select>` per non passare `undefined` come `value` controllato.
-- Sistemare l’uso di `AlertDialogFooter` dentro componenti Radix con `asChild` o ref, perché il log mostra: “Function components cannot be given refs”.
-
-### 6. Verifica finale
-
-Dopo la correzione controllerò che:
-
-- assegnando un servizio e registrando pagamento nella stessa sessione, il cliente abbia `service_sold` salvato;
-- la sezione **Registra Pagamento** mostri “Contratto Attivo: [servizio]”;
-- il movimento contabile non sia più `Rata - Servizio`, ma `Rata - [servizio]`;
-- il caso `Percorso Online` / `Founders Circle` continui a funzionare con prezzo custom editabile;
-- non compaiano più warning React principali nella console per questa schermata.
+Risultato netto: probabile riduzione dei costi AI complessivi, dato che follow-up e Sales Coach vengono usati più frequentemente del briefing CFO.

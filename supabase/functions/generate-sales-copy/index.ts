@@ -110,7 +110,7 @@ Genera la sequenza di follow-up WhatsApp in italiano (Giorno 1, 3, 7) seguendo l
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
