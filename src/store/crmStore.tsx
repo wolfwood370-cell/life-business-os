@@ -248,6 +248,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
         notes: r.notes ?? undefined,
         recurrence_type: (r.recurrence_type ?? 'none') as MovementRecurrenceType,
         recurrence_value: r.recurrence_value ?? undefined,
+        service_sold: r.service_sold ?? undefined,
+        actual_price: r.actual_price !== null && r.actual_price !== undefined ? Number(r.actual_price) : undefined,
         created_at: r.created_at,
       }));
     },

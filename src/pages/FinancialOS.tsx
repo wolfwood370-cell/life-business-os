@@ -137,10 +137,10 @@ const FinancialOS = () => {
     <div className="px-4 md:px-0 pt-6 pb-24 md:pb-8 space-y-6 animate-fade-in">
 
       <header>
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Life · Finance OS</p>
+        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Life · Finance Hub</p>
         <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight text-foreground">Centro Finanziario</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Ledger unificato dei movimenti bancari · target dinamico calcolato sul tuo storico reale.
+          Movimenti unificati dei conti bancari · target dinamico calcolato sul tuo storico reale.
         </p>
       </header>
 

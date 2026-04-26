@@ -82,6 +82,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          actual_price: number | null
           birth_date: string | null
           churn_risk: string | null
           created_at: string
@@ -106,9 +107,11 @@ export type Database = {
           pipeline_stage: string
           pt_pack_sessions_used: number | null
           root_motivator: string
+          service_sold: string | null
           stage_updated_at: string
         }
         Insert: {
+          actual_price?: number | null
           birth_date?: string | null
           churn_risk?: string | null
           created_at?: string
@@ -133,9 +136,11 @@ export type Database = {
           pipeline_stage: string
           pt_pack_sessions_used?: number | null
           root_motivator?: string
+          service_sold?: string | null
           stage_updated_at?: string
         }
         Update: {
+          actual_price?: number | null
           birth_date?: string | null
           churn_risk?: string | null
           created_at?: string
@@ -160,6 +165,7 @@ export type Database = {
           pipeline_stage?: string
           pt_pack_sessions_used?: number | null
           root_motivator?: string
+          service_sold?: string | null
           stage_updated_at?: string
         }
         Relationships: []
@@ -167,6 +173,7 @@ export type Database = {
       financial_movements: {
         Row: {
           account_id: string
+          actual_price: number | null
           amount: number
           category_id: string | null
           classification: string
@@ -181,12 +188,14 @@ export type Database = {
           notes: string | null
           recurrence_type: string
           recurrence_value: number | null
+          service_sold: string | null
           source: string
           type: string
           updated_at: string
         }
         Insert: {
           account_id: string
+          actual_price?: number | null
           amount?: number
           category_id?: string | null
           classification?: string
@@ -201,12 +210,14 @@ export type Database = {
           notes?: string | null
           recurrence_type?: string
           recurrence_value?: number | null
+          service_sold?: string | null
           source?: string
           type: string
           updated_at?: string
         }
         Update: {
           account_id?: string
+          actual_price?: number | null
           amount?: number
           category_id?: string | null
           classification?: string
@@ -221,6 +232,7 @@ export type Database = {
           notes?: string | null
           recurrence_type?: string
           recurrence_value?: number | null
+          service_sold?: string | null
           source?: string
           type?: string
           updated_at?: string

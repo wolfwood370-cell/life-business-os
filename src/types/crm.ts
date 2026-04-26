@@ -283,6 +283,8 @@ export interface FinancialMovement {
   notes?: string;
   recurrence_type: MovementRecurrenceType;
   recurrence_value?: number;
+  service_sold?: string;
+  actual_price?: number;
   created_at: string;
 }
 
