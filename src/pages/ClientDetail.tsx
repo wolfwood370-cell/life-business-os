@@ -792,7 +792,7 @@ const ClientDetail = () => {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Euro className="h-3 w-3" /> Prezzo Effettivo (€)
+                    <Euro className="h-3 w-3" /> Valore Totale del Contratto (€)
                   </label>
                   <Input
                     type="number"
@@ -804,6 +804,26 @@ const ClientDetail = () => {
                     placeholder="es. 1250"
                     className="h-12 rounded-xl bg-card border border-border text-base font-semibold"
                   />
+                </div>
+
+                {/* Incassato Oggi (Acconto o Saldo) — Anti-Double Entry UX */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Receipt className="h-3 w-3" /> Incassato Oggi (Acconto o Saldo)
+                  </label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={incassatoOggi}
+                    onChange={(e) => setIncassatoOggi(e.target.value)}
+                    placeholder="0,00 — opzionale"
+                    className="h-12 rounded-xl bg-card border border-border text-base font-semibold"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Se valorizzato, salvando il profilo verrà registrato un movimento d'incasso oggi.
+                  </p>
                 </div>
 
                 {/* Periodo Percorso */}
@@ -818,20 +838,43 @@ const ClientDetail = () => {
                     className="h-12 rounded-xl bg-card border border-border text-sm font-semibold"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <CalendarClock className="h-3 w-3" /> Fine Percorso
-                  </label>
-                  <Input
-                    type="date"
-                    value={trainingEnd}
-                    onChange={(e) => setTrainingEnd(e.target.value)}
-                    className="h-12 rounded-xl bg-card border border-border text-sm font-semibold"
-                  />
-                </div>
+
+                {/* Smart Duration: 28gg fissi per servizi short, altrimenti select Mesi */}
+                {serviceSold && SHORT_DURATION_SERVICES.includes(serviceSold) ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </label>
+                    <div className="h-12 rounded-xl bg-primary/5 border border-primary/20 flex items-center px-3 text-sm font-semibold text-foreground">
+                      28 giorni (auto)
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Durata fissa per <span className="font-semibold text-foreground">{serviceSold}</span>.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </label>
+                    <Select
+                      value={String(contractDuration)}
+                      onValueChange={(v) => setContractDuration(Number(v) as ContractDurationMonths)}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl bg-card border border-border text-sm font-semibold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CONTRACT_DURATION_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <p className="sm:col-span-2 text-[10px] text-muted-foreground">
-                  Servizio e periodo sono indipendenti dalla fonte di acquisizione. Premi "Salva profilo" in fondo.
+                  La data di fine viene calcolata automaticamente in base al servizio e alla durata. Premi "Salva profilo" in fondo.
                 </p>
               </div>
 
