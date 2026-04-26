@@ -1,37 +1,111 @@
+## Diagnosi
 
+Il messaggio resta visibile perché la sezione **Registra pagamento** legge esclusivamente `client.service_sold` dal profilo cliente. Per il cliente attuale (`Alan Spagnolo`) il database contiene ancora:
 
-## Obiettivo
-Aggiornare il modello AI usato dalla Edge Function `analyze-win-loss` per ottenere un ragionamento analitico di livello "Direttore Vendite", mantenendo invariata `generate-sales-copy`. Verificare che il loading state in `SalesCoach.tsx` usi skeleton eleganti coerenti con il resto dell'app.
+```text
+service_sold: null
+actual_price: null
+training_start_date: null
+training_end_date: null
+```
 
-## Modifiche
+Il pagamento è stato invece salvato correttamente come transazione:
 
-### 1. `supabase/functions/analyze-win-loss/index.ts`
-- Sostituire `model: "google/gemini-3-flash-preview"` con `model: "google/gemini-2.5-pro"` (modello stabile di livello Pro, ottimale per pattern recognition su obiezioni).
-- Nessun'altra modifica alla logica: prompt, tool calling strutturato, gestione errori 429/402 e CORS restano invariati.
-- La function verrà ridistribuita automaticamente.
+```text
+amount: 450
+payment_type: Unica Soluzione
+status: Saldato
+```
 
-### 2. `supabase/functions/generate-sales-copy/index.ts`
-- Nessuna modifica. Resta su `google/gemini-3-flash-preview` per latenza bassa sui follow-up WhatsApp.
+ma il movimento contabile generato ha ereditato un contratto vuoto:
 
-### 3. `src/pages/SalesCoach.tsx`
-- Verifica del loading state esistente durante l'invocazione di `analyze-win-loss`: se l'attuale UI mostra solo uno spinner o testo statico, sostituirlo con uno skeleton card stilizzato (3 righe shimmer per i bullet "Perché perdiamo" + 3 righe per "Azioni correttive" + 1 riga per la sintesi), usando il componente `<Skeleton>` da `@/components/ui/skeleton` già presente nel progetto e coerente con `AiFollowupGenerator.tsx`.
-- Disabilitare il pulsante "Genera Report AI Settimanale" durante il caricamento con icona `Loader2` animata.
-- Toast italiani su errore (`"Errore di connessione all'AI"`, `"Limite di richieste raggiunto"`, `"Crediti AI esauriti"`) gestiti via `sonner`.
+```text
+description: Rata - Servizio
+service_sold: null
+actual_price: 450
+```
 
-## Scelta del modello
-`google/gemini-2.5-pro` invece di `gemini-3.1-pro-preview` perché:
-- È in versione stabile (non preview) → più affidabile per il go-to-market.
-- Top-tier per ragionamento complesso su contesti testuali — ideale per analisi pattern obiezioni.
-- Latenza accettabile (mitigata dallo skeleton).
+### Perché succede
 
-Se in futuro si volesse spingere ulteriormente il ragionamento, basterà sostituire la stringa modello con `gemini-3.1-pro-preview` o `openai/gpt-5`.
+Ci sono due cause principali:
 
-## File toccati
-- `supabase/functions/analyze-win-loss/index.ts` (1 riga)
-- `src/pages/SalesCoach.tsx` (solo se loading state non già a livello skeleton)
+1. **Registrare un pagamento non assegna automaticamente un contratto.**
+   La funzione `handleRegisterPayment` crea solo una transazione. Il servizio viene recuperato dal profilo cliente già salvato. Se il profilo ha `service_sold = null`, anche la transazione e il ledger restano senza servizio.
 
-## Localizzazione & Tema
-- Tutti i testi UI in italiano.
-- Light Theme preservato.
-- Nessun nuovo tool, nessuna generazione immagini.
+2. **Possibile UX disallineata tra campi modificati e stato salvato.**
+   Se l’utente seleziona un servizio nella tab Commerciale ma poi clicca direttamente **Registra Pagamento** nella stessa schermata, il pagamento parte prima che i campi contratto vengano persistiti sul cliente. Il sistema quindi legge ancora `service_sold = null` e mostra “Nessun servizio assegnato”.
 
+Nota tecnica aggiuntiva: nei log c’è anche un warning React sui `<Select>` che passano da uncontrolled a controlled. Non è la causa primaria del bug, ma può rendere meno affidabile la percezione dello stato del form e va ripulito.
+
+## Soluzione proposta
+
+### 1. Rendere “Registra Pagamento” contract-aware
+
+In `ClientDetail.tsx`, prima di creare la transazione:
+
+- calcolare un `effectiveService` usando prima il valore salvato su `client.service_sold`, poi il valore appena selezionato nel form `serviceSold`;
+- se esiste un servizio selezionato ma non ancora salvato, salvare prima il profilo cliente con:
+  - `service_sold`
+  - `actual_price`
+  - `training_start_date`
+  - `training_end_date`
+- attendere il completamento di `updateClient` prima di chiamare `addTransaction`.
+
+Flusso corretto:
+
+```text
+Utente seleziona servizio/prezzo/date
+        ↓
+Clicca “Registra Pagamento”
+        ↓
+Salva contratto cliente se necessario
+        ↓
+Crea pagamento
+        ↓
+Ledger eredita il servizio corretto
+        ↓
+UI mostra “Contratto Attivo”
+```
+
+### 2. Bloccare il pagamento se manca davvero il servizio
+
+Se non esiste né `client.service_sold` né `serviceSold` nel form:
+
+- mostrare un messaggio chiaro: “Seleziona prima un servizio nella sezione Dati Commerciali.”
+- non registrare il pagamento con contratto vuoto.
+
+Questo evita altri movimenti “Rata - Servizio” senza contesto.
+
+### 3. Aggiornare `addTransaction` per accettare il servizio effettivo come fallback sicuro
+
+In `crmContext.ts` e `crmStore.tsx`, estendere il payload interno di `addTransaction` con campi opzionali:
+
+- `service_sold?: string`
+- `actual_price?: number`
+
+Poi in `addTransactionMutation`:
+
+- leggere comunque il contratto dal cliente come fonte principale;
+- usare il servizio passato dal form solo come fallback quando il database non è ancora aggiornato;
+- aggiornare `financial_movements.description` in modo professionale: `Rata - [Nome Servizio]`.
+
+Questo rende la logica robusta anche in caso di latenza/invalidation della cache.
+
+### 4. Aggiornare subito la cache cliente dopo `updateClient`
+
+Dopo il salvataggio del contratto, invalidare e/o aggiornare in modo ottimistico la query `['crm', 'clients']`, così la schermata non continua a leggere il vecchio `client.service_sold = null` fino al refetch successivo.
+
+### 5. Correggere i warning UI correlati
+
+- Normalizzare i valori dei `<Select>` per non passare `undefined` come `value` controllato.
+- Sistemare l’uso di `AlertDialogFooter` dentro componenti Radix con `asChild` o ref, perché il log mostra: “Function components cannot be given refs”.
+
+### 6. Verifica finale
+
+Dopo la correzione controllerò che:
+
+- assegnando un servizio e registrando pagamento nella stessa sessione, il cliente abbia `service_sold` salvato;
+- la sezione **Registra Pagamento** mostri “Contratto Attivo: [servizio]”;
+- il movimento contabile non sia più `Rata - Servizio`, ma `Rata - [servizio]`;
+- il caso `Percorso Online` / `Founders Circle` continui a funzionare con prezzo custom editabile;
+- non compaiano più warning React principali nella console per questa schermata.

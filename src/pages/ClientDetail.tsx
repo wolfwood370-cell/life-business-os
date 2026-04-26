@@ -332,8 +332,38 @@ const ClientDetail = () => {
       toast.error('Inserisci un importo valido');
       return;
     }
+
+    // Effective service: prefer the form selection (most recent intent),
+    // otherwise fall back to the persisted profile value.
+    const effectiveService = (serviceSold as ServiceType | undefined) ?? (client!.service_sold as ServiceType | undefined);
+    if (!effectiveService) {
+      toast.error('Seleziona prima un servizio nella sezione Dati Commerciali');
+      return;
+    }
+
     setPaySubmitting(true);
     try {
+      // If the form has contract data not yet persisted on the client (or it
+      // diverges from what is saved), save the contract first. This guarantees
+      // the ledger inherits the correct service and the "Contratto Attivo"
+      // banner appears immediately after the payment is registered.
+      const formPriceNum = parseCurrencyInput(actualPrice);
+      const contractDirty =
+        client!.service_sold !== effectiveService ||
+        (formPriceNum !== undefined && client!.actual_price !== formPriceNum) ||
+        (!!trainingStart && client!.training_start_date !== trainingStart);
+
+      if (contractDirty) {
+        const effectiveStart = trainingStart || todayIso();
+        const effectiveEnd = computeContractEndDate(effectiveStart, effectiveService, contractDuration);
+        await updateClient(client!.id, {
+          service_sold: effectiveService,
+          actual_price: formPriceNum,
+          training_start_date: effectiveStart,
+          training_end_date: effectiveEnd,
+        });
+      }
+
       await addTransaction({
         client_id: client!.id,
         amount: value,
@@ -341,6 +371,9 @@ const ClientDetail = () => {
         payment_method: payMethod,
         installments_count: payType === 'A Rate' ? payInstallments : 1,
         payment_date: dateInputToIso(payDate),
+        // Fallback inheritance for the ledger (in case the cache hasn't refetched yet)
+        service_sold: effectiveService,
+        actual_price: formPriceNum,
       });
       const perInstallment = payType === 'A Rate' ? value / payInstallments : value;
       toast.success(
