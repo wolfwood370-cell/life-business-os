@@ -262,26 +262,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] });
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'personal_expenses' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'personal_expenses'] });
-      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'life_goals' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'life_goals'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_categories' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'expense_categories'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'personal_incomes' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'personal_incomes'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_expenses' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'business_expenses'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_expense_categories' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'business_expense_categories'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'income_categories' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'income_categories'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'financial_movements' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
