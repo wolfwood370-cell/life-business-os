@@ -648,32 +648,46 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     const now = new Date();
 
     // Baseline: media mensile dei movimenti ricorrenti negli ultimi 3 mesi completi.
-    // Evita di sottostimare il mese corrente quando le ricorrenze devono ancora arrivare.
-    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    // Divide per il numero EFFETTIVO di mesi con dati (1-3) per evitare sottostime
+    // quando lo storico è ancora corto.
     const startOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
     const recurringWindow = movements.filter(mv => {
       if (!mv.is_recurring || mv.type !== 'debit') return false;
       const d = new Date(mv.date);
       return d >= threeMonthsAgo && d < startOfCurrentMonth;
     });
+    const monthsWithRecurring = new Set(
+      recurringWindow.map(mv => {
+        const d = new Date(mv.date);
+        return `${d.getFullYear()}-${d.getMonth()}`;
+      })
+    ).size;
+    const recurringDivisor = Math.max(1, monthsWithRecurring);
     const totalRecurringExpenses = recurringWindow
       .filter(mv => mv.classification === 'personal')
-      .reduce((s, mv) => s + mv.amount, 0) / 3;
+      .reduce((s, mv) => s + mv.amount, 0) / recurringDivisor;
     const totalRecurringBusinessExpenses = recurringWindow
       .filter(mv => mv.classification === 'business')
-      .reduce((s, mv) => s + mv.amount, 0) / 3;
+      .reduce((s, mv) => s + mv.amount, 0) / recurringDivisor;
     const fixedBaseline = totalRecurringExpenses + totalRecurringBusinessExpenses;
 
-    // Adaptive Buffer: spese non-ricorrenti ultimi 90gg / 3
+    // Adaptive Buffer: media mensile spese non-ricorrenti negli ultimi 90gg.
+    // Divide per il numero effettivo di mesi coperti da dati (1-3).
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 86_400_000);
-    const occasionalSum = movements
-      .filter(mv => mv.type === 'debit' && !mv.is_recurring)
-      .filter(mv => {
+    const occasional = movements.filter(mv => {
+      if (mv.type !== 'debit' || mv.is_recurring) return false;
+      const d = new Date(mv.date);
+      return d >= ninetyDaysAgo && d <= now;
+    });
+    const occasionalSum = occasional.reduce((s, mv) => s + mv.amount, 0);
+    const monthsWithOccasional = new Set(
+      occasional.map(mv => {
         const d = new Date(mv.date);
-        return d >= ninetyDaysAgo && d <= now;
+        return `${d.getFullYear()}-${d.getMonth()}`;
       })
-      .reduce((s, mv) => s + mv.amount, 0);
-    const adaptiveBuffer = occasionalSum / 3;
+    ).size;
+    const adaptiveBuffer = occasionalSum / Math.max(1, monthsWithOccasional);
 
     const activeGoal = lifeGoals.find(g => g.is_active);
     let monthlyGoalSaving = 0;

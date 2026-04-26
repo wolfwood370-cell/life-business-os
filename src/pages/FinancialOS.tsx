@@ -115,8 +115,9 @@ const FinancialOS = () => {
 
   const monthOptions = useMemo(() => {
     const opts: Array<{ value: string; label: string }> = [];
-    let y = 2026, m = 0;
-    const ny = now.getFullYear(), nm = now.getMonth();
+    const today = new Date();
+    let y = HISTORY_START_YEAR, m = HISTORY_START_MONTH;
+    const ny = today.getFullYear(), nm = today.getMonth();
     while (y < ny || (y === ny && m <= nm)) {
       opts.push({
         value: `${y}-${m}`,
@@ -126,7 +127,6 @@ const FinancialOS = () => {
       if (m > 11) { m = 0; y++; }
     }
     return opts.reverse();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
