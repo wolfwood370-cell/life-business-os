@@ -232,34 +232,93 @@ const ClientDetail = () => {
     (behaviorUrgency ? 10 : 0);
   const score = Math.min(100, baseScore + behaviorBonus);
 
-  const handleSave = () => {
+  // Smart end-date computation: 28 days for short-duration services, N months otherwise.
+  const computeEndDate = (startYmd: string, svc: ServiceType | undefined, months: ContractDurationMonths): string | undefined => {
+    if (!startYmd) return undefined;
+    const [y, m, d] = startYmd.split('-').map(Number);
+    if (!y || !m || !d) return undefined;
+    const start = new Date(Date.UTC(y, m - 1, d));
+    const end = new Date(start);
+    if (svc && SHORT_DURATION_SERVICES.includes(svc)) {
+      end.setUTCDate(end.getUTCDate() + 28);
+    } else {
+      end.setUTCMonth(end.getUTCMonth() + months);
+    }
+    return `${end.getUTCFullYear()}-${String(end.getUTCMonth() + 1).padStart(2, '0')}-${String(end.getUTCDate()).padStart(2, '0')}`;
+  };
+
+  const handleSave = async () => {
     const fn = firstName.trim();
     const ln = lastName.trim();
     const fullName = [fn, ln].filter(Boolean).join(' ').trim() || client!.name;
-    updateClient(client.id, {
-      name: fullName,
-      first_name: fn || undefined,
-      last_name: ln || undefined,
-      root_motivator: motivator,
-      objection_stated: stated,
-      objection_real: real,
-      monthly_value: monthlyValue ? Number(monthlyValue) : undefined,
-      next_renewal_date: dateInputToIso(renewal),
-      last_contacted_at: dateInputToIso(lastContact),
-      lead_score: score,
-      churn_risk: client.pipeline_stage === 'Closed Won' ? churn : undefined,
-      birth_date: birthDate || undefined,
-      gender: (gender || undefined) as Gender | undefined,
-      gym_signup_date: gymSignup || undefined,
-      gym_expiry_date: gymExpiry || undefined,
-      phone: phone.trim() || undefined,
-      email: email.trim() || undefined,
-      gdpr_consent: gdprConsent,
-      service_sold: serviceSold || undefined,
-      actual_price: actualPrice ? Number(actualPrice.replace(',', '.')) : undefined,
-      training_start_date: trainingStart || undefined,
-      training_end_date: trainingEnd || undefined,
-    });
+
+    // Smart Dates: default trainingStart to today if missing; auto-compute end.
+    const effectiveStart = trainingStart || (serviceSold ? todayIso() : '');
+    const effectiveEnd = serviceSold && effectiveStart
+      ? computeEndDate(effectiveStart, serviceSold, contractDuration)
+      : (trainingEnd || undefined);
+
+    const priceNum = actualPrice ? Number(actualPrice.replace(',', '.')) : undefined;
+    const upfrontNum = incassatoOggi ? Number(incassatoOggi.replace(',', '.')) : 0;
+
+    try {
+      await updateClient(client!.id, {
+        name: fullName,
+        first_name: fn || undefined,
+        last_name: ln || undefined,
+        root_motivator: motivator,
+        objection_stated: stated,
+        objection_real: real,
+        monthly_value: monthlyValue ? Number(monthlyValue) : undefined,
+        next_renewal_date: dateInputToIso(renewal),
+        last_contacted_at: dateInputToIso(lastContact),
+        lead_score: score,
+        churn_risk: client!.pipeline_stage === 'Closed Won' ? churn : undefined,
+        birth_date: birthDate || undefined,
+        gender: (gender || undefined) as Gender | undefined,
+        gym_signup_date: gymSignup || undefined,
+        gym_expiry_date: gymExpiry || undefined,
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+        gdpr_consent: gdprConsent,
+        // Phase 37: contract fields explicitly included in payload
+        service_sold: serviceSold || undefined,
+        actual_price: priceNum,
+        training_start_date: effectiveStart || undefined,
+        training_end_date: effectiveEnd,
+      });
+
+      // One-Click First Payment: register an upfront ledger entry if user typed a value.
+      if (upfrontNum > 0 && !isNaN(upfrontNum)) {
+        const account = bankAccounts.find(a => a.type === 'business') ?? bankAccounts[0];
+        if (!account) {
+          toast.error('Nessun conto bancario configurato per registrare l\'incasso');
+        } else {
+          await addMovement({
+            account_id: account.id,
+            date: new Date().toISOString(),
+            description: `Prima rata / Saldo - ${serviceSold ?? 'Servizio'}`,
+            amount: upfrontNum,
+            type: 'credit',
+            classification: 'business',
+            client_id: client!.id,
+            is_recurring: false,
+            is_reviewed: true,
+            source: 'manual',
+            recurrence_type: 'none',
+            service_sold: serviceSold,
+            actual_price: priceNum,
+          });
+          toast.success(`Profilo salvato + incasso di ${formatEuro(upfrontNum)} registrato`);
+          setIncassatoOggi('');
+          return;
+        }
+      }
+      toast.success('Profilo aggiornato');
+    } catch {
+      toast.error('Errore nel salvataggio');
+    }
+  };
     toast.success('Profilo aggiornato');
   };
 
