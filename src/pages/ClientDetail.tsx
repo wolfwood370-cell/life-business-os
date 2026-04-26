@@ -27,6 +27,7 @@ import {
   PaymentType, PaymentMethod, PAYMENT_METHODS,
   Transaction, TransactionStatus, TRANSACTION_STATUSES,
   SERVICE_GROUPS, ServiceType, CUSTOM_PRICE_SERVICES,
+  SHORT_DURATION_SERVICES, CONTRACT_DURATION_OPTIONS, ContractDurationMonths,
   formatEuro,
 } from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
