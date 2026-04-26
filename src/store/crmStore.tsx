@@ -398,6 +398,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     mutationFn: async (
       t: Omit<Transaction, 'id' | 'created_at' | 'payment_date' | 'status' | 'due_date'> & {
         payment_date?: string;
+        service_sold?: string;
+        actual_price?: number;
       }
     ) => {
       const startIso = t.payment_date ?? new Date().toISOString();
@@ -407,13 +409,16 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
 
-      // Strict Contract Inheritance: read service from client profile
+      // Strict Contract Inheritance: read service from client profile, fallback
+      // to the value passed by the caller (handles freshly-saved contracts where
+      // the client cache hasn't been refetched yet).
       const { data: clientRow } = await sb
         .from('clients')
         .select('service_sold')
         .eq('id', t.client_id)
         .maybeSingle();
-      const inheritedService: string | null = clientRow?.service_sold ?? null;
+      const inheritedService: string | null =
+        clientRow?.service_sold ?? t.service_sold ?? null;
       const baseLabel = inheritedService || 'Servizio';
 
       let insertedIds: string[] = [];

@@ -24,7 +24,7 @@ export interface CrmContextValue {
   moveClient: (id: string, stage: PipelineStage) => Promise<void>;
   addRoiMetric: (clientId: string, metric: Omit<RoiMetric, 'id' | 'date'>) => Promise<void>;
   removeRoiMetric: (clientId: string, metricId: string) => Promise<void>;
-  addTransaction: (t: Omit<Transaction, 'id' | 'created_at' | 'payment_date' | 'status' | 'due_date'> & { payment_date?: string; total_amount?: number }) => Promise<void>;
+  addTransaction: (t: Omit<Transaction, 'id' | 'created_at' | 'payment_date' | 'status' | 'due_date'> & { payment_date?: string; total_amount?: number; service_sold?: string; actual_price?: number }) => Promise<void>;
   stopRecurringPayment: (transactionId: string) => Promise<void>;
   markTransactionPaid: (transactionId: string) => Promise<void>;
   updateTransaction: (transactionId: string, updates: Partial<Transaction>) => Promise<void>;
