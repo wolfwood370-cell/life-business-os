@@ -100,7 +100,8 @@ export const LedgerTable = ({ year, month }: Props) => {
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden bg-card">
+      {/* Desktop: tabella */}
+      <div className="hidden md:block border rounded-lg overflow-hidden bg-card">
         <div className="max-h-[600px] overflow-auto">
           <Table>
             <TableHeader className="sticky top-0 bg-muted/50 backdrop-blur z-10">
@@ -156,7 +157,7 @@ export const LedgerTable = ({ year, month }: Props) => {
                           .filter(c =>
                             c.scope === 'both' ||
                             c.scope === mv.classification ||
-                            c.id === mv.category_id // mantieni visibile la categoria già assegnata
+                            c.id === mv.category_id
                           )
                           .map(c => (
                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
@@ -228,6 +229,108 @@ export const LedgerTable = ({ year, month }: Props) => {
             </TableBody>
           </Table>
         </div>
+      </div>
+
+      {/* Mobile: lista di card */}
+      <div className="md:hidden space-y-2">
+        {filtered.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card/40 p-6 text-center text-sm text-muted-foreground">
+            Nessun movimento per i filtri selezionati.
+          </div>
+        ) : filtered.map(mv => (
+          <div
+            key={mv.id}
+            className={cn(
+              'rounded-xl border bg-card p-3 space-y-2 transition-colors',
+              !mv.is_reviewed ? 'border-amber-400/50 bg-amber-50/30 dark:bg-amber-950/10' : 'border-border'
+            )}
+          >
+            {/* Top: data + importo */}
+            <div className="flex items-start justify-between gap-2">
+              <div className="text-[11px] font-mono text-muted-foreground">
+                {new Date(mv.date).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+              </div>
+              <PrivacyMask>
+                <span className={cn(
+                  'font-mono tabular-nums font-bold text-base inline-flex items-center gap-0.5',
+                  mv.type === 'credit' ? 'text-emerald-600' : 'text-rose-600',
+                )}>
+                  {mv.type === 'credit' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                  {formatEuro(mv.amount)}
+                </span>
+              </PrivacyMask>
+            </div>
+
+            {/* Descrizione */}
+            <div className="text-sm font-medium text-foreground">
+              <InlineDescriptionEdit
+                value={mv.description}
+                onSave={(v) => updateMovement(mv.id, { description: v })}
+              />
+            </div>
+
+            {/* Badges: conto + categoria + classificazione */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center rounded-md bg-secondary px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                {accountName(mv.account_id)}
+              </span>
+              <span className="inline-flex items-center rounded-md bg-secondary/70 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                {categoryName(mv.category_id)}
+              </span>
+              <span className={cn(
+                'inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider',
+                mv.classification === 'business'
+                  ? 'bg-primary/15 text-primary'
+                  : 'bg-muted text-muted-foreground'
+              )}>
+                {mv.classification === 'business' ? 'Aziendale' : 'Personale'}
+              </span>
+            </div>
+
+            {/* Controlli */}
+            <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-border/60">
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={mv.classification === 'business'}
+                  onCheckedChange={(v) => setMovementClassification(
+                    mv.id,
+                    (v ? 'business' : 'personal') as MovementClassification,
+                  )}
+                  className="h-4 w-7 [&>span]:h-3 [&>span]:w-3 [&>span[data-state=checked]]:translate-x-3"
+                />
+                <span className="text-[10px] text-muted-foreground">Azienda</span>
+              </div>
+              <RecurrencePopover
+                type={mv.recurrence_type}
+                value={mv.recurrence_value}
+                onChange={(t, v) => updateMovement(mv.id, { recurrence_type: t, recurrence_value: v, is_recurring: t !== 'none' })}
+                size="sm"
+              />
+              <button
+                onClick={() => toggleMovementReviewed(mv.id, !mv.is_reviewed)}
+                className={cn(
+                  'inline-flex h-6 px-2 items-center gap-1 rounded-md border text-[10px] font-semibold transition-colors',
+                  mv.is_reviewed
+                    ? 'bg-primary border-primary text-primary-foreground'
+                    : 'border-muted-foreground/40 text-muted-foreground hover:border-primary',
+                )}
+              >
+                {mv.is_reviewed && <Check className="h-3 w-3" />}
+                Rev.
+              </button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                onClick={() => {
+                  if (confirm('Eliminare questo movimento?')) deleteMovement(mv.id);
+                }}
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
