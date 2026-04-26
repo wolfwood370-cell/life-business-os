@@ -178,7 +178,7 @@ const ClientDetail = () => {
       setBehaviorUrgency(urgency);
       setChurn(client.churn_risk ?? 'Basso');
       setBirthDate(client.birth_date ? client.birth_date.slice(0, 10) : '');
-      setGender(client.gender ?? '');
+      setGender(client.gender ?? undefined);
       setGymSignup(client.gym_signup_date ? client.gym_signup_date.slice(0, 10) : '');
       setGymExpiry(client.gym_expiry_date ? client.gym_expiry_date.slice(0, 10) : '');
       setPhone(client.phone ?? '');
@@ -186,7 +186,7 @@ const ClientDetail = () => {
       setFirstName(client.first_name ?? '');
       setLastName(client.last_name ?? '');
       setGdprConsent(!!client.gdpr_consent);
-      setServiceSold((client.service_sold as ServiceType) ?? '');
+      setServiceSold((client.service_sold as ServiceType | undefined) ?? undefined);
       setActualPrice(client.actual_price !== undefined && client.actual_price !== null ? String(client.actual_price) : '');
       setTrainingStart(client.training_start_date ? client.training_start_date.slice(0, 10) : '');
       setTrainingEnd(client.training_end_date ? client.training_end_date.slice(0, 10) : '');
