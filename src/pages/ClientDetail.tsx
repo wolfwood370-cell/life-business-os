@@ -500,7 +500,7 @@ const ClientDetail = () => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold text-sm text-foreground">Lead Score Guidato</h3>
+                <h3 className="font-bold text-sm text-foreground">Temperatura Lead Guidata</h3>
               </div>
 
               <div className="space-y-3">
