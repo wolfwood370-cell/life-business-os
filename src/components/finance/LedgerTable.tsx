@@ -233,3 +233,51 @@ export const LedgerTable = ({ year, month }: Props) => {
     </div>
   );
 };
+
+interface InlineDescriptionEditProps {
+  value: string;
+  onSave: (v: string) => void;
+}
+
+const InlineDescriptionEdit = ({ value, onSave }: InlineDescriptionEditProps) => {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { if (!editing) setDraft(value); }, [value, editing]);
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+
+  const commit = () => {
+    const trimmed = draft.trim();
+    if (trimmed && trimmed !== value) onSave(trimmed);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <Input
+        ref={inputRef}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') { e.preventDefault(); commit(); }
+          else if (e.key === 'Escape') { setDraft(value); setEditing(false); }
+        }}
+        className="h-7 text-xs"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() => setEditing(true)}
+      className="group inline-flex items-center gap-1 max-w-full text-left hover:text-primary transition-colors"
+      title="Clicca per modificare"
+    >
+      <span className="line-clamp-1">{value || <span className="italic text-muted-foreground">Senza descrizione</span>}</span>
+      <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-100 shrink-0 text-muted-foreground" />
+    </button>
+  );
+};
