@@ -111,6 +111,7 @@ export const LedgerTable = ({ year, month }: Props) => {
                 <TableHead className="text-[10px] uppercase tracking-wider w-[110px]">Conto</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-wider w-[140px]">Categoria</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-wider w-[110px]">Classifica</TableHead>
+                <TableHead className="text-[10px] uppercase tracking-wider w-[120px]">Ricorrenza</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-wider w-[110px] text-right">Importo</TableHead>
                 <TableHead className="text-[10px] uppercase tracking-wider w-[60px] text-center">Rev.</TableHead>
                 <TableHead className="w-[40px]"></TableHead>
@@ -119,7 +120,7 @@ export const LedgerTable = ({ year, month }: Props) => {
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-sm text-muted-foreground">
+                  <TableCell colSpan={9} className="text-center py-8 text-sm text-muted-foreground">
                     Nessun movimento per i filtri selezionati.
                   </TableCell>
                 </TableRow>
@@ -132,10 +133,10 @@ export const LedgerTable = ({ year, month }: Props) => {
                     {new Date(mv.date).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' })}
                   </TableCell>
                   <TableCell className="py-2">
-                    <span className="line-clamp-1">{mv.description}</span>
-                    {mv.is_recurring && (
-                      <Badge variant="outline" className="ml-1 h-4 px-1 text-[9px]">Ric.</Badge>
-                    )}
+                    <InlineDescriptionEdit
+                      value={mv.description}
+                      onSave={(v) => updateMovement(mv.id, { description: v })}
+                    />
                   </TableCell>
                   <TableCell className="py-2">
                     <span className="text-[10px] text-muted-foreground font-medium">{accountName(mv.account_id)}</span>
