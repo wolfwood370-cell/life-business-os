@@ -19,6 +19,7 @@ import { LedgerTable } from '@/components/finance/LedgerTable';
 import { MovementImportDialog } from '@/components/finance/MovementImportDialog';
 import { ManualMovementDialog } from '@/components/finance/ManualMovementDialog';
 import { CategoryManagerDialog } from '@/components/finance/CategoryManagerDialog';
+import { CostsAreaChart } from '@/components/finance/CostsAreaChart';
 
 interface GoalFormState {
   id?: string;
@@ -314,6 +315,8 @@ const FinancialOS = () => {
 
       <BankAccountCards year={ledgerYear} month={ledgerMonth} />
       <LedgerTable year={ledgerYear} month={ledgerMonth} />
+
+      <CostsAreaChart />
 
       {/* ============ Math breakdown ============ */}
       <section className="rounded-3xl border border-dashed border-border bg-secondary/40 p-5">
