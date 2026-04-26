@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
 import { TAX_RATE } from '@/types/crm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
