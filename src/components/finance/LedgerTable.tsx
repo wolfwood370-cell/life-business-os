@@ -180,6 +180,13 @@ export const LedgerTable = ({ year, month }: Props) => {
                       </span>
                     </div>
                   </TableCell>
+                  <TableCell className="py-2">
+                    <RecurrencePopover
+                      type={mv.recurrence_type}
+                      value={mv.recurrence_value}
+                      onChange={(t, v) => updateMovement(mv.id, { recurrence_type: t, recurrence_value: v, is_recurring: t !== 'none' })}
+                    />
+                  </TableCell>
                   <TableCell className="py-2 text-right">
                     <PrivacyMask>
                       <span className={cn(
