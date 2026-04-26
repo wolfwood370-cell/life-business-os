@@ -4,6 +4,7 @@ import { TAX_RATE } from '@/types/crm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
@@ -151,6 +152,11 @@ export default function FinanceCoach() {
   const daysToDeadline = simulatedDays;
   const setDaysToDeadline = setSimulatedDays;
 
+  // Manual overrides — empty string => use historical snapshot value.
+  // Stored as strings to support free-typing, parsed safely below.
+  const [avgTicketOverride, setAvgTicketOverride] = useState<string>('');
+  const [winRateOverride, setWinRateOverride] = useState<string>(''); // percent (0-100)
+
   const sim = useMemo(() => {
     const monthsLeft = Math.max(0.5, daysToDeadline / 30);
     const remaining = activeGoal
@@ -159,15 +165,27 @@ export default function FinanceCoach() {
     const goalSavingPerMonth = remaining / monthsLeft;
     const requiredMonthlyNet = goalSavingPerMonth + snapshot.lifestyleBurnRate;
     const requiredMonthlyGross = requiredMonthlyNet / (1 - TAX_RATE);
-    const requiredClientsPerMonth = snapshot.avgTicket > 0
-      ? requiredMonthlyGross / snapshot.avgTicket
+
+    // Effective ticket: manual override if a positive number is typed, else historical avgTicket.
+    const parsedTicket = parseFloat(avgTicketOverride);
+    const effectiveTicket = Number.isFinite(parsedTicket) && parsedTicket > 0
+      ? parsedTicket
+      : snapshot.avgTicket;
+
+    // Effective win rate: manual override (0-100 → 0-1) if valid, else historical winRate.
+    const parsedWinPct = parseFloat(winRateOverride);
+    const effectiveWinRate = Number.isFinite(parsedWinPct) && parsedWinPct > 0 && parsedWinPct <= 100
+      ? parsedWinPct / 100
+      : snapshot.winRate;
+
+    const requiredClientsPerMonth = effectiveTicket > 0
+      ? requiredMonthlyGross / effectiveTicket
       : 0;
-    const requiredLeadsPerMonth = snapshot.winRate > 0
-      ? requiredClientsPerMonth / snapshot.winRate
+    const requiredLeadsPerMonth = effectiveWinRate > 0 && requiredClientsPerMonth > 0
+      ? requiredClientsPerMonth / effectiveWinRate
       : 0;
-    // unrealistic if would require closing too high % of pitches
-    // approximate "implied win rate needed" if user could only pitch as many as historic
-    const historicMonthlyPitched = snapshot.pitchedCount / 3; // 3 months
+
+    const historicMonthlyPitched = snapshot.pitchedCount / 3;
     const impliedWinRate = historicMonthlyPitched > 0
       ? requiredClientsPerMonth / historicMonthlyPitched
       : 1;
@@ -175,8 +193,11 @@ export default function FinanceCoach() {
     return {
       monthsLeft, goalSavingPerMonth, requiredMonthlyNet, requiredMonthlyGross,
       requiredClientsPerMonth, requiredLeadsPerMonth, impliedWinRate, isUnrealistic,
+      effectiveTicket, effectiveWinRate,
+      ticketIsManual: effectiveTicket !== snapshot.avgTicket,
+      winRateIsManual: effectiveWinRate !== snapshot.winRate,
     };
-  }, [daysToDeadline, activeGoal, snapshot]);
+  }, [daysToDeadline, activeGoal, snapshot, avgTicketOverride, winRateOverride]);
 
   // ============ AI Briefing (persistente) ============
   const [briefing, setBriefing] = useState<string>('');
@@ -370,6 +391,49 @@ export default function FinanceCoach() {
             )}
           </div>
 
+          {/* Manual overrides — fall back to historical snapshot when empty */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label htmlFor="ticket-override" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Ticket medio (€)
+              </label>
+              <Input
+                id="ticket-override"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                step="1"
+                placeholder={snapshot.avgTicket > 0 ? `Storico: ${Math.round(snapshot.avgTicket)}` : 'Es. 1200'}
+                value={avgTicketOverride}
+                onChange={(e) => setAvgTicketOverride(e.target.value)}
+                className="h-10 rounded-lg bg-secondary/40 border-border text-sm tabular-nums"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                {sim.ticketIsManual ? 'Override manuale attivo' : 'Sto usando il valore storico (90 giorni)'}
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <label htmlFor="winrate-override" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Win rate atteso (%)
+              </label>
+              <Input
+                id="winrate-override"
+                type="number"
+                inputMode="decimal"
+                min="0"
+                max="100"
+                step="1"
+                placeholder={snapshot.winRate > 0 ? `Storico: ${(snapshot.winRate * 100).toFixed(0)}` : 'Es. 30'}
+                value={winRateOverride}
+                onChange={(e) => setWinRateOverride(e.target.value)}
+                className="h-10 rounded-lg bg-secondary/40 border-border text-sm tabular-nums"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                {sim.winRateIsManual ? 'Override manuale attivo' : 'Sto usando il valore storico (90 giorni)'}
+              </p>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <SimMetric
               label="Nuovo Target Netto/Mese"
@@ -383,14 +447,22 @@ export default function FinanceCoach() {
             />
             <SimMetric
               label="Clienti da chiudere/mese"
-              value={sim.requiredClientsPerMonth.toFixed(1)}
-              hint={snapshot.avgTicket > 0 ? `Su ticket medio ${formatEuro(snapshot.avgTicket)}` : 'Nessun ticket medio storico'}
+              value={sim.effectiveTicket > 0 ? sim.requiredClientsPerMonth.toFixed(1) : 'N/A'}
+              hint={
+                sim.effectiveTicket > 0
+                  ? `Su ticket medio ${formatEuro(sim.effectiveTicket)}${sim.ticketIsManual ? ' (manuale)' : ''}`
+                  : 'Inserisci un ticket medio per calcolare'
+              }
               danger={sim.isUnrealistic}
             />
             <SimMetric
               label="Nuovi Lead Necessari/mese"
-              value={sim.requiredLeadsPerMonth > 0 ? sim.requiredLeadsPerMonth.toFixed(1) : '—'}
-              hint={snapshot.winRate > 0 ? `Win rate attuale ${formatPct(snapshot.winRate)}` : 'Nessuno storico di chiusure'}
+              value={sim.requiredLeadsPerMonth > 0 ? sim.requiredLeadsPerMonth.toFixed(1) : 'N/A'}
+              hint={
+                sim.effectiveWinRate > 0
+                  ? `Win rate ${formatPct(sim.effectiveWinRate)}${sim.winRateIsManual ? ' (manuale)' : ''}`
+                  : 'Inserisci un win rate per calcolare'
+              }
               danger={sim.isUnrealistic}
             />
           </div>
