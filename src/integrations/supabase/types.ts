@@ -32,6 +32,30 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_accounts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          type?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          type?: string
+        }
+        Relationships: []
+      }
       business_expense_categories: {
         Row: {
           created_at: string
@@ -86,6 +110,30 @@ export type Database = {
           recurrence_type?: string
           recurrence_value?: number | null
           start_date?: string
+        }
+        Relationships: []
+      }
+      categories: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          scope?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          scope?: string
         }
         Relationships: []
       }
@@ -190,6 +238,85 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      financial_movements: {
+        Row: {
+          account_id: string
+          amount: number
+          category_id: string | null
+          classification: string
+          client_id: string | null
+          created_at: string
+          date: string
+          description: string
+          external_ref: string | null
+          id: string
+          is_recurring: boolean
+          is_reviewed: boolean
+          notes: string | null
+          source: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          amount?: number
+          category_id?: string | null
+          classification?: string
+          client_id?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          external_ref?: string | null
+          id?: string
+          is_recurring?: boolean
+          is_reviewed?: boolean
+          notes?: string | null
+          source?: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          category_id?: string | null
+          classification?: string
+          client_id?: string | null
+          created_at?: string
+          date?: string
+          description?: string
+          external_ref?: string | null
+          id?: string
+          is_recurring?: boolean
+          is_reviewed?: boolean
+          notes?: string | null
+          source?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_movements_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "bank_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_movements_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_movements_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       income_categories: {
         Row: {
