@@ -152,7 +152,11 @@ export const LedgerTable = ({ year, month }: Props) => {
                       <SelectContent>
                         <SelectItem value="none">—</SelectItem>
                         {unifiedCategories
-                          .filter(c => c.scope === 'both' || c.scope === mv.classification)
+                          .filter(c =>
+                            c.scope === 'both' ||
+                            c.scope === mv.classification ||
+                            c.id === mv.category_id // mantieni visibile la categoria già assegnata
+                          )
                           .map(c => (
                             <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
                           ))}
