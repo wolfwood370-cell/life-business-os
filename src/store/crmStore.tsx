@@ -649,48 +649,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     [clients]
   );
 
-  // ---------- Recurrence engine ----------
-  // Conta quante volte un item ricorrente cade nel mese (y,m), rispettando start/end.
-  // Per 'fixed_day' = 0 o 1 occorrenza nel mese (clamp al last day del mese).
-  // Per 'interval_days' = numero di multipli di N giorni a partire da start_date che cadono nel mese.
-  type RecurringRow = {
-    recurrence_type: RecurrenceType;
-    recurrence_value?: number;
-    start_date: string;
-    end_date?: string;
-    amount: number;
-  };
-  const occurrencesInMonth = useCallback((e: RecurringRow, y: number, m: number): number => {
-    const monthStart = new Date(y, m, 1);
-    const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
-    const lastDay = monthEnd.getDate();
-    const start = new Date(e.start_date);
-    const end = e.end_date ? new Date(e.end_date) : null;
-    const winStart = start > monthStart ? start : monthStart;
-    const winEnd = end && end < monthEnd ? end : monthEnd;
-    if (winStart > winEnd) return 0;
-
-    if (e.recurrence_type === 'fixed_day') {
-      const day = Math.min(Math.max(1, e.recurrence_value ?? start.getDate()), lastDay);
-      const occ = new Date(y, m, day, 12, 0, 0);
-      return occ >= winStart && occ <= winEnd ? 1 : 0;
-    }
-    if (e.recurrence_type === 'interval_days') {
-      const interval = Math.max(1, e.recurrence_value ?? 30);
-      const msPerDay = 86_400_000;
-      const diffDays = Math.floor((winStart.getTime() - start.getTime()) / msPerDay);
-      const firstK = Math.max(0, Math.ceil(diffDays / interval));
-      let count = 0;
-      for (let k = firstK; k < 1000; k++) {
-        const occ = new Date(start.getTime() + k * interval * msPerDay);
-        if (occ > winEnd) break;
-        if (occ >= winStart) count++;
-      }
-      return count;
-    }
-    return 0;
-  }, []);
-
   // ---------- Dynamic Target (Adaptive Buffer) ----------
   // ============ Phase 28: Calcoli sul Ledger Unificato ============
   // Helper: filtra movements per anno/mese
