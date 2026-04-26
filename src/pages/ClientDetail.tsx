@@ -27,6 +27,7 @@ import {
   PaymentType, PaymentMethod, PAYMENT_METHODS,
   Transaction, TransactionStatus, TRANSACTION_STATUSES,
   SERVICE_GROUPS, ServiceType, CUSTOM_PRICE_SERVICES,
+  SHORT_DURATION_SERVICES, CONTRACT_DURATION_OPTIONS, ContractDurationMonths,
   formatEuro,
 } from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
@@ -44,7 +45,7 @@ import { todayIso, dateInputToIso } from '@/lib/date';
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, deleteClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, services, addTransaction, stopRecurringPayment, markTransactionPaid, updateTransaction, deleteTransaction } = useCrm();
+  const { clients, updateClient, deleteClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, services, addTransaction, stopRecurringPayment, markTransactionPaid, updateTransaction, deleteTransaction, bankAccounts, addMovement } = useCrm();
   const client = clients.find(c => c.id === id);
 
   // Inline payment form state
@@ -147,6 +148,8 @@ const ClientDetail = () => {
   const [actualPrice, setActualPrice] = useState('');
   const [trainingStart, setTrainingStart] = useState('');
   const [trainingEnd, setTrainingEnd] = useState('');
+  const [contractDuration, setContractDuration] = useState<ContractDurationMonths>(3);
+  const [incassatoOggi, setIncassatoOggi] = useState('');
 
   // Lead score behavior checklist (objective scoring)
   const [behaviorResponsive, setBehaviorResponsive] = useState(false);
@@ -229,35 +232,92 @@ const ClientDetail = () => {
     (behaviorUrgency ? 10 : 0);
   const score = Math.min(100, baseScore + behaviorBonus);
 
-  const handleSave = () => {
+  // Smart end-date computation: 28 days for short-duration services, N months otherwise.
+  const computeEndDate = (startYmd: string, svc: ServiceType | undefined, months: ContractDurationMonths): string | undefined => {
+    if (!startYmd) return undefined;
+    const [y, m, d] = startYmd.split('-').map(Number);
+    if (!y || !m || !d) return undefined;
+    const start = new Date(Date.UTC(y, m - 1, d));
+    const end = new Date(start);
+    if (svc && SHORT_DURATION_SERVICES.includes(svc)) {
+      end.setUTCDate(end.getUTCDate() + 28);
+    } else {
+      end.setUTCMonth(end.getUTCMonth() + months);
+    }
+    return `${end.getUTCFullYear()}-${String(end.getUTCMonth() + 1).padStart(2, '0')}-${String(end.getUTCDate()).padStart(2, '0')}`;
+  };
+
+  const handleSave = async () => {
     const fn = firstName.trim();
     const ln = lastName.trim();
     const fullName = [fn, ln].filter(Boolean).join(' ').trim() || client!.name;
-    updateClient(client.id, {
-      name: fullName,
-      first_name: fn || undefined,
-      last_name: ln || undefined,
-      root_motivator: motivator,
-      objection_stated: stated,
-      objection_real: real,
-      monthly_value: monthlyValue ? Number(monthlyValue) : undefined,
-      next_renewal_date: dateInputToIso(renewal),
-      last_contacted_at: dateInputToIso(lastContact),
-      lead_score: score,
-      churn_risk: client.pipeline_stage === 'Closed Won' ? churn : undefined,
-      birth_date: birthDate || undefined,
-      gender: (gender || undefined) as Gender | undefined,
-      gym_signup_date: gymSignup || undefined,
-      gym_expiry_date: gymExpiry || undefined,
-      phone: phone.trim() || undefined,
-      email: email.trim() || undefined,
-      gdpr_consent: gdprConsent,
-      service_sold: serviceSold || undefined,
-      actual_price: actualPrice ? Number(actualPrice.replace(',', '.')) : undefined,
-      training_start_date: trainingStart || undefined,
-      training_end_date: trainingEnd || undefined,
-    });
-    toast.success('Profilo aggiornato');
+
+    // Smart Dates: default trainingStart to today if missing; auto-compute end.
+    const effectiveStart = trainingStart || (serviceSold ? todayIso() : '');
+    const effectiveEnd = serviceSold && effectiveStart
+      ? computeEndDate(effectiveStart, serviceSold, contractDuration)
+      : (trainingEnd || undefined);
+
+    const priceNum = actualPrice ? Number(actualPrice.replace(',', '.')) : undefined;
+    const upfrontNum = incassatoOggi ? Number(incassatoOggi.replace(',', '.')) : 0;
+
+    try {
+      await updateClient(client!.id, {
+        name: fullName,
+        first_name: fn || undefined,
+        last_name: ln || undefined,
+        root_motivator: motivator,
+        objection_stated: stated,
+        objection_real: real,
+        monthly_value: monthlyValue ? Number(monthlyValue) : undefined,
+        next_renewal_date: dateInputToIso(renewal),
+        last_contacted_at: dateInputToIso(lastContact),
+        lead_score: score,
+        churn_risk: client!.pipeline_stage === 'Closed Won' ? churn : undefined,
+        birth_date: birthDate || undefined,
+        gender: (gender || undefined) as Gender | undefined,
+        gym_signup_date: gymSignup || undefined,
+        gym_expiry_date: gymExpiry || undefined,
+        phone: phone.trim() || undefined,
+        email: email.trim() || undefined,
+        gdpr_consent: gdprConsent,
+        // Phase 37: contract fields explicitly included in payload
+        service_sold: serviceSold || undefined,
+        actual_price: priceNum,
+        training_start_date: effectiveStart || undefined,
+        training_end_date: effectiveEnd,
+      });
+
+      // One-Click First Payment: register an upfront ledger entry if user typed a value.
+      if (upfrontNum > 0 && !isNaN(upfrontNum)) {
+        const account = bankAccounts.find(a => a.type === 'business') ?? bankAccounts[0];
+        if (!account) {
+          toast.error('Nessun conto bancario configurato per registrare l\'incasso');
+        } else {
+          await addMovement({
+            account_id: account.id,
+            date: new Date().toISOString(),
+            description: `Prima rata / Saldo - ${serviceSold ?? 'Servizio'}`,
+            amount: upfrontNum,
+            type: 'credit',
+            classification: 'business',
+            client_id: client!.id,
+            is_recurring: false,
+            is_reviewed: true,
+            source: 'manual',
+            recurrence_type: 'none',
+            service_sold: serviceSold,
+            actual_price: priceNum,
+          });
+          toast.success(`Profilo salvato + incasso di ${formatEuro(upfrontNum)} registrato`);
+          setIncassatoOggi('');
+          return;
+        }
+      }
+      toast.success('Profilo aggiornato');
+    } catch {
+      toast.error('Errore nel salvataggio');
+    }
   };
 
   const handleRegisterPayment = async () => {
@@ -732,7 +792,7 @@ const ClientDetail = () => {
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <Euro className="h-3 w-3" /> Prezzo Effettivo (€)
+                    <Euro className="h-3 w-3" /> Valore Totale del Contratto (€)
                   </label>
                   <Input
                     type="number"
@@ -744,6 +804,26 @@ const ClientDetail = () => {
                     placeholder="es. 1250"
                     className="h-12 rounded-xl bg-card border border-border text-base font-semibold"
                   />
+                </div>
+
+                {/* Incassato Oggi (Acconto o Saldo) — Anti-Double Entry UX */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Receipt className="h-3 w-3" /> Incassato Oggi (Acconto o Saldo)
+                  </label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={incassatoOggi}
+                    onChange={(e) => setIncassatoOggi(e.target.value)}
+                    placeholder="0,00 — opzionale"
+                    className="h-12 rounded-xl bg-card border border-border text-base font-semibold"
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Se valorizzato, salvando il profilo verrà registrato un movimento d'incasso oggi.
+                  </p>
                 </div>
 
                 {/* Periodo Percorso */}
@@ -758,20 +838,43 @@ const ClientDetail = () => {
                     className="h-12 rounded-xl bg-card border border-border text-sm font-semibold"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <CalendarClock className="h-3 w-3" /> Fine Percorso
-                  </label>
-                  <Input
-                    type="date"
-                    value={trainingEnd}
-                    onChange={(e) => setTrainingEnd(e.target.value)}
-                    className="h-12 rounded-xl bg-card border border-border text-sm font-semibold"
-                  />
-                </div>
+
+                {/* Smart Duration: 28gg fissi per servizi short, altrimenti select Mesi */}
+                {serviceSold && SHORT_DURATION_SERVICES.includes(serviceSold) ? (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </label>
+                    <div className="h-12 rounded-xl bg-primary/5 border border-primary/20 flex items-center px-3 text-sm font-semibold text-foreground">
+                      28 giorni (auto)
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Durata fissa per <span className="font-semibold text-foreground">{serviceSold}</span>.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </label>
+                    <Select
+                      value={String(contractDuration)}
+                      onValueChange={(v) => setContractDuration(Number(v) as ContractDurationMonths)}
+                    >
+                      <SelectTrigger className="h-12 rounded-xl bg-card border border-border text-sm font-semibold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CONTRACT_DURATION_OPTIONS.map(o => (
+                          <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <p className="sm:col-span-2 text-[10px] text-muted-foreground">
-                  Servizio e periodo sono indipendenti dalla fonte di acquisizione. Premi "Salva profilo" in fondo.
+                  La data di fine viene calcolata automaticamente in base al servizio e alla durata. Premi "Salva profilo" in fondo.
                 </p>
               </div>
 

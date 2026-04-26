@@ -98,6 +98,21 @@ export const SERVICE_GROUPS: { label: string; items: ServiceType[] }[] = [
 // Services with custom pricing (no default price, fully editable)
 export const CUSTOM_PRICE_SERVICES: ServiceType[] = ['Founders Circle', 'Percorso Online'];
 
+// Servizi a durata fissa di 28 giorni (no Durata Percorso selector, fine_data auto)
+export const SHORT_DURATION_SERVICES: ServiceType[] = [
+  'Founders Circle',
+  'Programmazione Avanzata',
+  'PT Pack 99€',
+];
+
+// Opzioni durata in mesi per i servizi standard
+export type ContractDurationMonths = 3 | 6 | 12;
+export const CONTRACT_DURATION_OPTIONS: { value: ContractDurationMonths; label: string }[] = [
+  { value: 3, label: '3 Mesi' },
+  { value: 6, label: '6 Mesi' },
+  { value: 12, label: '12 Mesi' },
+];
+
 export type Gender = 'M' | 'F' | 'Altro';
 export const GENDERS: Gender[] = ['M', 'F', 'Altro'];
 export const genderLabel: Record<Gender, string> = {
