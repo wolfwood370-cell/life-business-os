@@ -442,6 +442,8 @@ const FinancialOS = () => {
       </Dialog>
 
       <MovementImportDialog open={importOpen} onOpenChange={setImportOpen} />
+      <ManualMovementDialog open={manualOpen} onOpenChange={setManualOpen} />
+      <CategoryManagerDialog open={categoryMgrOpen} onOpenChange={setCategoryMgrOpen} />
     </div>
   );
 };
