@@ -14,6 +14,7 @@ interface Payload {
     freeCashFlow: number;
     topPersonalCategories: Array<{ name: string; amount: number }>;
     topBusinessCategories: Array<{ name: string; amount: number }>;
+    serviceMix?: Array<{ name: string; count: number; revenue: number }>;
   };
   goal: {
     title: string;
@@ -55,7 +56,7 @@ Deno.serve(async (req) => {
 
     const payload = (await req.json()) as Payload;
 
-    const systemPrompt = `You are an elite, ruthless, highly strategic AI CFO for a freelance personal trainer. Analyze the provided financial ledger (business vs personal spending) AND sales CRM metrics (Win rate, pipeline). Write a highly actionable, punchy 3-paragraph strategic briefing in Italian. Use Markdown headings (### Diagnosi, ### Strategia di Vendita, ### Strategia di Spesa). Paragraph 1: Diagnose the main bottleneck (e.g., 'You spend too much on non-essentials' or 'Your closing rate is too low for your lifestyle'). Paragraph 2: Define the exact sales strategy for this month with specific numbers (calls/week, leads needed). Paragraph 3: Define the exact expense-cutting strategy citing the top categories. Be direct, professional, and use numbers in EUR.`;
+    const systemPrompt = `You are an elite, ruthless, highly strategic AI CFO for a freelance personal trainer. Analyze the provided financial ledger (business vs personal spending), the SERVICE MIX (which products are actually selling and at what revenue), AND sales CRM metrics (Win rate, pipeline). Write a highly actionable, punchy 3-paragraph strategic briefing in Italian. Use Markdown headings (### Diagnosi, ### Strategia di Vendita, ### Strategia di Spesa). Paragraph 1: Diagnose the main bottleneck (e.g., 'Stai vendendo troppo poco il pacchetto Plus rispetto al Premium, rivedi il pricing' or 'La tua chiusura è troppo bassa per il tuo lifestyle'). Paragraph 2: Define the exact sales strategy for this month with specific numbers (calls/week, leads needed) AND which service to push. Paragraph 3: Define the exact expense-cutting strategy citing the top categories. Be direct, professional, and use numbers in EUR.`;
 
     const userPrompt = `# Financial DNA — last ${payload.windowDays} days
 
@@ -68,6 +69,7 @@ Deno.serve(async (req) => {
 - Free Cash Flow: € ${payload.ledger.freeCashFlow.toFixed(2)}
 - Top personal expense categories: ${payload.ledger.topPersonalCategories.map(c => `${c.name} (€${c.amount.toFixed(0)})`).join(", ") || "n/a"}
 - Top business expense categories: ${payload.ledger.topBusinessCategories.map(c => `${c.name} (€${c.amount.toFixed(0)})`).join(", ") || "n/a"}
+- Service mix sold: ${payload.ledger.serviceMix && payload.ledger.serviceMix.length > 0 ? payload.ledger.serviceMix.map(s => `${s.name} ×${s.count} (€${s.revenue.toFixed(0)})`).join(", ") : "n/a"}
 
 ## Active Goal
 ${payload.goal ? `- ${payload.goal.title}: € ${payload.goal.current.toFixed(0)} / € ${payload.goal.target.toFixed(0)} entro ${payload.goal.deadline} (${payload.goal.monthsLeft} mesi residui)` : "- Nessun obiettivo attivo"}
