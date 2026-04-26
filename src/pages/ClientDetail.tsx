@@ -122,6 +122,9 @@ const ClientDetail = () => {
     () => clientTransactions.filter(t => t.status === 'In Attesa').reduce((s, t) => s + t.amount, 0),
     [clientTransactions]
   );
+  const contractTotal = client?.actual_price ?? 0;
+  const contractRemaining = Math.max(0, contractTotal - totalPaid);
+  const contractProgressPct = contractTotal > 0 ? Math.min(100, Math.round((totalPaid / contractTotal) * 100)) : 0;
 
   const [motivator, setMotivator] = useState('');
   const [stated, setStated] = useState('');
