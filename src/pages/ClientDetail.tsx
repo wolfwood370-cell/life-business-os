@@ -41,6 +41,7 @@ import { ShieldCheck } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { toast } from 'sonner';
 import { todayIso, dateInputToIso } from '@/lib/date';
+import { computeContractEndDate, parseCurrencyInput } from '@/lib/contracts';
 
 const ClientDetail = () => {
   const { id } = useParams();
@@ -252,21 +253,6 @@ const ClientDetail = () => {
     (behaviorUrgency ? 10 : 0);
   const score = Math.min(100, baseScore + behaviorBonus);
 
-  // Smart end-date computation: 28 days for short-duration services, N months otherwise.
-  const computeEndDate = (startYmd: string, svc: ServiceType | undefined, months: ContractDurationMonths): string | undefined => {
-    if (!startYmd) return undefined;
-    const [y, m, d] = startYmd.split('-').map(Number);
-    if (!y || !m || !d) return undefined;
-    const start = new Date(Date.UTC(y, m - 1, d));
-    const end = new Date(start);
-    if (svc && SHORT_DURATION_SERVICES.includes(svc)) {
-      end.setUTCDate(end.getUTCDate() + 28);
-    } else {
-      end.setUTCMonth(end.getUTCMonth() + months);
-    }
-    return `${end.getUTCFullYear()}-${String(end.getUTCMonth() + 1).padStart(2, '0')}-${String(end.getUTCDate()).padStart(2, '0')}`;
-  };
-
   const handleSave = async () => {
     const fn = firstName.trim();
     const ln = lastName.trim();
@@ -275,11 +261,11 @@ const ClientDetail = () => {
     // Smart Dates: default trainingStart to today if missing; auto-compute end.
     const effectiveStart = trainingStart || (serviceSold ? todayIso() : '');
     const effectiveEnd = serviceSold && effectiveStart
-      ? computeEndDate(effectiveStart, serviceSold, contractDuration)
+      ? computeContractEndDate(effectiveStart, serviceSold, contractDuration)
       : (trainingEnd || undefined);
 
-    const priceNum = actualPrice ? Number(actualPrice.replace(',', '.')) : undefined;
-    const upfrontNum = incassatoOggi ? Number(incassatoOggi.replace(',', '.')) : 0;
+    const priceNum = parseCurrencyInput(actualPrice);
+    const upfrontNum = parseCurrencyInput(incassatoOggi) ?? 0;
 
     try {
       await updateClient(client!.id, {

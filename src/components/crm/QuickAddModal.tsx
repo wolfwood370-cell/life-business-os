@@ -6,10 +6,26 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useCrm } from '@/store/useCrm';
-import { LEAD_SOURCES, PIPELINE_STAGES, LeadSource, PipelineStage, leadSourceLabel, pipelineStageLabel } from '@/types/crm';
+import {
+  CONTRACT_DURATION_OPTIONS,
+  ContractDurationMonths,
+  CUSTOM_PRICE_SERVICES,
+  LEAD_SOURCES,
+  LeadSource,
+  PipelineStage,
+  PIPELINE_STAGES,
+  ServiceType,
+  SERVICE_GROUPS,
+  SHORT_DURATION_SERVICES,
+  leadSourceLabel,
+  pipelineStageLabel,
+} from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
 import { toast } from 'sonner';
-import { CalendarDays, ShieldCheck } from 'lucide-react';
+import { CalendarClock, CalendarDays, Euro, ShieldCheck, Sparkles } from 'lucide-react';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { computeContractEndDate, parseCurrencyInput } from '@/lib/contracts';
+import { todayIso } from '@/lib/date';
 
 interface Props {
   open: boolean;
@@ -25,6 +41,10 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
   const [source, setSource] = useState<LeadSource>('Gym Floor');
   const [stage, setStage] = useState<PipelineStage>('Lead Acquired');
   const [gdprConsent, setGdprConsent] = useState(false);
+  const [serviceSold, setServiceSold] = useState<ServiceType | undefined>(undefined);
+  const [actualPrice, setActualPrice] = useState('');
+  const [trainingStart, setTrainingStart] = useState(todayIso());
+  const [contractDuration, setContractDuration] = useState<ContractDurationMonths>(3);
 
   const handleSave = async () => {
     const fn = firstName.trim();
@@ -33,7 +53,16 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       toast.error('Nome o Cognome obbligatorio');
       return;
     }
+    if (stage === 'Closed Won' && !serviceSold) {
+      toast.error('Seleziona il servizio venduto per attivare il contratto');
+      return;
+    }
     const fullName = [fn, ln].filter(Boolean).join(' ');
+    const priceNum = parseCurrencyInput(actualPrice);
+    const effectiveStart = stage === 'Closed Won' && serviceSold ? (trainingStart || todayIso()) : undefined;
+    const effectiveEnd = effectiveStart
+      ? computeContractEndDate(effectiveStart, serviceSold, contractDuration)
+      : undefined;
     try {
       await addClient({
         name: fullName,
@@ -48,6 +77,10 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
         lead_score: baseLeadScore(source),
         churn_risk: 'Basso',
         gdpr_consent: gdprConsent,
+        service_sold: stage === 'Closed Won' ? serviceSold : undefined,
+        actual_price: stage === 'Closed Won' ? priceNum : undefined,
+        training_start_date: effectiveStart,
+        training_end_date: effectiveEnd,
       });
       toast.success(`${fullName} aggiunto alla pipeline`);
       setFirstName('');
@@ -55,6 +88,10 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
       setSource('Gym Floor');
       setStage('Lead Acquired');
       setGdprConsent(false);
+      setServiceSold(undefined);
+      setActualPrice('');
+      setTrainingStart(todayIso());
+      setContractDuration(3);
       onOpenChange(false);
     } catch {
       toast.error('Errore nel salvataggio');
@@ -136,6 +173,91 @@ export const QuickAddModal = ({ open, onOpenChange }: Props) => {
               ))}
             </ToggleGroup>
           </div>
+
+          {stage === 'Closed Won' && (
+            <div className="space-y-3 rounded-xl border border-border bg-secondary/30 p-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3 w-3" /> Servizio Venduto
+                  </Label>
+                  <Select
+                    value={serviceSold}
+                    onValueChange={(v) => {
+                      const next = v as ServiceType;
+                      setServiceSold(next);
+                      if (CUSTOM_PRICE_SERVICES.includes(next)) setActualPrice('');
+                    }}
+                  >
+                    <SelectTrigger className="h-12 rounded-xl bg-card border border-border text-sm font-semibold">
+                      <SelectValue placeholder="Seleziona servizio…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVICE_GROUPS.map(group => (
+                        <SelectGroup key={group.label}>
+                          <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">{group.label}</SelectLabel>
+                          {group.items.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectGroup>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <Euro className="h-3 w-3" /> Valore Contratto (€)
+                  </Label>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={actualPrice}
+                    onChange={(e) => setActualPrice(e.target.value)}
+                    placeholder="es. 1250"
+                    className="h-12 rounded-xl bg-card border border-border text-base font-semibold"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <CalendarClock className="h-3 w-3" /> Inizio Percorso
+                  </Label>
+                  <Input
+                    type="date"
+                    value={trainingStart}
+                    onChange={(e) => setTrainingStart(e.target.value)}
+                    className="h-12 rounded-xl bg-card border border-border text-sm font-semibold"
+                  />
+                </div>
+
+                {serviceSold && SHORT_DURATION_SERVICES.includes(serviceSold) ? (
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </Label>
+                    <div className="h-12 rounded-xl bg-primary/5 border border-primary/20 flex items-center px-3 text-sm font-semibold text-foreground">
+                      28 giorni (auto)
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <Label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CalendarClock className="h-3 w-3" /> Durata Percorso
+                    </Label>
+                    <Select value={String(contractDuration)} onValueChange={(v) => setContractDuration(Number(v) as ContractDurationMonths)}>
+                      <SelectTrigger className="h-12 rounded-xl bg-card border border-border text-sm font-semibold">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CONTRACT_DURATION_OPTIONS.map(o => <SelectItem key={o.value} value={String(o.value)}>{o.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           <label className="flex items-start gap-3 rounded-xl border border-border bg-secondary/40 p-3 cursor-pointer hover:bg-secondary/60 transition-smooth">
             <Checkbox
