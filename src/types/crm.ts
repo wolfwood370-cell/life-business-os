@@ -245,6 +245,56 @@ export interface DynamicTarget {
 export const HISTORY_START_YEAR = 2026;
 export const HISTORY_START_MONTH = 0; // Gennaio
 
+// ============ Phase 28: Unified Ledger ============
+export type BankAccountType = 'personal' | 'business';
+export interface BankAccount {
+  id: string;
+  name: string;
+  type: BankAccountType;
+  sort_order: number;
+  created_at: string;
+}
+
+export type MovementType = 'credit' | 'debit';
+export type MovementClassification = 'personal' | 'business';
+export type MovementSource = 'manual' | 'import' | 'migrated';
+
+export interface FinancialMovement {
+  id: string;
+  account_id: string;
+  date: string;
+  description: string;
+  amount: number;
+  type: MovementType;
+  classification: MovementClassification;
+  category_id?: string;
+  client_id?: string;
+  is_recurring: boolean;
+  is_reviewed: boolean;
+  source: MovementSource;
+  external_ref?: string;
+  notes?: string;
+  created_at: string;
+}
+
+export type CategoryScope = 'personal' | 'business' | 'both';
+export type CategoryKind = 'expense' | 'income' | 'both';
+export interface UnifiedCategory {
+  id: string;
+  name: string;
+  scope: CategoryScope;
+  kind: CategoryKind;
+}
+
+export const movementClassificationLabel: Record<MovementClassification, string> = {
+  personal: 'Personale',
+  business: 'Aziendale',
+};
+export const movementTypeLabel: Record<MovementType, string> = {
+  credit: 'Entrata',
+  debit: 'Uscita',
+};
+
 export const leadSourceLabel: Record<LeadSource, string> = {
   'Gym-provided': 'Contatto Palestra',
   'PT Pack 99€': 'PT Pack 99€',

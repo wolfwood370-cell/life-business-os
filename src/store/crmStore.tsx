@@ -7,6 +7,8 @@ import {
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
   PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory, PersonalIncome,
   BusinessExpense, BusinessExpenseCategory, IncomeCategory, RecurrenceType,
+  BankAccount, FinancialMovement, UnifiedCategory, MovementClassification,
+  MovementType, MovementSource, BankAccountType, CategoryScope, CategoryKind,
 } from '@/types/crm';
 import { CrmContext, CrmContextValue } from './crmContext';
 
@@ -305,6 +307,64 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
+  // ============ Phase 28: Unified Ledger queries ============
+  const { data: bankAccounts = [] } = useQuery({
+    queryKey: ['crm', 'bank_accounts'],
+    queryFn: async (): Promise<BankAccount[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('bank_accounts').select('*').order('sort_order', { ascending: true });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({
+        id: r.id, name: r.name, type: r.type as BankAccountType,
+        sort_order: r.sort_order, created_at: r.created_at,
+      }));
+    },
+  });
+
+  const { data: unifiedCategories = [] } = useQuery({
+    queryKey: ['crm', 'categories'],
+    queryFn: async (): Promise<UnifiedCategory[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('categories').select('*').order('name', { ascending: true });
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({
+        id: r.id, name: r.name, scope: r.scope as CategoryScope, kind: r.kind as CategoryKind,
+      }));
+    },
+  });
+
+  const { data: movements = [] } = useQuery({
+    queryKey: ['crm', 'movements'],
+    queryFn: async (): Promise<FinancialMovement[]> => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('financial_movements').select('*').order('date', { ascending: false }).limit(5000);
+      if (error) throw error;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (data as any[]).map(r => ({
+        id: r.id,
+        account_id: r.account_id,
+        date: r.date,
+        description: r.description ?? '',
+        amount: Number(r.amount),
+        type: r.type as MovementType,
+        classification: r.classification as MovementClassification,
+        category_id: r.category_id ?? undefined,
+        client_id: r.client_id ?? undefined,
+        is_recurring: Boolean(r.is_recurring),
+        is_reviewed: Boolean(r.is_reviewed),
+        source: (r.source ?? 'manual') as MovementSource,
+        external_ref: r.external_ref ?? undefined,
+        notes: r.notes ?? undefined,
+        created_at: r.created_at,
+      }));
+    },
+  });
+
   useEffect(() => {
     const channel = supabase
       .channel('crm-realtime')
@@ -337,6 +397,15 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'income_categories' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'income_categories'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'financial_movements' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bank_accounts' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['crm', 'bank_accounts'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => {
+        queryClient.invalidateQueries({ queryKey: ['crm', 'categories'] });
       })
       .subscribe();
     return () => {
@@ -893,6 +962,104 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidateIncomeCategories,
   });
 
+  // ============ Phase 28: Movements + Categories CRUD ============
+  const invalidateMovements = () => queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
+
+  const addMovementMutation = useMutation({
+    mutationFn: async (m: Omit<FinancialMovement, 'id' | 'created_at'>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('financial_movements').insert({
+        account_id: m.account_id,
+        date: m.date,
+        description: m.description,
+        amount: m.amount,
+        type: m.type,
+        classification: m.classification,
+        category_id: m.category_id ?? null,
+        client_id: m.client_id ?? null,
+        is_recurring: m.is_recurring,
+        is_reviewed: m.is_reviewed,
+        source: m.source ?? 'manual',
+        external_ref: m.external_ref ?? null,
+        notes: m.notes ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const updateMovementMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<FinancialMovement> }) => {
+      const dbPatch: Record<string, unknown> = {};
+      if (patch.account_id !== undefined) dbPatch.account_id = patch.account_id;
+      if (patch.date !== undefined) dbPatch.date = patch.date;
+      if (patch.description !== undefined) dbPatch.description = patch.description;
+      if (patch.amount !== undefined) dbPatch.amount = patch.amount;
+      if (patch.type !== undefined) dbPatch.type = patch.type;
+      if (patch.classification !== undefined) dbPatch.classification = patch.classification;
+      if (patch.category_id !== undefined) dbPatch.category_id = patch.category_id ?? null;
+      if (patch.client_id !== undefined) dbPatch.client_id = patch.client_id ?? null;
+      if (patch.is_recurring !== undefined) dbPatch.is_recurring = patch.is_recurring;
+      if (patch.is_reviewed !== undefined) dbPatch.is_reviewed = patch.is_reviewed;
+      if (patch.notes !== undefined) dbPatch.notes = patch.notes;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('financial_movements').update(dbPatch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const deleteMovementMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('financial_movements').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const importMovementsMutation = useMutation({
+    mutationFn: async (rows: Array<Omit<FinancialMovement, 'id' | 'created_at' | 'source'>>): Promise<number> => {
+      if (rows.length === 0) return 0;
+      const payload = rows.map(m => ({
+        account_id: m.account_id,
+        date: m.date,
+        description: m.description,
+        amount: m.amount,
+        type: m.type,
+        classification: m.classification,
+        category_id: m.category_id ?? null,
+        client_id: m.client_id ?? null,
+        is_recurring: m.is_recurring ?? false,
+        is_reviewed: false,
+        source: 'import' as MovementSource,
+        external_ref: m.external_ref ?? null,
+        notes: m.notes ?? null,
+      }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error, data } = await (supabase as any).from('financial_movements').insert(payload).select('id');
+      if (error) throw error;
+      return (data?.length ?? rows.length) as number;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const addUnifiedCategoryMutation = useMutation({
+    mutationFn: async ({ name, scope, kind }: { name: string; scope: CategoryScope; kind: CategoryKind }): Promise<UnifiedCategory | null> => {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('categories').insert({ name: trimmed, scope, kind }).select().single();
+      if (error) {
+        if ((error as { code?: string }).code === '23505') return null;
+        throw error;
+      }
+      return data ? { id: data.id, name: data.name, scope: data.scope, kind: data.kind } : null;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'categories'] }),
+  });
+
   const current_monthly_revenue = useMemo(
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
@@ -941,40 +1108,43 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   // ---------- Dynamic Target (Adaptive Buffer) ----------
+  // ============ Phase 28: Calcoli sul Ledger Unificato ============
+  // Helper: filtra movements per anno/mese
+  const movementsInMonth = useCallback((y: number, m: number): FinancialMovement[] => {
+    const monthStart = new Date(y, m, 1).getTime();
+    const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999).getTime();
+    return movements.filter(mv => {
+      const t = new Date(mv.date).getTime();
+      return t >= monthStart && t <= monthEnd;
+    });
+  }, [movements]);
+
+  // ---------- Dynamic Target (Adaptive Buffer) — basato sul Ledger ----------
   const dynamicTarget = useMemo<DynamicTarget>(() => {
     const now = new Date();
     const y = now.getFullYear();
     const m = now.getMonth();
 
-    // Fixed Baseline: occorrenze previste questo mese × amount
-    const totalRecurringExpenses = personalExpenses
-      .filter(e => e.recurrence_type !== 'none')
-      .reduce((s, e) => s + e.amount * occurrencesInMonth(e, y, m), 0);
-
-    const totalRecurringBusinessExpenses = businessExpenses
-      .filter(e => e.recurrence_type !== 'none')
-      .reduce((s, e) => s + e.amount * occurrencesInMonth(e, y, m), 0);
-
+    // Baseline: spese ricorrenti del mese corrente (dal ledger)
+    const thisMonth = movementsInMonth(y, m);
+    const totalRecurringExpenses = thisMonth
+      .filter(mv => mv.type === 'debit' && mv.classification === 'personal' && mv.is_recurring)
+      .reduce((s, mv) => s + mv.amount, 0);
+    const totalRecurringBusinessExpenses = thisMonth
+      .filter(mv => mv.type === 'debit' && mv.classification === 'business' && mv.is_recurring)
+      .reduce((s, mv) => s + mv.amount, 0);
     const fixedBaseline = totalRecurringExpenses + totalRecurringBusinessExpenses;
 
-    // Adaptive Buffer: media mensile delle spese 'none' negli ultimi 90 giorni
+    // Adaptive Buffer: spese non-ricorrenti ultimi 90gg / 3
     const ninetyDaysAgo = new Date(now.getTime() - 90 * 86_400_000);
-    const occasionalSum =
-      personalExpenses
-        .filter(e => e.recurrence_type === 'none')
-        .filter(e => {
-          const d = new Date(e.start_date);
-          return d >= ninetyDaysAgo && d <= now;
-        })
-        .reduce((s, e) => s + e.amount, 0) +
-      businessExpenses
-        .filter(e => e.recurrence_type === 'none')
-        .filter(e => {
-          const d = new Date(e.start_date);
-          return d >= ninetyDaysAgo && d <= now;
-        })
-        .reduce((s, e) => s + e.amount, 0);
-    const adaptiveBuffer = occasionalSum / 3; // 90gg → media mensile
+    const occasionalSum = movements
+      .filter(mv => mv.type === 'debit' && !mv.is_recurring)
+      .filter(mv => {
+        const d = new Date(mv.date);
+        return d >= ninetyDaysAgo && d <= now;
+      })
+      .reduce((s, mv) => s + mv.amount, 0);
+    const adaptiveBuffer = occasionalSum / 3;
 
     const activeGoal = lifeGoals.find(g => g.is_active);
     let monthlyGoalSaving = 0;
@@ -1000,21 +1170,19 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       dynamicGrossTarget,
       monthsUntilDeadline,
     };
-  }, [personalExpenses, businessExpenses, lifeGoals, occurrencesInMonth]);
+  }, [movements, movementsInMonth, lifeGoals]);
 
-  // Il target mensile della Dashboard segue il target dinamico se >0, altrimenti fallback manuale
   const effectiveMonthlyTarget = dynamicTarget.dynamicGrossTarget > 0
     ? dynamicTarget.dynamicGrossTarget
     : monthlyTarget;
 
+  // ---------- Financial Summary — basato sul Ledger ----------
   const financialSummary = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
     const monthNum = month + 1;
 
-    // YTD: incassi dal 1° gennaio dell'anno corrente,
-    // ma mai prima dello start storico (Gennaio 2026)
     const ytdStart = new Date(
       Math.max(year, HISTORY_START_YEAR),
       year > HISTORY_START_YEAR ? 0 : HISTORY_START_MONTH,
@@ -1023,13 +1191,13 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
 
     let gross_monthly = 0;
     let gross_ytd = 0;
-    for (const t of transactions) {
-      if (t.status !== 'Saldato') continue;
-      const d = new Date(t.payment_date);
+    for (const mv of movements) {
+      if (mv.type !== 'credit' || mv.classification !== 'business') continue;
+      const d = new Date(mv.date);
       if (d < ytdStart) continue;
       if (d.getFullYear() !== year) continue;
-      gross_ytd += t.amount;
-      if (d.getMonth() === month) gross_monthly += t.amount;
+      gross_ytd += mv.amount;
+      if (d.getMonth() === month) gross_monthly += mv.amount;
     }
 
     const net_monthly = gross_monthly - (gross_monthly * TAX_RATE);
@@ -1043,92 +1211,47 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       monthly_target: effectiveMonthlyTarget,
       current_month_number: monthNum,
     };
-  }, [transactions, effectiveMonthlyTarget]);
+  }, [movements, effectiveMonthlyTarget]);
 
-  // Storico mensile a partire da Gennaio 2026 fino al mese corrente.
-  // Il NETTO sottrae per ogni mese: tasse, spese una tantum nel mese,
-  // spese ricorrenti attive in quel mese.
+  // ---------- Monthly Breakdown — basato sul Ledger ----------
   const monthlyBreakdown = useMemo<MonthlyBreakdown[]>(() => {
     const now = new Date();
     const endYear = now.getFullYear();
     const endMonth = now.getMonth();
 
-    // Aggrega lordo per chiave "YYYY-M"
-    const grossMap = new Map<string, number>();
-    for (const t of transactions) {
-      if (t.status !== 'Saldato') continue;
-      const d = new Date(t.payment_date);
-      const y = d.getFullYear();
-      const m = d.getMonth();
-      if (y < HISTORY_START_YEAR) continue;
-      if (y === HISTORY_START_YEAR && m < HISTORY_START_MONTH) continue;
-      const key = `${y}-${m}`;
-      grossMap.set(key, (grossMap.get(key) ?? 0) + t.amount);
-    }
-
-    const sumMonthExpenses = (
-      list: RecurringRow[],
-      y: number, m: number
-    ): number => {
-      const monthStart = new Date(y, m, 1);
-      const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
-      let total = 0;
-      for (const e of list) {
-        if (e.recurrence_type === 'none') {
-          const start = new Date(e.start_date);
-          if (start >= monthStart && start <= monthEnd) total += e.amount;
-        } else {
-          total += e.amount * occurrencesInMonth(e, y, m);
-        }
-      }
-      return total;
-    };
-
-    const monthIncomes = (y: number, m: number): number => {
-      const monthStart = new Date(y, m, 1);
-      const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
-      let total = 0;
-      for (const i of personalIncomes) {
-        if (i.recurrence_type && i.recurrence_type !== 'none') {
-          total += i.amount * occurrencesInMonth(
-            { recurrence_type: i.recurrence_type, recurrence_value: i.recurrence_value, start_date: i.date, end_date: undefined, amount: i.amount },
-            y, m,
-          );
-        } else {
-          const d = new Date(i.date);
-          if (d >= monthStart && d <= monthEnd) total += i.amount;
-        }
-      }
-      return total;
-    };
-
     const months: MonthlyBreakdown[] = [];
     let y = HISTORY_START_YEAR;
     let m = HISTORY_START_MONTH;
     while (y < endYear || (y === endYear && m <= endMonth)) {
-      const gross = grossMap.get(`${y}-${m}`) ?? 0;
+      const list = movementsInMonth(y, m);
+      // Phase 28 waterfall:
+      // Gross Revenue = Credit + Business
+      // Business Expenses = Debit + Business
+      // Personal Expenses = Debit + Personal
+      // Personal Incomes = Credit + Personal
+      const gross = list.filter(mv => mv.type === 'credit' && mv.classification === 'business').reduce((s, mv) => s + mv.amount, 0);
+      const biz_expenses = list.filter(mv => mv.type === 'debit' && mv.classification === 'business').reduce((s, mv) => s + mv.amount, 0);
+      const pers_expenses = list.filter(mv => mv.type === 'debit' && mv.classification === 'personal').reduce((s, mv) => s + mv.amount, 0);
+      const pers_incomes = list.filter(mv => mv.type === 'credit' && mv.classification === 'personal').reduce((s, mv) => s + mv.amount, 0);
       const taxes = gross * TAX_RATE;
-      const biz_expenses = sumMonthExpenses(businessExpenses, y, m);
       const net_business = gross - taxes - biz_expenses;
-      const expenses = sumMonthExpenses(personalExpenses, y, m);
-      const incomes = monthIncomes(y, m);
-      const free_cash_flow = net_business + incomes - expenses;
+      const free_cash_flow = net_business + pers_incomes - pers_expenses;
       const label = new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'short', year: 'numeric' });
       months.push({
         year: y, month: m, label,
         gross, taxes,
         business_expenses: biz_expenses,
         net_business,
-        personal_expenses: expenses,
-        personal_incomes: incomes,
+        personal_expenses: pers_expenses,
+        personal_incomes: pers_incomes,
         free_cash_flow,
-        net: free_cash_flow, // backward-compat
+        net: free_cash_flow,
       });
       m += 1;
       if (m > 11) { m = 0; y += 1; }
     }
     return months;
-  }, [transactions, personalExpenses, personalIncomes, businessExpenses, occurrencesInMonth]);
+  }, [movements, movementsInMonth]);
 
   const value: CrmContextValue = {
     clients,
@@ -1184,6 +1307,22 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     updateIncomeCategory: async (id, name) => { await updateIncomeCategoryMutation.mutateAsync({ id, name }); },
     deleteIncomeCategory: async (id) => { await deleteIncomeCategoryMutation.mutateAsync(id); },
     setMonthlyTarget,
+
+    // ============ Phase 28: Unified Ledger ============
+    bankAccounts,
+    movements,
+    unifiedCategories,
+    addMovement: async (m) => { await addMovementMutation.mutateAsync(m); },
+    updateMovement: async (id, patch) => { await updateMovementMutation.mutateAsync({ id, patch }); },
+    deleteMovement: async (id) => { await deleteMovementMutation.mutateAsync(id); },
+    setMovementClassification: async (id, classification) => {
+      await updateMovementMutation.mutateAsync({ id, patch: { classification } });
+    },
+    toggleMovementReviewed: async (id, reviewed) => {
+      await updateMovementMutation.mutateAsync({ id, patch: { is_reviewed: reviewed } });
+    },
+    importMovements: async (rows) => await importMovementsMutation.mutateAsync(rows),
+    addUnifiedCategory: async (name, scope, kind) => await addUnifiedCategoryMutation.mutateAsync({ name, scope, kind }),
   };
 
   return <CrmContext.Provider value={value}>{children}</CrmContext.Provider>;

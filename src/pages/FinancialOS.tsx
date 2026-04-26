@@ -16,11 +16,14 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban, Settings2, Check, X, ArrowDownToLine, Briefcase, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Pencil, Target, Wallet, TrendingUp, Sparkles, Ban, Settings2, Check, X, ArrowDownToLine, Briefcase, ChevronDown, BookOpen, Upload } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
 import { toast } from 'sonner';
 import { todayIso, dateInputToIso } from '@/lib/date';
+import { BankAccountCards } from '@/components/finance/BankAccountCards';
+import { LedgerTable } from '@/components/finance/LedgerTable';
+import { MovementImportDialog } from '@/components/finance/MovementImportDialog';
 
 const NEW_CATEGORY_SENTINEL = '__new__';
 
@@ -417,16 +420,78 @@ const FinancialOS = () => {
     catch { toast.error('Errore nell\'interruzione'); }
   };
 
+  // ============ Phase 28: Ledger state ============
+  const now = new Date();
+  const [ledgerYear, setLedgerYear] = useState(now.getFullYear());
+  const [ledgerMonth, setLedgerMonth] = useState(now.getMonth());
+  const [importOpen, setImportOpen] = useState(false);
+
+  const monthOptions = useMemo(() => {
+    const opts: Array<{ value: string; label: string }> = [];
+    let y = 2026, m = 0;
+    const ny = now.getFullYear(), nm = now.getMonth();
+    while (y < ny || (y === ny && m <= nm)) {
+      opts.push({
+        value: `${y}-${m}`,
+        label: new Date(y, m, 1).toLocaleDateString('it-IT', { month: 'long', year: 'numeric' }),
+      });
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
+    return opts.reverse();
+  }, [now]);
+
   return (
     <div className="px-4 md:px-0 pt-6 pb-24 md:pb-8 space-y-6 animate-fade-in">
 
       <header>
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Life · Finance OS</p>
-        <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight text-foreground">Target Dinamico</h1>
+        <h1 className="mt-1 text-2xl md:text-3xl font-bold tracking-tight text-foreground">Centro Finanziario</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Calcola il fatturato lordo che devi generare ogni mese per coprire tasse, spese personali e obiettivi di vita.
+          Gestisci movimenti bancari, categorizza spese e monitora il tuo target dinamico.
         </p>
       </header>
+
+      <Tabs defaultValue="ledger" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="ledger" className="gap-2">
+            <BookOpen className="h-3.5 w-3.5" /> Ledger
+          </TabsTrigger>
+          <TabsTrigger value="classic" className="gap-2">
+            <Target className="h-3.5 w-3.5" /> Vista Classica
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ============ LEDGER TAB ============ */}
+        <TabsContent value="ledger" className="space-y-5 mt-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Select
+              value={`${ledgerYear}-${ledgerMonth}`}
+              onValueChange={(v) => {
+                const [y, m] = v.split('-').map(Number);
+                setLedgerYear(y); setLedgerMonth(m);
+              }}
+            >
+              <SelectTrigger className="w-[200px] h-9 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {monthOptions.map(o => (
+                  <SelectItem key={o.value} value={o.value} className="capitalize">{o.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button size="sm" onClick={() => setImportOpen(true)} className="gap-2 h-9 ml-auto">
+              <Upload className="h-3.5 w-3.5" /> Importa CSV
+            </Button>
+          </div>
+
+          <BankAccountCards year={ledgerYear} month={ledgerMonth} />
+          <LedgerTable year={ledgerYear} month={ledgerMonth} />
+        </TabsContent>
+
+        {/* ============ CLASSIC TAB ============ */}
+        <TabsContent value="classic" className="space-y-6 mt-2">
 
       {/* Visual Target Card */}
       <div className="relative overflow-hidden rounded-3xl gradient-card border border-primary/30 p-6 shadow-card">
@@ -1382,6 +1447,10 @@ const FinancialOS = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
+
+      <MovementImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 };
