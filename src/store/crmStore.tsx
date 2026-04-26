@@ -881,7 +881,7 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       if (m > 11) { m = 0; y += 1; }
     }
     return months;
-  }, [movements, movementsInMonth]);
+  }, [movementsInMonth]);
 
   const value: CrmContextValue = {
     clients,
