@@ -261,8 +261,13 @@ const ClientDetail = () => {
 
     // Smart Dates: default trainingStart to today if missing; auto-compute end.
     const effectiveStart = trainingStart || (serviceSold ? todayIso() : '');
-    const effectiveEnd = serviceSold && effectiveStart
+    // For NO_DURATION services computeContractEndDate returns undefined → we MUST
+    // explicitly send `null` to clear any stale end-date stored in the DB.
+    const computedEnd = serviceSold && effectiveStart
       ? computeContractEndDate(effectiveStart, serviceSold, contractDuration)
+      : undefined;
+    const effectiveEnd: string | null | undefined = serviceSold
+      ? (computedEnd ?? null)
       : (trainingEnd || undefined);
 
     const priceNum = parseCurrencyInput(actualPrice);
