@@ -1,9 +1,30 @@
 export type LeadSource =
   | 'Gym-provided'
-  | 'PT Pack 99€'
   | 'Gym Floor'
   | 'Referral'
-  | 'Social Media';
+  | 'Social Media'
+  | 'Other';
+
+export type ServiceType =
+  | 'Percorso Base'
+  | 'Percorso Light'
+  | 'Percorso Plus'
+  | 'Percorso Premium'
+  | 'Programmazione Avanzata'
+  | 'NC Nutrition'
+  | 'PT Pack 99€'
+  | 'Altro';
+
+export const SERVICE_TYPES: ServiceType[] = [
+  'Percorso Base',
+  'Percorso Light',
+  'Percorso Plus',
+  'Percorso Premium',
+  'Programmazione Avanzata',
+  'NC Nutrition',
+  'PT Pack 99€',
+  'Altro',
+];
 
 export type PipelineStage =
   | 'Lead Acquired'
@@ -50,6 +71,8 @@ export interface Client {
   gym_signup_date?: string;   // ISO date
   gym_expiry_date?: string;   // ISO date
   gdpr_consent?: boolean;
+  service_sold?: ServiceType;
+  actual_price?: number;
 }
 
 export type Gender = 'M' | 'F' | 'Altro';
@@ -67,10 +90,10 @@ export interface Financials {
 
 export const LEAD_SOURCES: LeadSource[] = [
   'Gym-provided',
-  'PT Pack 99€',
   'Gym Floor',
   'Referral',
   'Social Media',
+  'Other',
 ];
 
 export const PIPELINE_STAGES: PipelineStage[] = [
