@@ -201,7 +201,7 @@ const SalesCoach = () => {
         <Button
           onClick={handleGenerate}
           disabled={generating || lostClients.length === 0}
-          className="w-full h-12 rounded-xl text-sm font-semibold gradient-primary text-primary-foreground shadow-glow"
+          className="shimmer-button w-full h-12 rounded-xl text-sm font-semibold border-0 hover:text-white disabled:opacity-60"
         >
           {generating ? (
             <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Analisi in corso…</>
