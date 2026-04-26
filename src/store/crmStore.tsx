@@ -962,6 +962,104 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidateIncomeCategories,
   });
 
+  // ============ Phase 28: Movements + Categories CRUD ============
+  const invalidateMovements = () => queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
+
+  const addMovementMutation = useMutation({
+    mutationFn: async (m: Omit<FinancialMovement, 'id' | 'created_at'>) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('financial_movements').insert({
+        account_id: m.account_id,
+        date: m.date,
+        description: m.description,
+        amount: m.amount,
+        type: m.type,
+        classification: m.classification,
+        category_id: m.category_id ?? null,
+        client_id: m.client_id ?? null,
+        is_recurring: m.is_recurring,
+        is_reviewed: m.is_reviewed,
+        source: m.source ?? 'manual',
+        external_ref: m.external_ref ?? null,
+        notes: m.notes ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const updateMovementMutation = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Partial<FinancialMovement> }) => {
+      const dbPatch: Record<string, unknown> = {};
+      if (patch.account_id !== undefined) dbPatch.account_id = patch.account_id;
+      if (patch.date !== undefined) dbPatch.date = patch.date;
+      if (patch.description !== undefined) dbPatch.description = patch.description;
+      if (patch.amount !== undefined) dbPatch.amount = patch.amount;
+      if (patch.type !== undefined) dbPatch.type = patch.type;
+      if (patch.classification !== undefined) dbPatch.classification = patch.classification;
+      if (patch.category_id !== undefined) dbPatch.category_id = patch.category_id ?? null;
+      if (patch.client_id !== undefined) dbPatch.client_id = patch.client_id ?? null;
+      if (patch.is_recurring !== undefined) dbPatch.is_recurring = patch.is_recurring;
+      if (patch.is_reviewed !== undefined) dbPatch.is_reviewed = patch.is_reviewed;
+      if (patch.notes !== undefined) dbPatch.notes = patch.notes;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('financial_movements').update(dbPatch).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const deleteMovementMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from('financial_movements').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const importMovementsMutation = useMutation({
+    mutationFn: async (rows: Array<Omit<FinancialMovement, 'id' | 'created_at' | 'source'>>): Promise<number> => {
+      if (rows.length === 0) return 0;
+      const payload = rows.map(m => ({
+        account_id: m.account_id,
+        date: m.date,
+        description: m.description,
+        amount: m.amount,
+        type: m.type,
+        classification: m.classification,
+        category_id: m.category_id ?? null,
+        client_id: m.client_id ?? null,
+        is_recurring: m.is_recurring ?? false,
+        is_reviewed: false,
+        source: 'import' as MovementSource,
+        external_ref: m.external_ref ?? null,
+        notes: m.notes ?? null,
+      }));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error, data } = await (supabase as any).from('financial_movements').insert(payload).select('id');
+      if (error) throw error;
+      return (data?.length ?? rows.length) as number;
+    },
+    onSuccess: invalidateMovements,
+  });
+
+  const addUnifiedCategoryMutation = useMutation({
+    mutationFn: async ({ name, scope, kind }: { name: string; scope: CategoryScope; kind: CategoryKind }): Promise<UnifiedCategory | null> => {
+      const trimmed = name.trim();
+      if (!trimmed) return null;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any)
+        .from('categories').insert({ name: trimmed, scope, kind }).select().single();
+      if (error) {
+        if ((error as { code?: string }).code === '23505') return null;
+        throw error;
+      }
+      return data ? { id: data.id, name: data.name, scope: data.scope, kind: data.kind } : null;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'categories'] }),
+  });
+
   const current_monthly_revenue = useMemo(
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
