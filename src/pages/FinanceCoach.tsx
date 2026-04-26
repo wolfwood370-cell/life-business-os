@@ -224,7 +224,7 @@ export default function FinanceCoach() {
           <BrainCircuit className="h-6 w-6 text-primary-foreground" strokeWidth={2.5} />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">CFO Globale</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Orizzonte Strategico</h1>
           <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
             Intelligenza Finanziaria Adattiva — ultimi {WINDOW_DAYS} giorni
           </p>

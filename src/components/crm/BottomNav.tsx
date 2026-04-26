@@ -26,7 +26,7 @@ const allItems = [
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/clients', label: 'Clienti', icon: Users },
   { to: '/finance', label: 'Finance Hub', icon: Target },
-  { to: '/finance-coach', label: 'CFO Globale', icon: BrainCircuit },
+  { to: '/finance-coach', label: 'Orizzonte', icon: BrainCircuit },
   { to: '/strategy', label: 'Strategia di Vendita', icon: Brain },
   { to: '/coach', label: 'Sales Coach', icon: BarChart3 },
 ];
