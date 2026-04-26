@@ -36,6 +36,10 @@ type ClientRow = {
   gym_signup_date: string | null;
   gym_expiry_date: string | null;
   gdpr_consent: boolean | null;
+  service_sold: string | null;
+  actual_price: number | string | null;
+  training_start_date: string | null;
+  training_end_date: string | null;
   created_at: string;
   stage_updated_at: string;
 };
@@ -75,6 +79,10 @@ const mapClient = (row: ClientRow, metrics: RoiRow[]): Client => ({
   gym_signup_date: row.gym_signup_date ?? undefined,
   gym_expiry_date: row.gym_expiry_date ?? undefined,
   gdpr_consent: row.gdpr_consent ?? false,
+  service_sold: (row.service_sold as Client['service_sold']) ?? undefined,
+  actual_price: row.actual_price !== null && row.actual_price !== undefined ? Number(row.actual_price) : undefined,
+  training_start_date: row.training_start_date ?? undefined,
+  training_end_date: row.training_end_date ?? undefined,
   roi_metrics: metrics
     .filter(m => m.client_id === row.id)
     .map(m => ({
