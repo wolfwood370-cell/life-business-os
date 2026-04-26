@@ -45,6 +45,8 @@ export interface CrmContextValue {
   toggleMovementReviewed: (id: string, reviewed: boolean) => Promise<void>;
   importMovements: (movements: Array<Omit<FinancialMovement, 'id' | 'created_at' | 'source'>>) => Promise<number>;
   addUnifiedCategory: (name: string, scope: 'personal' | 'business' | 'both', kind: 'expense' | 'income' | 'both') => Promise<UnifiedCategory | null>;
+  updateUnifiedCategory: (id: string, patch: Partial<UnifiedCategory>) => Promise<void>;
+  deleteUnifiedCategory: (id: string) => Promise<void>;
 }
 
 export const CrmContext = createContext<CrmContextValue | null>(null);
