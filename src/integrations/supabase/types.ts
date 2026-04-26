@@ -56,63 +56,6 @@ export type Database = {
         }
         Relationships: []
       }
-      business_expense_categories: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
-      business_expenses: {
-        Row: {
-          amount: number
-          category: string
-          created_at: string
-          end_date: string | null
-          id: string
-          is_recurring: boolean
-          name: string
-          recurrence_type: string
-          recurrence_value: number | null
-          start_date: string
-        }
-        Insert: {
-          amount?: number
-          category?: string
-          created_at?: string
-          end_date?: string | null
-          id?: string
-          is_recurring?: boolean
-          name: string
-          recurrence_type?: string
-          recurrence_value?: number | null
-          start_date?: string
-        }
-        Update: {
-          amount?: number
-          category?: string
-          created_at?: string
-          end_date?: string | null
-          id?: string
-          is_recurring?: boolean
-          name?: string
-          recurrence_type?: string
-          recurrence_value?: number | null
-          start_date?: string
-        }
-        Relationships: []
-      }
       categories: {
         Row: {
           created_at: string
@@ -221,24 +164,6 @@ export type Database = {
         }
         Relationships: []
       }
-      expense_categories: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       financial_movements: {
         Row: {
           account_id: string
@@ -318,24 +243,6 @@ export type Database = {
           },
         ]
       }
-      income_categories: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
-        }
-        Relationships: []
-      }
       life_goals: {
         Row: {
           created_at: string
@@ -363,78 +270,6 @@ export type Database = {
           is_active?: boolean
           title?: string
           total_target_amount?: number
-        }
-        Relationships: []
-      }
-      personal_expenses: {
-        Row: {
-          amount: number
-          category: string
-          created_at: string
-          end_date: string | null
-          id: string
-          is_recurring: boolean
-          name: string
-          recurrence_type: string
-          recurrence_value: number | null
-          start_date: string
-        }
-        Insert: {
-          amount?: number
-          category?: string
-          created_at?: string
-          end_date?: string | null
-          id?: string
-          is_recurring?: boolean
-          name: string
-          recurrence_type?: string
-          recurrence_value?: number | null
-          start_date?: string
-        }
-        Update: {
-          amount?: number
-          category?: string
-          created_at?: string
-          end_date?: string | null
-          id?: string
-          is_recurring?: boolean
-          name?: string
-          recurrence_type?: string
-          recurrence_value?: number | null
-          start_date?: string
-        }
-        Relationships: []
-      }
-      personal_incomes: {
-        Row: {
-          amount: number
-          category: string
-          created_at: string
-          date: string
-          id: string
-          name: string
-          recurrence_type: string
-          recurrence_value: number | null
-        }
-        Insert: {
-          amount?: number
-          category?: string
-          created_at?: string
-          date?: string
-          id?: string
-          name: string
-          recurrence_type?: string
-          recurrence_value?: number | null
-        }
-        Update: {
-          amount?: number
-          category?: string
-          created_at?: string
-          date?: string
-          id?: string
-          name?: string
-          recurrence_type?: string
-          recurrence_value?: number | null
         }
         Relationships: []
       }

@@ -5,8 +5,7 @@ import {
   Client, TAX_RATE, RoiMetric, LeadSource, PipelineStage,
   ChurnRisk, Gender, Transaction, PaymentType, PaymentMethod,
   Service, MonthlyBreakdown, HISTORY_START_YEAR, HISTORY_START_MONTH,
-  PersonalExpense, LifeGoal, DynamicTarget, ExpenseCategory, PersonalIncome,
-  BusinessExpense, BusinessExpenseCategory, IncomeCategory, RecurrenceType,
+  LifeGoal, DynamicTarget,
   BankAccount, FinancialMovement, UnifiedCategory, MovementClassification,
   MovementType, MovementSource, BankAccountType, CategoryScope, CategoryKind,
 } from '@/types/crm';
@@ -169,30 +168,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
-  const { data: personalExpenses = [] } = useQuery({
-    queryKey: ['crm', 'personal_expenses'],
-    queryFn: async (): Promise<PersonalExpense[]> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('personal_expenses')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data as any[]).map((r) => ({
-        id: r.id,
-        name: r.name,
-        amount: Number(r.amount),
-        is_recurring: Boolean(r.is_recurring),
-        recurrence_type: ((r.recurrence_type as RecurrenceType) ?? (r.is_recurring ? 'fixed_day' : 'none')),
-        recurrence_value: r.recurrence_value ?? undefined,
-        category: r.category,
-        created_at: r.created_at,
-        start_date: r.start_date ?? r.created_at,
-        end_date: r.end_date ?? undefined,
-      }));
-    },
-  });
 
   const { data: lifeGoals = [] } = useQuery({
     queryKey: ['crm', 'life_goals'],
@@ -216,96 +191,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
-  const { data: expenseCategories = [] } = useQuery({
-    queryKey: ['crm', 'expense_categories'],
-    queryFn: async (): Promise<ExpenseCategory[]> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('expense_categories')
-        .select('*')
-        .order('name', { ascending: true });
-      if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data as any[]).map(r => ({ id: r.id, name: r.name, created_at: r.created_at }));
-    },
-  });
-
-  const { data: businessExpenseCategories = [] } = useQuery({
-    queryKey: ['crm', 'business_expense_categories'],
-    queryFn: async (): Promise<BusinessExpenseCategory[]> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('business_expense_categories')
-        .select('*')
-        .order('name', { ascending: true });
-      if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data as any[]).map(r => ({ id: r.id, name: r.name, created_at: r.created_at }));
-    },
-  });
-
-  const { data: incomeCategories = [] } = useQuery({
-    queryKey: ['crm', 'income_categories'],
-    queryFn: async (): Promise<IncomeCategory[]> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('income_categories')
-        .select('*')
-        .order('name', { ascending: true });
-      if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data as any[]).map(r => ({ id: r.id, name: r.name, created_at: r.created_at }));
-    },
-  });
-
-  const { data: personalIncomes = [] } = useQuery({
-    queryKey: ['crm', 'personal_incomes'],
-    queryFn: async (): Promise<PersonalIncome[]> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('personal_incomes')
-        .select('*')
-        .order('date', { ascending: false });
-      if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data as any[]).map(r => ({
-        id: r.id,
-        name: r.name,
-        amount: Number(r.amount),
-        date: r.date,
-        category: r.category ?? 'Altro',
-        created_at: r.created_at,
-        recurrence_type: ((r.recurrence_type as RecurrenceType) ?? 'none'),
-        recurrence_value: r.recurrence_value ?? undefined,
-        end_date: r.end_date ?? undefined,
-      }));
-    },
-  });
-
-  const { data: businessExpenses = [] } = useQuery({
-    queryKey: ['crm', 'business_expenses'],
-    queryFn: async (): Promise<BusinessExpense[]> => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('business_expenses')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data as any[]).map((r) => ({
-        id: r.id,
-        name: r.name,
-        amount: Number(r.amount),
-        is_recurring: Boolean(r.is_recurring),
-        recurrence_type: ((r.recurrence_type as RecurrenceType) ?? (r.is_recurring ? 'fixed_day' : 'none')),
-        recurrence_value: r.recurrence_value ?? undefined,
-        category: r.category,
-        created_at: r.created_at,
-        start_date: r.start_date ?? r.created_at,
-        end_date: r.end_date ?? undefined,
-      }));
-    },
-  });
 
   // ============ Phase 28: Unified Ledger queries ============
   const { data: bankAccounts = [] } = useQuery({
@@ -377,26 +262,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] });
       })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'personal_expenses' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'personal_expenses'] });
-      })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'life_goals' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'life_goals'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_categories' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'expense_categories'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'personal_incomes' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'personal_incomes'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_expenses' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'business_expenses'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'business_expense_categories' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'business_expense_categories'] });
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'income_categories' }, () => {
-        queryClient.invalidateQueries({ queryKey: ['crm', 'income_categories'] });
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'financial_movements' }, () => {
         queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
@@ -617,89 +484,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
   });
 
-  // ---------- Personal Expenses CRUD ----------
-  const invalidateExpenses = () => queryClient.invalidateQueries({ queryKey: ['crm', 'personal_expenses'] });
-  const addExpenseMutation = useMutation({
-    mutationFn: async (e: Omit<PersonalExpense, 'id' | 'created_at'>) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('personal_expenses').insert({
-        name: e.name,
-        amount: e.amount,
-        is_recurring: e.recurrence_type !== 'none',
-        recurrence_type: e.recurrence_type,
-        recurrence_value: e.recurrence_value ?? null,
-        category: e.category,
-        start_date: e.start_date,
-        end_date: e.end_date ?? null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: invalidateExpenses,
-  });
-  const updateExpenseMutation = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<PersonalExpense> }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-
-      const { data: existing, error: fetchErr } = await sb
-        .from('personal_expenses').select('*').eq('id', id).single();
-      if (fetchErr) throw fetchErr;
-
-      const wasRecurring = (existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none')) !== 'none';
-      const newRecurrenceType = patch.recurrence_type ?? existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none');
-      const newRecurrenceValue = patch.recurrence_value !== undefined ? patch.recurrence_value : existing?.recurrence_value;
-      const amountChanged = patch.amount !== undefined && Number(patch.amount) !== Number(existing?.amount);
-      const recurrenceChanged =
-        (patch.recurrence_type !== undefined && patch.recurrence_type !== existing?.recurrence_type) ||
-        (patch.recurrence_value !== undefined && patch.recurrence_value !== existing?.recurrence_value);
-
-      // SCD Type 2: snapshot storico se cambia importo o pattern di una ricorrente
-      if (wasRecurring && (amountChanged || recurrenceChanged)) {
-        const todayIso = new Date().toISOString();
-        const { error: closeErr } = await sb
-          .from('personal_expenses').update({ end_date: todayIso }).eq('id', id);
-        if (closeErr) throw closeErr;
-        const { error: insertErr } = await sb.from('personal_expenses').insert({
-          name: patch.name ?? existing.name,
-          amount: patch.amount ?? existing.amount,
-          is_recurring: newRecurrenceType !== 'none',
-          recurrence_type: newRecurrenceType,
-          recurrence_value: newRecurrenceValue ?? null,
-          category: patch.category ?? existing.category,
-          start_date: todayIso,
-          end_date: null,
-        });
-        if (insertErr) throw insertErr;
-        return;
-      }
-
-      const dbPatch: Record<string, unknown> = { ...patch };
-      if (patch.recurrence_type !== undefined) dbPatch.is_recurring = patch.recurrence_type !== 'none';
-      const { error } = await sb.from('personal_expenses').update(dbPatch).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateExpenses,
-  });
-  const endExpenseMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
-        .from('personal_expenses')
-        .update({ end_date: new Date().toISOString() })
-        .eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateExpenses,
-  });
-  const deleteExpenseMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('personal_expenses').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateExpenses,
-  });
-
   // ---------- Life Goals CRUD ----------
   const invalidateGoals = () => queryClient.invalidateQueries({ queryKey: ['crm', 'life_goals'] });
   const addGoalMutation = useMutation({
@@ -743,224 +527,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     onSuccess: invalidateGoals,
   });
 
-  // ---------- Expense Categories CRUD ----------
-  const invalidateCategories = () => queryClient.invalidateQueries({ queryKey: ['crm', 'expense_categories'] });
-  const addCategoryMutation = useMutation({
-    mutationFn: async (name: string): Promise<ExpenseCategory | null> => {
-      const trimmed = name.trim();
-      if (!trimmed) return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('expense_categories')
-        .insert({ name: trimmed })
-        .select()
-        .single();
-      if (error) {
-        // Unique violation → ignora silenziosamente
-        if ((error as { code?: string }).code === '23505') return null;
-        throw error;
-      }
-      return data ? { id: data.id, name: data.name, created_at: data.created_at } : null;
-    },
-    onSuccess: invalidateCategories,
-  });
-  const updateCategoryMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('expense_categories').update({ name: name.trim() }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateCategories,
-  });
-  const deleteCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('expense_categories').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateCategories,
-  });
-
-  // ---------- Personal Incomes CRUD ----------
-  const invalidateIncomes = () => queryClient.invalidateQueries({ queryKey: ['crm', 'personal_incomes'] });
-  const addIncomeMutation = useMutation({
-    mutationFn: async (i: Omit<PersonalIncome, 'id' | 'created_at'>) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('personal_incomes').insert({
-        name: i.name,
-        amount: i.amount,
-        date: i.date,
-        category: i.category,
-        recurrence_type: i.recurrence_type ?? 'none',
-        recurrence_value: i.recurrence_value ?? null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: invalidateIncomes,
-  });
-  const updateIncomeMutation = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<PersonalIncome> }) => {
-      const dbPatch: Record<string, unknown> = { ...patch };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('personal_incomes').update(dbPatch).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateIncomes,
-  });
-  const deleteIncomeMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('personal_incomes').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateIncomes,
-  });
-
-  // ---------- Business Expenses CRUD (Copy-on-Write SCD Type 2) ----------
-  const invalidateBizExpenses = () => queryClient.invalidateQueries({ queryKey: ['crm', 'business_expenses'] });
-  const addBusinessExpenseMutation = useMutation({
-    mutationFn: async (e: Omit<BusinessExpense, 'id' | 'created_at'>) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('business_expenses').insert({
-        name: e.name,
-        amount: e.amount,
-        is_recurring: e.recurrence_type !== 'none',
-        recurrence_type: e.recurrence_type,
-        recurrence_value: e.recurrence_value ?? null,
-        category: e.category,
-        start_date: e.start_date,
-        end_date: e.end_date ?? null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: invalidateBizExpenses,
-  });
-  const updateBusinessExpenseMutation = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<BusinessExpense> }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-      const { data: existing, error: fetchErr } = await sb
-        .from('business_expenses').select('*').eq('id', id).single();
-      if (fetchErr) throw fetchErr;
-      const wasRecurring = (existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none')) !== 'none';
-      const newRecurrenceType = patch.recurrence_type ?? existing?.recurrence_type ?? (existing?.is_recurring ? 'fixed_day' : 'none');
-      const newRecurrenceValue = patch.recurrence_value !== undefined ? patch.recurrence_value : existing?.recurrence_value;
-      const amountChanged = patch.amount !== undefined && Number(patch.amount) !== Number(existing?.amount);
-      const recurrenceChanged =
-        (patch.recurrence_type !== undefined && patch.recurrence_type !== existing?.recurrence_type) ||
-        (patch.recurrence_value !== undefined && patch.recurrence_value !== existing?.recurrence_value);
-      if (wasRecurring && (amountChanged || recurrenceChanged)) {
-        const todayIso = new Date().toISOString();
-        const { error: closeErr } = await sb
-          .from('business_expenses').update({ end_date: todayIso }).eq('id', id);
-        if (closeErr) throw closeErr;
-        const { error: insertErr } = await sb.from('business_expenses').insert({
-          name: patch.name ?? existing.name,
-          amount: patch.amount ?? existing.amount,
-          is_recurring: newRecurrenceType !== 'none',
-          recurrence_type: newRecurrenceType,
-          recurrence_value: newRecurrenceValue ?? null,
-          category: patch.category ?? existing.category,
-          start_date: todayIso,
-          end_date: null,
-        });
-        if (insertErr) throw insertErr;
-        return;
-      }
-      const dbPatch: Record<string, unknown> = { ...patch };
-      if (patch.recurrence_type !== undefined) dbPatch.is_recurring = patch.recurrence_type !== 'none';
-      const { error } = await sb.from('business_expenses').update(dbPatch).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateBizExpenses,
-  });
-  const endBusinessExpenseMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
-        .from('business_expenses').update({ end_date: new Date().toISOString() }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateBizExpenses,
-  });
-  const deleteBusinessExpenseMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('business_expenses').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateBizExpenses,
-  });
-
-  // ---------- Business Expense Categories CRUD ----------
-  const invalidateBizCategories = () => queryClient.invalidateQueries({ queryKey: ['crm', 'business_expense_categories'] });
-  const addBizCategoryMutation = useMutation({
-    mutationFn: async (name: string): Promise<BusinessExpenseCategory | null> => {
-      const trimmed = name.trim();
-      if (!trimmed) return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('business_expense_categories').insert({ name: trimmed }).select().single();
-      if (error) {
-        if ((error as { code?: string }).code === '23505') return null;
-        throw error;
-      }
-      return data ? { id: data.id, name: data.name, created_at: data.created_at } : null;
-    },
-    onSuccess: invalidateBizCategories,
-  });
-  const updateBizCategoryMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
-        .from('business_expense_categories').update({ name: name.trim() }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateBizCategories,
-  });
-  const deleteBizCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('business_expense_categories').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateBizCategories,
-  });
-
-  // ---------- Income Categories CRUD ----------
-  const invalidateIncomeCategories = () => queryClient.invalidateQueries({ queryKey: ['crm', 'income_categories'] });
-  const addIncomeCategoryMutation = useMutation({
-    mutationFn: async (name: string): Promise<IncomeCategory | null> => {
-      const trimmed = name.trim();
-      if (!trimmed) return null;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data, error } = await (supabase as any)
-        .from('income_categories').insert({ name: trimmed }).select().single();
-      if (error) {
-        if ((error as { code?: string }).code === '23505') return null;
-        throw error;
-      }
-      return data ? { id: data.id, name: data.name, created_at: data.created_at } : null;
-    },
-    onSuccess: invalidateIncomeCategories,
-  });
-  const updateIncomeCategoryMutation = useMutation({
-    mutationFn: async ({ id, name }: { id: string; name: string }) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any)
-        .from('income_categories').update({ name: name.trim() }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateIncomeCategories,
-  });
-  const deleteIncomeCategoryMutation = useMutation({
-    mutationFn: async (id: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from('income_categories').delete().eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: invalidateIncomeCategories,
-  });
 
   // ============ Phase 28: Movements + Categories CRUD ============
   const invalidateMovements = () => queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
@@ -1064,48 +630,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     () => clients.filter(c => c.pipeline_stage === 'Closed Won').reduce((s, c) => s + (c.monthly_value || 0), 0),
     [clients]
   );
-
-  // ---------- Recurrence engine ----------
-  // Conta quante volte un item ricorrente cade nel mese (y,m), rispettando start/end.
-  // Per 'fixed_day' = 0 o 1 occorrenza nel mese (clamp al last day del mese).
-  // Per 'interval_days' = numero di multipli di N giorni a partire da start_date che cadono nel mese.
-  type RecurringRow = {
-    recurrence_type: RecurrenceType;
-    recurrence_value?: number;
-    start_date: string;
-    end_date?: string;
-    amount: number;
-  };
-  const occurrencesInMonth = useCallback((e: RecurringRow, y: number, m: number): number => {
-    const monthStart = new Date(y, m, 1);
-    const monthEnd = new Date(y, m + 1, 0, 23, 59, 59, 999);
-    const lastDay = monthEnd.getDate();
-    const start = new Date(e.start_date);
-    const end = e.end_date ? new Date(e.end_date) : null;
-    const winStart = start > monthStart ? start : monthStart;
-    const winEnd = end && end < monthEnd ? end : monthEnd;
-    if (winStart > winEnd) return 0;
-
-    if (e.recurrence_type === 'fixed_day') {
-      const day = Math.min(Math.max(1, e.recurrence_value ?? start.getDate()), lastDay);
-      const occ = new Date(y, m, day, 12, 0, 0);
-      return occ >= winStart && occ <= winEnd ? 1 : 0;
-    }
-    if (e.recurrence_type === 'interval_days') {
-      const interval = Math.max(1, e.recurrence_value ?? 30);
-      const msPerDay = 86_400_000;
-      const diffDays = Math.floor((winStart.getTime() - start.getTime()) / msPerDay);
-      const firstK = Math.max(0, Math.ceil(diffDays / interval));
-      let count = 0;
-      for (let k = firstK; k < 1000; k++) {
-        const occ = new Date(start.getTime() + k * interval * msPerDay);
-        if (occ > winEnd) break;
-        if (occ >= winStart) count++;
-      }
-      return count;
-    }
-    return 0;
-  }, []);
 
   // ---------- Dynamic Target (Adaptive Buffer) ----------
   // ============ Phase 28: Calcoli sul Ledger Unificato ============
@@ -1269,7 +793,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     monthlyBreakdown,
     services,
     transactions,
-    personalExpenses,
     lifeGoals,
     dynamicTarget,
     addClient: async (c) => { await addMutation.mutateAsync(c); },
@@ -1283,34 +806,9 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
     markTransactionPaid: async (transactionId) => { await markPaidMutation.mutateAsync(transactionId); },
     updateTransaction: async (transactionId, updates) => { await updateTransactionMutation.mutateAsync({ id: transactionId, updates }); },
     deleteTransaction: async (transactionId) => { await deleteTransactionMutation.mutateAsync(transactionId); },
-    addPersonalExpense: async (e) => { await addExpenseMutation.mutateAsync(e); },
-    updatePersonalExpense: async (id, patch) => { await updateExpenseMutation.mutateAsync({ id, patch }); },
-    deletePersonalExpense: async (id) => { await deleteExpenseMutation.mutateAsync(id); },
-    endPersonalExpense: async (id) => { await endExpenseMutation.mutateAsync(id); },
     addLifeGoal: async (g) => { await addGoalMutation.mutateAsync(g); },
     updateLifeGoal: async (id, patch) => { await updateGoalMutation.mutateAsync({ id, patch }); },
     deleteLifeGoal: async (id) => { await deleteGoalMutation.mutateAsync(id); },
-    expenseCategories,
-    addExpenseCategory: async (name) => await addCategoryMutation.mutateAsync(name),
-    updateExpenseCategory: async (id, name) => { await updateCategoryMutation.mutateAsync({ id, name }); },
-    deleteExpenseCategory: async (id) => { await deleteCategoryMutation.mutateAsync(id); },
-    personalIncomes,
-    addPersonalIncome: async (i) => { await addIncomeMutation.mutateAsync(i); },
-    updatePersonalIncome: async (id, patch) => { await updateIncomeMutation.mutateAsync({ id, patch }); },
-    deletePersonalIncome: async (id) => { await deleteIncomeMutation.mutateAsync(id); },
-    businessExpenses,
-    addBusinessExpense: async (e) => { await addBusinessExpenseMutation.mutateAsync(e); },
-    updateBusinessExpense: async (id, patch) => { await updateBusinessExpenseMutation.mutateAsync({ id, patch }); },
-    deleteBusinessExpense: async (id) => { await deleteBusinessExpenseMutation.mutateAsync(id); },
-    endBusinessExpense: async (id) => { await endBusinessExpenseMutation.mutateAsync(id); },
-    businessExpenseCategories,
-    addBusinessExpenseCategory: async (name) => await addBizCategoryMutation.mutateAsync(name),
-    updateBusinessExpenseCategory: async (id, name) => { await updateBizCategoryMutation.mutateAsync({ id, name }); },
-    deleteBusinessExpenseCategory: async (id) => { await deleteBizCategoryMutation.mutateAsync(id); },
-    incomeCategories,
-    addIncomeCategory: async (name) => await addIncomeCategoryMutation.mutateAsync(name),
-    updateIncomeCategory: async (id, name) => { await updateIncomeCategoryMutation.mutateAsync({ id, name }); },
-    deleteIncomeCategory: async (id) => { await deleteIncomeCategoryMutation.mutateAsync(id); },
     setMonthlyTarget,
 
     // ============ Phase 28: Unified Ledger ============
