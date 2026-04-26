@@ -707,7 +707,13 @@ const ClientDetail = () => {
                   <Select
                     key={`svc-${formInitialized ? 'r' : 'i'}`}
                     value={serviceSold}
-                    onValueChange={(v) => setServiceSold(v as ServiceType)}
+                    onValueChange={(v) => {
+                      const next = v as ServiceType;
+                      setServiceSold(next);
+                      if (CUSTOM_PRICE_SERVICES.includes(next)) {
+                        setActualPrice('');
+                      }
+                    }}
                   >
                     <SelectTrigger className="h-12 rounded-xl bg-card border border-border text-sm font-semibold">
                       <SelectValue placeholder="Seleziona servizio…" />
