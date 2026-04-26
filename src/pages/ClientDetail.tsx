@@ -409,6 +409,59 @@ const ClientDetail = () => {
           </div>
         </div>
 
+        {/* Contratto Attivo — Snapshot di servizio, prezzo e progresso pagamenti */}
+        {(client.service_sold || contractTotal > 0 || client.training_start_date || client.training_end_date) && (
+          <section className="rounded-3xl border-2 border-primary/30 bg-gradient-to-br from-primary/5 via-card to-card p-5 shadow-card space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-primary">Contratto Attivo</p>
+                <h3 className="mt-1 text-lg font-bold text-foreground truncate">
+                  {client.service_sold ?? 'Servizio non assegnato'}
+                </h3>
+                {(client.training_start_date || client.training_end_date) && (
+                  <p className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <CalendarClock className="h-3.5 w-3.5" />
+                    <span>
+                      {client.training_start_date
+                        ? new Date(client.training_start_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '—'}
+                      {' → '}
+                      {client.training_end_date
+                        ? new Date(client.training_end_date).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : '—'}
+                    </span>
+                  </p>
+                )}
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Valore</p>
+                <p className="text-xl font-bold text-foreground tabular-nums">{formatEuro(contractTotal)}</p>
+              </div>
+            </div>
+
+            {contractTotal > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-baseline justify-between gap-2 text-[11px]">
+                  <span className="text-muted-foreground">
+                    Incassato <span className="font-bold text-primary tabular-nums">{formatEuro(totalPaid)}</span>
+                  </span>
+                  <span className="text-muted-foreground">
+                    Residuo <span className="font-bold text-foreground tabular-nums">{formatEuro(contractRemaining)}</span>
+                  </span>
+                </div>
+                <Progress value={contractProgressPct} className="h-2" />
+                <p className="text-[10px] text-right text-muted-foreground">{contractProgressPct}% saldato</p>
+              </div>
+            )}
+
+            {!client.service_sold && (
+              <p className="text-[11px] text-muted-foreground rounded-lg bg-secondary/50 p-2">
+                Nessun servizio assegnato. Apri la tab <span className="font-semibold text-foreground">Commerciale</span> per impostare servizio e prezzo del contratto.
+              </p>
+            )}
+          </section>
+        )}
+
         {/* Stage + Source selectors */}
         <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
