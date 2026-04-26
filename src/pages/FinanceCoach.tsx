@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
 import { TAX_RATE } from '@/types/crm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -449,12 +450,25 @@ export default function FinanceCoach() {
           </div>
         </div>
 
-        {/* Briefing body — full width premium card */}
+        {/* Briefing body — structured Card */}
         <div className="md:col-span-6 ai-beam-border p-[1px]">
-          <div className="relative overflow-hidden rounded-2xl bg-card p-4 md:p-6 min-h-[200px]">
+          <Card className="relative overflow-hidden rounded-2xl border-0 bg-card min-h-[200px]">
             <div className="ai-glow-halo" aria-hidden />
             <div className="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-primary-glow/15 blur-3xl" aria-hidden />
-            <div className="relative">
+
+            {!briefingLoading && briefing && (
+              <CardHeader className="relative pb-3">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <BrainCircuit className="h-4 w-4 text-accent" />
+                  Briefing del CFO AI
+                </CardTitle>
+                <CardDescription className="text-[11px]">
+                  Diagnosi strategica basata sui tuoi dati degli ultimi 90 giorni
+                </CardDescription>
+              </CardHeader>
+            )}
+
+            <CardContent className="relative pt-4">
               {briefingLoading && (
                 <div className="space-y-2" aria-busy="true" aria-live="polite">
                   <Skeleton className="h-4 w-32 rounded-full" />
@@ -470,19 +484,85 @@ export default function FinanceCoach() {
                   </p>
                 </div>
               )}
+
               {!briefingLoading && briefing && (
-                <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-bold prose-headings:tracking-tight prose-h3:text-sm prose-h3:uppercase prose-h3:tracking-wider prose-h3:bg-gradient-to-r prose-h3:from-accent prose-h3:to-primary-glow prose-h3:bg-clip-text prose-h3:text-transparent">
-                  <ReactMarkdown>{briefing}</ReactMarkdown>
+                <article className="max-w-none text-sm text-foreground leading-relaxed space-y-4">
+                  <ReactMarkdown
+                    components={{
+                      h1: ({ children }) => (
+                        <div className="space-y-2 pt-2 first:pt-0">
+                          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-accent to-primary-glow bg-clip-text text-transparent">
+                            {children}
+                          </h3>
+                          <Separator className="bg-border/60" />
+                        </div>
+                      ),
+                      h2: ({ children }) => (
+                        <div className="space-y-2 pt-3 first:pt-0">
+                          <h3 className="text-sm font-bold uppercase tracking-wider bg-gradient-to-r from-accent to-primary-glow bg-clip-text text-transparent">
+                            {children}
+                          </h3>
+                          <Separator className="bg-border/60" />
+                        </div>
+                      ),
+                      h3: ({ children }) => (
+                        <h4 className="text-[13px] font-bold text-foreground tracking-tight pt-2 flex items-center gap-2">
+                          <span className="h-1.5 w-1.5 rounded-full bg-accent" aria-hidden />
+                          {children}
+                        </h4>
+                      ),
+                      h4: ({ children }) => (
+                        <h5 className="text-xs font-semibold text-foreground/90 tracking-tight pt-1">
+                          {children}
+                        </h5>
+                      ),
+                      p: ({ children }) => (
+                        <p className="text-sm text-foreground/90 leading-relaxed">{children}</p>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="space-y-1.5 pl-1">{children}</ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="space-y-1.5 list-decimal pl-5 marker:text-accent marker:font-bold">{children}</ol>
+                      ),
+                      li: ({ children }) => (
+                        <li className="flex gap-2 text-sm text-foreground/90 leading-relaxed">
+                          <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-gradient-to-br from-accent to-primary-glow" aria-hidden />
+                          <span className="flex-1">{children}</span>
+                        </li>
+                      ),
+                      strong: ({ children }) => (
+                        <strong className="font-bold text-foreground">{children}</strong>
+                      ),
+                      em: ({ children }) => (
+                        <em className="italic text-foreground/80">{children}</em>
+                      ),
+                      blockquote: ({ children }) => (
+                        <blockquote className="border-l-2 border-accent/60 bg-accent/5 rounded-r-lg pl-3 pr-2 py-2 text-sm text-foreground/90 italic">
+                          {children}
+                        </blockquote>
+                      ),
+                      hr: () => <Separator className="my-4 bg-border/60" />,
+                      code: ({ children }) => (
+                        <code className="rounded bg-secondary/60 px-1.5 py-0.5 text-[12px] font-mono text-foreground">
+                          {children}
+                        </code>
+                      ),
+                    }}
+                  >
+                    {briefing}
+                  </ReactMarkdown>
                 </article>
               )}
+
               {!briefingLoading && !briefing && (
                 <div className="flex flex-col items-center text-center py-8 text-muted-foreground">
                   <BrainCircuit className="h-12 w-12 mb-3 opacity-30" />
                   <p className="text-sm">Premi <b>Genera Briefing Strategico</b> per ricevere la tua analisi personalizzata.</p>
                 </div>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
