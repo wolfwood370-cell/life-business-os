@@ -788,17 +788,37 @@ const ClientDetail = () => {
                     </label>
                   </div>
 
-                  {/* Servizio del Contratto (ereditato dal profilo cliente) */}
-                  <div className="rounded-xl border border-primary/20 bg-primary/5 p-2.5 flex items-center gap-2">
-                    <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
-                    <p className="text-[11px] text-foreground leading-tight">
-                      Servizio:{' '}
-                      <span className="font-bold">{client.service_sold ?? 'Non assegnato'}</span>
-                      {contractRemaining > 0 && (
-                        <span className="text-muted-foreground"> · Residuo: <span className="font-semibold text-foreground tabular-nums">{formatEuro(contractRemaining)}</span></span>
+                  {/* Contratto Attivo o Warning (eredita strict dal profilo cliente) */}
+                  {client.service_sold ? (
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-primary shrink-0" />
+                        <p className="text-[11px] text-foreground leading-tight flex-1 min-w-0">
+                          <span className="text-muted-foreground uppercase tracking-wider text-[10px] font-semibold">Contratto Attivo:</span>{' '}
+                          <span className="font-bold">{client.service_sold}</span>
+                        </p>
+                        {contractTotal > 0 && (
+                          <span className="text-[10px] font-bold text-primary tabular-nums shrink-0">{contractProgressPct}%</span>
+                        )}
+                      </div>
+                      {contractTotal > 0 && (
+                        <>
+                          <Progress value={contractProgressPct} className="h-1.5" />
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground tabular-nums">
+                            <span>Versato <span className="font-semibold text-foreground">{formatEuro(totalPaid)}</span></span>
+                            <span>Residuo <span className="font-semibold text-foreground">{formatEuro(contractRemaining)}</span></span>
+                          </div>
+                        </>
                       )}
-                    </p>
-                  </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-warning/30 bg-warning/10 p-3 flex items-start gap-2">
+                      <AlertTriangle className="h-3.5 w-3.5 text-warning shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-foreground leading-snug">
+                        Nessun servizio assegnato. Modifica il profilo del cliente per attivare il contratto.
+                      </p>
+                    </div>
+                  )}
 
                   {/* Importo Totale */}
                   <div className="space-y-1.5">
@@ -913,7 +933,7 @@ const ClientDetail = () => {
                     <div className="space-y-2 pt-2">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground truncate">
-                          Pagamenti per <span className="text-foreground">{client.service_sold ?? 'Contratto'}</span>
+                          Piano Pagamenti{client.service_sold ? <> · <span className="text-foreground normal-case tracking-normal">{client.service_sold}</span></> : null}
                         </p>
                         {totalPending > 0 && (
                           <p className="text-[10px] font-semibold text-warning shrink-0">
