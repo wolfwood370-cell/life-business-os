@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useState } from 'react';
+import { forwardRef, useEffect, useMemo, useState } from 'react';
 import { useCrm } from '@/store/useCrm';
 import { TAX_RATE } from '@/types/crm';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import {
   BrainCircuit, TrendingUp, TrendingDown, Target as TargetIcon,
-  Users, Wallet, AlertTriangle, Sparkles, Activity, BarChart3,
+  Users, Wallet, AlertTriangle, Sparkles, Activity, BarChart3, Clock3, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
