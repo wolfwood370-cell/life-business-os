@@ -114,6 +114,8 @@ const FinancialOS = () => {
   const [ledgerYear, setLedgerYear] = useState(now.getFullYear());
   const [ledgerMonth, setLedgerMonth] = useState(now.getMonth());
   const [importOpen, setImportOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [categoryMgrOpen, setCategoryMgrOpen] = useState(false);
 
   const monthOptions = useMemo(() => {
     const opts: Array<{ value: string; label: string }> = [];
