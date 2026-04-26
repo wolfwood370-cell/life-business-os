@@ -399,6 +399,17 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const sb = supabase as any;
 
+      // Strict Contract Inheritance: read service from client profile
+      const { data: clientRow } = await sb
+        .from('clients')
+        .select('service_sold')
+        .eq('id', t.client_id)
+        .maybeSingle();
+      const inheritedService: string | null = clientRow?.service_sold ?? null;
+      const baseLabel = inheritedService || 'Servizio';
+
+      let insertedIds: string[] = [];
+
       if (t.payment_type === 'A Rate' && t.installments_count > 1) {
         const n = t.installments_count;
         const cents = Math.round(totalAmount * 100);
@@ -408,7 +419,6 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
           const due = new Date(start);
           due.setDate(due.getDate() + 28 * i);
           const isFirst = i === 0;
-          // Distribuiamo il resto sulle prime "remainderCents" rate per evitare perdite di centesimi
           const amountCents = baseCents + (i < remainderCents ? 1 : 0);
           return {
             client_id: t.client_id,
@@ -422,10 +432,11 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
             recurring_active: false,
           };
         });
-        const { error } = await sb.from('transactions').insert(rows);
+        const { data, error } = await sb.from('transactions').insert(rows).select('id');
         if (error) throw error;
+        insertedIds = (data ?? []).map((r: { id: string }) => r.id);
       } else {
-        const { error } = await sb.from('transactions').insert({
+        const { data, error } = await sb.from('transactions').insert({
           client_id: t.client_id,
           amount: totalAmount,
           payment_type: t.payment_type,
@@ -435,11 +446,30 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
           due_date: startIso,
           status: 'Saldato',
           recurring_active: t.payment_type === 'Ricorrente',
-        });
+        }).select('id');
         if (error) throw error;
+        insertedIds = (data ?? []).map((r: { id: string }) => r.id);
+      }
+
+      // Override the auto-generated financial_movements (created by DB trigger)
+      // to enforce strict contract inheritance: service_sold + professional description.
+      if (insertedIds.length > 0) {
+        const refs = insertedIds.map(id => `tx:${id}`);
+        const desc = `Rata - ${baseLabel}`;
+        await sb
+          .from('financial_movements')
+          .update({
+            description: desc,
+            service_sold: inheritedService,
+          })
+          .eq('source', 'transaction')
+          .in('external_ref', refs);
       }
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm', 'transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['crm', 'movements'] });
+    },
   });
 
   const stopRecurringMutation = useMutation({
