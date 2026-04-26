@@ -1447,6 +1447,10 @@ const FinancialOS = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
+
+      <MovementImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 };
