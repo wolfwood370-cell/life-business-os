@@ -266,9 +266,18 @@ export default function FinanceCoach() {
               onValueChange={(v) => setDaysToDeadline(v[0])}
               disabled={!activeGoal}
             />
-            <div className="flex justify-between text-[10px] text-muted-foreground mt-1.5">
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5">
               <span>1 mese</span><span>1 anno</span><span>3 anni</span>
             </div>
+            {activeGoal && simulatedDays !== realDaysLeft && (
+              <button
+                type="button"
+                onClick={() => setSimulatedDays(realDaysLeft)}
+                className="mt-2 text-[10px] uppercase tracking-wider font-semibold text-primary hover:underline"
+              >
+                Reset a scadenza reale ({realDaysLeft} giorni)
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
