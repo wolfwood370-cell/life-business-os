@@ -42,7 +42,7 @@ export const SideNav = ({ onFabClick }: Props) => {
 
       <nav className="flex-1 px-3 space-y-1">
         {items.map(({ to, label, icon: Icon }) => {
-          const active = to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
+          const active = location.pathname === to;
           return (
             <NavLink
               key={to}
