@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Home, KanbanSquare, Users, Plus, Target, Menu as MenuIcon, LogOut, Dumbbell, BarChart3, Brain } from 'lucide-react';
+import { Home, KanbanSquare, Users, Plus, Target, Menu as MenuIcon, LogOut, Dumbbell, BarChart3, Brain, BrainCircuit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { PrivacyToggle } from '@/components/crm/PrivacyToggle';
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
