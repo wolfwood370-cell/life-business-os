@@ -45,7 +45,7 @@ import { todayIso, dateInputToIso } from '@/lib/date';
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { clients, updateClient, deleteClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, services, addTransaction, stopRecurringPayment, markTransactionPaid, updateTransaction, deleteTransaction } = useCrm();
+  const { clients, updateClient, deleteClient, moveClient, addRoiMetric, removeRoiMetric, isLoading, transactions, services, addTransaction, stopRecurringPayment, markTransactionPaid, updateTransaction, deleteTransaction, bankAccounts, addMovement } = useCrm();
   const client = clients.find(c => c.id === id);
 
   // Inline payment form state
