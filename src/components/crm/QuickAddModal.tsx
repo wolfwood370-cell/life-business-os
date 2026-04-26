@@ -17,6 +17,7 @@ import {
   ServiceType,
   SERVICE_GROUPS,
   SHORT_DURATION_SERVICES,
+  NO_DURATION_SERVICES,
   leadSourceLabel,
   pipelineStageLabel,
 } from '@/types/crm';
