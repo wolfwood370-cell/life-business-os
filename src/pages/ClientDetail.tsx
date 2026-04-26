@@ -198,9 +198,29 @@ const ClientDetail = () => {
       setActualPrice(client.actual_price !== undefined && client.actual_price !== null ? String(client.actual_price) : '');
       setTrainingStart(client.training_start_date ? client.training_start_date.slice(0, 10) : '');
       setTrainingEnd(client.training_end_date ? client.training_end_date.slice(0, 10) : '');
+
+      // Phase 37 polish: derive contractDuration from existing dates so the select
+      // reflects the real saved contract length when re-opening a client.
+      if (client.training_start_date && client.training_end_date) {
+        const ms = new Date(client.training_end_date).getTime() - new Date(client.training_start_date).getTime();
+        const days = Math.round(ms / 86_400_000);
+        // Months ≈ days/30.44; snap to nearest available option (3,6,12).
+        const months = days / 30.44;
+        const snapped: ContractDurationMonths = months <= 4 ? 3 : months <= 9 ? 6 : 12;
+        setContractDuration(snapped);
+      } else {
+        setContractDuration(3);
+      }
+      setIncassatoOggi('');
       setFormInitialized(true);
     }
-  }, [client]);
+    // Reset transient inputs when switching to a different client.
+    return () => {
+      setFormInitialized(false);
+      setPayAmount('');
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [client?.id]);
 
   // SMART AMOUNT: prefill remaining balance once form is initialized
   useEffect(() => {

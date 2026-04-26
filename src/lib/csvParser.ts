@@ -35,7 +35,7 @@ const parseCsvLine = (line: string): string[] => {
 
 // Tenta di parsare un numero in formato italiano (1.234,56) o internazionale (1234.56)
 const parseAmount = (raw: string): number => {
-  const s = raw.replace(/[^0-9,.\-]/g, '').trim();
+  const s = raw.replace(/[^0-9,.-]/g, '').trim();
   if (!s) return 0;
   const hasComma = s.includes(',');
   const hasDot = s.includes('.');
@@ -65,8 +65,8 @@ const parseDate = (raw: string): string | null => {
   // DD/MM/YYYY o DD-MM-YYYY (anche YY)
   const m = s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);
   if (m) {
-    let [, dd, mm, yyyy] = m;
-    if (yyyy.length === 2) yyyy = '20' + yyyy;
+    const [, dd, mm, yRaw] = m;
+    const yyyy = yRaw.length === 2 ? '20' + yRaw : yRaw;
     const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd), 12, 0, 0);
     if (!Number.isNaN(d.getTime())) return d.toISOString();
   }

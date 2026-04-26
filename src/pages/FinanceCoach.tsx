@@ -226,8 +226,9 @@ export default function FinanceCoach() {
         },
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
-      setBriefing((data as any)?.briefing ?? '');
+      const payload = (data ?? {}) as { error?: string; briefing?: string };
+      if (payload.error) throw new Error(payload.error);
+      setBriefing(payload.briefing ?? '');
       toast.success('Briefing generato');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Errore generazione briefing');
