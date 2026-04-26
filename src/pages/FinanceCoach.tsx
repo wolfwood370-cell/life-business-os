@@ -78,6 +78,20 @@ export default function FinanceCoach() {
         .map(([name, amount]) => ({ name, amount }));
     };
 
+    // Service mix (what's actually selling)
+    const serviceMixMap = new Map<string, { count: number; revenue: number }>();
+    businessCredits.forEach(mv => {
+      const key = mv.service_sold?.trim();
+      if (!key) return;
+      const cur = serviceMixMap.get(key) ?? { count: 0, revenue: 0 };
+      cur.count += 1;
+      cur.revenue += Number(mv.amount);
+      serviceMixMap.set(key, cur);
+    });
+    const serviceMix = [...serviceMixMap.entries()]
+      .map(([name, v]) => ({ name, count: v.count, revenue: v.revenue }))
+      .sort((a, b) => b.revenue - a.revenue);
+
     return {
       avgMonthlyGross, lifestyleBurnRate, winRate, avgTicket,
       grossRevenue, businessExpenses, personalIncomes, personalExpenses,
@@ -86,6 +100,7 @@ export default function FinanceCoach() {
       pipelineVolume,
       topPersonalCategories: aggregate(personalDebits),
       topBusinessCategories: aggregate(businessDebits),
+      serviceMix,
     };
   }, [movements, clients, unifiedCategories]);
 
@@ -155,6 +170,7 @@ export default function FinanceCoach() {
             freeCashFlow: snapshot.freeCashFlow,
             topPersonalCategories: snapshot.topPersonalCategories,
             topBusinessCategories: snapshot.topBusinessCategories,
+            serviceMix: snapshot.serviceMix,
           },
           goal: activeGoal ? {
             title: activeGoal.title,
