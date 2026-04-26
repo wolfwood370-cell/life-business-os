@@ -1,4 +1,4 @@
-import { useState, useRef, forwardRef } from 'react';
+import { useState, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -16,7 +16,7 @@ interface Props {
   onOpenChange: (v: boolean) => void;
 }
 
-export const MovementImportDialog = forwardRef<HTMLDivElement, Props>(({ open, onOpenChange }, _ref) => {
+export const MovementImportDialog = ({ open, onOpenChange }: Props) => {
   const { bankAccounts, importMovements } = useCrm();
   const [accountId, setAccountId] = useState<string>('');
   const [format, setFormat] = useState<BankFormat>('generic');
@@ -217,5 +217,4 @@ export const MovementImportDialog = forwardRef<HTMLDivElement, Props>(({ open, o
       </DialogContent>
     </Dialog>
   );
-});
-MovementImportDialog.displayName = 'MovementImportDialog';
+};
