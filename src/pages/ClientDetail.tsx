@@ -172,15 +172,18 @@ const ClientDetail = () => {
       setMonthlyValue(client.monthly_value ? String(client.monthly_value) : '');
       setRenewal(client.next_renewal_date ? client.next_renewal_date.slice(0, 10) : '');
       setLastContact(client.last_contacted_at ? client.last_contacted_at.slice(0, 10) : '');
-      // Decode behavior checklist from saved lead_score (best-effort)
+      // Decode behavior checklist from saved lead_score (best-effort, deterministic).
+      // delta is a sum of independent flags worth: booked=20, responsive=10, noMoney=10, urgency=10.
+      // To avoid ambiguity we always assume the largest combo: prefer booked (20) first,
+      // then split the residual evenly across the three 10-pt flags by capping at 30.
       const base = baseLeadScore(client.lead_source);
-      const delta = Math.max(0, (client.lead_score ?? base) - base);
-      // Greedy decode: booked(20) > responsive(10) > noMoney(10) > urgency(10)
-      let remaining = delta;
-      const booked = remaining >= 20; if (booked) remaining -= 20;
-      const responsive = remaining >= 10; if (responsive) remaining -= 10;
-      const noMoney = remaining >= 10; if (noMoney) remaining -= 10;
-      const urgency = remaining >= 10; if (urgency) remaining -= 10;
+      const delta = Math.max(0, Math.min(50, (client.lead_score ?? base) - base));
+      const booked = delta >= 20;
+      const tenSlots = Math.min(3, Math.floor((delta - (booked ? 20 : 0)) / 10));
+      // Stable order: responsive → noMoney → urgency
+      const responsive = tenSlots >= 1;
+      const noMoney = tenSlots >= 2;
+      const urgency = tenSlots >= 3;
       setBehaviorBookedSession(booked);
       setBehaviorResponsive(responsive);
       setBehaviorNoMoneyObjection(noMoney);
@@ -261,8 +264,13 @@ const ClientDetail = () => {
 
     // Smart Dates: default trainingStart to today if missing; auto-compute end.
     const effectiveStart = trainingStart || (serviceSold ? todayIso() : '');
-    const effectiveEnd = serviceSold && effectiveStart
+    // For NO_DURATION services computeContractEndDate returns undefined → we MUST
+    // explicitly send `null` to clear any stale end-date stored in the DB.
+    const computedEnd = serviceSold && effectiveStart
       ? computeContractEndDate(effectiveStart, serviceSold, contractDuration)
+      : undefined;
+    const effectiveEnd: string | null | undefined = serviceSold
+      ? (computedEnd ?? null)
       : (trainingEnd || undefined);
 
     const priceNum = parseCurrencyInput(actualPrice);
@@ -356,7 +364,9 @@ const ClientDetail = () => {
 
       if (contractDirty) {
         const effectiveStart = trainingStart || todayIso();
-        const effectiveEnd = computeContractEndDate(effectiveStart, effectiveService, contractDuration);
+        const computedEnd = computeContractEndDate(effectiveStart, effectiveService, contractDuration);
+        // NO_DURATION services → send null to clear any stale end-date in DB.
+        const effectiveEnd = (computedEnd ?? null) as unknown as string | undefined;
         await updateClient(client!.id, {
           service_sold: effectiveService,
           actual_price: formPriceNum,
@@ -426,14 +436,22 @@ const ClientDetail = () => {
     }
   };
 
-  const handleSourceChange = (s: LeadSource) => {
-    updateClient(client!.id, { lead_source: s });
-    toast.success(`Fonte aggiornata: ${leadSourceLabel[s]}`);
+  const handleSourceChange = async (s: LeadSource) => {
+    try {
+      await updateClient(client!.id, { lead_source: s });
+      toast.success(`Fonte aggiornata: ${leadSourceLabel[s]}`);
+    } catch {
+      toast.error('Impossibile aggiornare la fonte');
+    }
   };
 
-  const handleStageChange = (s: PipelineStage) => {
-    moveClient(client.id, s);
-    toast.success(`Spostato in "${pipelineStageLabel[s]}"`);
+  const handleStageChange = async (s: PipelineStage) => {
+    try {
+      await moveClient(client!.id, s);
+      toast.success(`Spostato in "${pipelineStageLabel[s]}"`);
+    } catch {
+      toast.error('Impossibile aggiornare la fase');
+    }
   };
 
   const handleAddRoi = async () => {

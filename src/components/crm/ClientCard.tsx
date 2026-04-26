@@ -92,7 +92,9 @@ export const ClientCard = ({ client, compact = false }: { client: Client; compac
     }
     const effectiveStart = closeStart || todayIso();
     const priceNum = parseCurrencyInput(closePrice);
-    const effectiveEnd = computeContractEndDate(effectiveStart, closeService, closeDuration);
+    const computedEnd = computeContractEndDate(effectiveStart, closeService, closeDuration);
+    // For NO_DURATION services computedEnd is undefined → send null to clear any stale value in DB.
+    const effectiveEnd = (computedEnd ?? null) as unknown as string | undefined;
     setUpdating(true);
     try {
       await updateClient(client.id, {
