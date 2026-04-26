@@ -364,6 +364,8 @@ export const CrmProvider = ({ children }: { children: ReactNode }) => {
       }));
     },
   });
+
+  useEffect(() => {
     const channel = supabase
       .channel('crm-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'clients' }, () => {
