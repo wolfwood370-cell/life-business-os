@@ -30,6 +30,9 @@ interface Payload {
     avgTicket: number;
     pipelineVolume: number;
     activeClients: number;
+    expiringIn30?: number;
+    expiringIn60?: number;
+    expiringClients?: Array<{ name: string; service: string | null; end: string | null; daysLeft: number | null }>;
   };
   derived: {
     requiredMonthlyNet: number;
@@ -56,7 +59,7 @@ Deno.serve(async (req) => {
 
     const payload = (await req.json()) as Payload;
 
-    const systemPrompt = `You are an elite, ruthless, highly strategic AI CFO for a freelance personal trainer. Analyze the provided financial ledger (business vs personal spending), the SERVICE MIX (which products are actually selling and at what revenue), AND sales CRM metrics (Win rate, pipeline). Write a highly actionable, punchy 3-paragraph strategic briefing in Italian. Use Markdown headings (### Diagnosi, ### Strategia di Vendita, ### Strategia di Spesa). Paragraph 1: Diagnose the main bottleneck (e.g., 'Stai vendendo troppo poco il pacchetto Plus rispetto al Premium, rivedi il pricing' or 'La tua chiusura è troppo bassa per il tuo lifestyle'). Paragraph 2: Define the exact sales strategy for this month with specific numbers (calls/week, leads needed) AND which service to push. Paragraph 3: Define the exact expense-cutting strategy citing the top categories. Be direct, professional, and use numbers in EUR.`;
+    const systemPrompt = `You are an elite, ruthless, highly strategic AI CFO ("Orizzonte Strategico") for a freelance personal trainer. Analyze the provided financial ledger (business vs personal spending), the SERVICE MIX (which products are actually selling and at what revenue), the UPCOMING TRAINING EXPIRATIONS (active clients whose program ends soon), AND sales CRM metrics (Win rate, pipeline). Write a highly actionable, punchy 3-paragraph strategic briefing in Italian. Use Markdown headings (### Diagnosi, ### Strategia di Vendita, ### Strategia di Spesa). Paragraph 1: Diagnose the main bottleneck and ALWAYS warn about expiring training programs if any (e.g., "Hai 3 percorsi in scadenza nei prossimi 30 giorni, focalizzati sui rinnovi"). Paragraph 2: Define the exact sales strategy for this month with specific numbers (calls/week, leads needed) AND which service to push (referencing the service mix). Paragraph 3: Define the exact expense-cutting strategy citing the top categories. Be direct, professional, and use numbers in EUR.`;
 
     const userPrompt = `# Financial DNA — last ${payload.windowDays} days
 
@@ -81,6 +84,13 @@ ${payload.goal ? `- ${payload.goal.title}: € ${payload.goal.current.toFixed(0)
 - Average Ticket Size: € ${payload.crm.avgTicket.toFixed(2)}
 - Active pipeline volume (€ potenziale): € ${payload.crm.pipelineVolume.toFixed(2)}
 - Active clients: ${payload.crm.activeClients}
+
+## Training Expirations (active clients)
+- Expiring in next 30 days: ${payload.crm.expiringIn30 ?? 0}
+- Expiring in next 60 days: ${payload.crm.expiringIn60 ?? 0}
+${payload.crm.expiringClients && payload.crm.expiringClients.length > 0
+  ? payload.crm.expiringClients.slice(0, 8).map(c => `  • ${c.name}${c.service ? ` (${c.service})` : ''} — ${c.daysLeft ?? '?'}g (${c.end ?? '—'})`).join("\n")
+  : "  • Nessuna scadenza imminente"}
 
 ## Required to hit goal
 - Net needed/month: € ${payload.derived.requiredMonthlyNet.toFixed(2)}

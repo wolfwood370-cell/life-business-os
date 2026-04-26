@@ -12,7 +12,7 @@ import { ClientDetailSkeleton } from '@/components/crm/skeletons';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -25,7 +25,7 @@ import {
   GENDERS, Gender, genderLabel,
   PaymentType, PaymentMethod, PAYMENT_METHODS,
   Transaction, TransactionStatus, TRANSACTION_STATUSES,
-  SERVICE_TYPES, ServiceType,
+  SERVICE_GROUPS, ServiceType,
   formatEuro,
 } from '@/types/crm';
 import { baseLeadScore } from '@/lib/leadScore';
@@ -141,6 +141,8 @@ const ClientDetail = () => {
   const [gdprConsent, setGdprConsent] = useState(false);
   const [serviceSold, setServiceSold] = useState<ServiceType | ''>('');
   const [actualPrice, setActualPrice] = useState('');
+  const [trainingStart, setTrainingStart] = useState('');
+  const [trainingEnd, setTrainingEnd] = useState('');
 
   // Lead score behavior checklist (objective scoring)
   const [behaviorResponsive, setBehaviorResponsive] = useState(false);
@@ -186,6 +188,8 @@ const ClientDetail = () => {
       setGdprConsent(!!client.gdpr_consent);
       setServiceSold((client.service_sold as ServiceType) ?? '');
       setActualPrice(client.actual_price !== undefined && client.actual_price !== null ? String(client.actual_price) : '');
+      setTrainingStart(client.training_start_date ? client.training_start_date.slice(0, 10) : '');
+      setTrainingEnd(client.training_end_date ? client.training_end_date.slice(0, 10) : '');
     }
   }, [client]);
 
@@ -236,6 +240,8 @@ const ClientDetail = () => {
       gdpr_consent: gdprConsent,
       service_sold: serviceSold || undefined,
       actual_price: actualPrice ? Number(actualPrice.replace(',', '.')) : undefined,
+      training_start_date: trainingStart || undefined,
+      training_end_date: trainingEnd || undefined,
     });
     toast.success('Profilo aggiornato');
   };
@@ -500,7 +506,7 @@ const ClientDetail = () => {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/15 text-accent">
                   <Sparkles className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold text-sm text-foreground">Lead Score Guidato</h3>
+                <h3 className="font-bold text-sm text-foreground">Temperatura Lead Guidata</h3>
               </div>
 
               <div className="space-y-3">
@@ -637,8 +643,13 @@ const ClientDetail = () => {
                       <SelectValue placeholder="Seleziona servizio…" />
                     </SelectTrigger>
                     <SelectContent>
-                      {SERVICE_TYPES.map(s => (
-                        <SelectItem key={s} value={s}>{s}</SelectItem>
+                      {SERVICE_GROUPS.map(group => (
+                        <SelectGroup key={group.label}>
+                          <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">{group.label}</SelectLabel>
+                          {group.items.map(s => (
+                            <SelectItem key={s} value={s}>{s}</SelectItem>
+                          ))}
+                        </SelectGroup>
                       ))}
                     </SelectContent>
                   </Select>
@@ -658,8 +669,33 @@ const ClientDetail = () => {
                     className="h-12 rounded-xl bg-card border border-border text-base font-semibold"
                   />
                 </div>
+
+                {/* Periodo Percorso */}
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <CalendarClock className="h-3 w-3" /> Inizio Percorso
+                  </label>
+                  <Input
+                    type="date"
+                    value={trainingStart}
+                    onChange={(e) => setTrainingStart(e.target.value)}
+                    className="h-12 rounded-xl bg-card border border-border text-sm font-semibold"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                    <CalendarClock className="h-3 w-3" /> Fine Percorso
+                  </label>
+                  <Input
+                    type="date"
+                    value={trainingEnd}
+                    onChange={(e) => setTrainingEnd(e.target.value)}
+                    className="h-12 rounded-xl bg-card border border-border text-sm font-semibold"
+                  />
+                </div>
+
                 <p className="sm:col-span-2 text-[10px] text-muted-foreground">
-                  Indipendente dalla fonte di acquisizione. Premi "Salva profilo" in fondo per registrare.
+                  Servizio e periodo sono indipendenti dalla fonte di acquisizione. Premi "Salva profilo" in fondo.
                 </p>
               </div>
 

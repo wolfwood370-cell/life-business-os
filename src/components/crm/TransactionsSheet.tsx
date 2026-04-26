@@ -2,7 +2,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { useCrm } from '@/store/useCrm';
 import { Transaction, formatEuro } from '@/types/crm';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, Clock, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Clock, ChevronRight, Sparkles, CalendarClock } from 'lucide-react';
 
 interface Props {
   open: boolean;
@@ -10,15 +10,29 @@ interface Props {
   title: string;
   description: string;
   transactions: Transaction[];
+  /** When the sheet is filtered to a single client, show service + training context. */
+  clientId?: string;
 }
 
-export const TransactionsSheet = ({ open, onOpenChange, title, description, transactions }: Props) => {
-  const { clients } = useCrm();
+const formatDateShort = (iso?: string) =>
+  iso ? new Date(iso).toLocaleDateString('it-IT', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+
+export const TransactionsSheet = ({ open, onOpenChange, title, description, transactions, clientId }: Props) => {
+  const { clients, getRemainingDays } = useCrm();
   const total = transactions.reduce((s, t) => s + t.amount, 0);
 
   const sorted = [...transactions].sort(
     (a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
   );
+
+  // Resolve focus client: explicit prop first, otherwise infer when all transactions belong to one client.
+  const focusClientId = clientId ?? (
+    transactions.length > 0 && transactions.every(t => t.client_id === transactions[0].client_id)
+      ? transactions[0].client_id
+      : undefined
+  );
+  const focusClient = focusClientId ? clients.find(c => c.id === focusClientId) : undefined;
+  const remaining = focusClient ? getRemainingDays(focusClient.id) : null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -27,6 +41,43 @@ export const TransactionsSheet = ({ open, onOpenChange, title, description, tran
           <SheetTitle>{title}</SheetTitle>
           <SheetDescription>{description}</SheetDescription>
         </SheetHeader>
+
+        {focusClient && (focusClient.service_sold || focusClient.training_start_date || focusClient.training_end_date) && (
+          <div className="mt-4 rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-2">
+            {focusClient.service_sold && (
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  {focusClient.service_sold}
+                </span>
+                {typeof focusClient.actual_price === 'number' && (
+                  <span className="text-[11px] font-semibold text-foreground">{formatEuro(focusClient.actual_price)}</span>
+                )}
+              </div>
+            )}
+            {(focusClient.training_start_date || focusClient.training_end_date) && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <CalendarClock className="h-3.5 w-3.5" />
+                <span>
+                  Periodo Percorso: <span className="font-semibold text-foreground">{formatDateShort(focusClient.training_start_date)}</span>
+                  {' – '}
+                  <span className="font-semibold text-foreground">{formatDateShort(focusClient.training_end_date)}</span>
+                </span>
+                {typeof remaining === 'number' && (
+                  <span
+                    className={`ml-auto inline-flex items-center rounded-md px-1.5 py-0.5 text-[10px] font-bold ${
+                      remaining < 0 ? 'bg-destructive/15 text-destructive'
+                      : remaining <= 30 ? 'bg-warning/15 text-warning'
+                      : 'bg-primary/15 text-primary'
+                    }`}
+                  >
+                    {remaining < 0 ? `Scaduto ${Math.abs(remaining)}g fa` : `${remaining}g residui`}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mt-4 rounded-2xl border border-border bg-secondary/40 p-4">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Totale</p>

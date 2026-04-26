@@ -33,6 +33,7 @@ export interface CrmContextValue {
   updateLifeGoal: (id: string, patch: Partial<LifeGoal>) => Promise<void>;
   deleteLifeGoal: (id: string) => Promise<void>;
   setMonthlyTarget: (n: number) => void;
+  getRemainingDays: (clientId: string) => number | null;
 
   // ============ Phase 28: Unified Ledger ============
   bankAccounts: BankAccount[];

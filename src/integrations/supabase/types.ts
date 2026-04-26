@@ -109,6 +109,8 @@ export type Database = {
           root_motivator: string
           service_sold: string | null
           stage_updated_at: string
+          training_end_date: string | null
+          training_start_date: string | null
         }
         Insert: {
           actual_price?: number | null
@@ -138,6 +140,8 @@ export type Database = {
           root_motivator?: string
           service_sold?: string | null
           stage_updated_at?: string
+          training_end_date?: string | null
+          training_start_date?: string | null
         }
         Update: {
           actual_price?: number | null
@@ -167,6 +171,8 @@ export type Database = {
           root_motivator?: string
           service_sold?: string | null
           stage_updated_at?: string
+          training_end_date?: string | null
+          training_start_date?: string | null
         }
         Relationships: []
       }

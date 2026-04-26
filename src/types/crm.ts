@@ -73,7 +73,21 @@ export interface Client {
   gdpr_consent?: boolean;
   service_sold?: ServiceType;
   actual_price?: number;
+  training_start_date?: string; // ISO date YYYY-MM-DD
+  training_end_date?: string;   // ISO date YYYY-MM-DD
 }
+
+// Grouped service catalog for UI selection
+export const SERVICE_GROUPS: { label: string; items: ServiceType[] }[] = [
+  { label: 'Percorsi Base', items: ['Percorso Base'] },
+  { label: 'Percorsi Light', items: ['Percorso Light'] },
+  { label: 'Percorsi Plus', items: ['Percorso Plus'] },
+  { label: 'Percorsi Premium', items: ['Percorso Premium'] },
+  { label: 'Programmazione', items: ['Programmazione Avanzata'] },
+  { label: 'Nutrizione', items: ['NC Nutrition'] },
+  { label: 'Entry Level', items: ['PT Pack 99€'] },
+  { label: 'Altro', items: ['Altro'] },
+];
 
 export type Gender = 'M' | 'F' | 'Altro';
 export const GENDERS: Gender[] = ['M', 'F', 'Altro'];

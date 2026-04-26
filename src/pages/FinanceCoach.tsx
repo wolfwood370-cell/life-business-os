@@ -66,6 +66,30 @@ export default function FinanceCoach() {
       .filter(c => !['Closed Lost', 'Closed Won'].includes(c.pipeline_stage))
       .reduce((a, c) => a + (c.monthly_value ?? 0), 0);
 
+    // Training expirations — count active clients whose training_end_date falls in the next 30/60 days
+    const today = new Date();
+    const day30 = new Date(today.getTime() + 30 * 86_400_000);
+    const day60 = new Date(today.getTime() + 60 * 86_400_000);
+    const wonClients = clients.filter(c => c.pipeline_stage === 'Closed Won');
+    const expiringIn30 = wonClients.filter(c => {
+      if (!c.training_end_date) return false;
+      const d = new Date(c.training_end_date);
+      return d >= today && d <= day30;
+    });
+    const expiringIn60 = wonClients.filter(c => {
+      if (!c.training_end_date) return false;
+      const d = new Date(c.training_end_date);
+      return d >= today && d <= day60;
+    });
+    const expiringClients = expiringIn60.map(c => ({
+      name: c.name,
+      service: c.service_sold ?? null,
+      end: c.training_end_date ?? null,
+      daysLeft: c.training_end_date
+        ? Math.ceil((new Date(c.training_end_date).getTime() - today.getTime()) / 86_400_000)
+        : null,
+    })).sort((a, b) => (a.daysLeft ?? 9999) - (b.daysLeft ?? 9999));
+
     // Top categories
     const catMap = new Map(unifiedCategories.map(c => [c.id, c.name]));
     const aggregate = (arr: typeof recent) => {
@@ -101,6 +125,9 @@ export default function FinanceCoach() {
       topPersonalCategories: aggregate(personalDebits),
       topBusinessCategories: aggregate(businessDebits),
       serviceMix,
+      expiringIn30Count: expiringIn30.length,
+      expiringIn60Count: expiringIn60.length,
+      expiringClients,
     };
   }, [movements, clients, unifiedCategories]);
 
@@ -186,6 +213,9 @@ export default function FinanceCoach() {
             avgTicket: snapshot.avgTicket,
             pipelineVolume: snapshot.pipelineVolume,
             activeClients: snapshot.activeClients,
+            expiringIn30: snapshot.expiringIn30Count,
+            expiringIn60: snapshot.expiringIn60Count,
+            expiringClients: snapshot.expiringClients,
           },
           derived: {
             requiredMonthlyNet: sim.requiredMonthlyNet,
@@ -224,7 +254,7 @@ export default function FinanceCoach() {
           <BrainCircuit className="h-6 w-6 text-primary-foreground" strokeWidth={2.5} />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">CFO Globale</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Orizzonte Strategico</h1>
           <p className="text-xs md:text-sm text-muted-foreground uppercase tracking-wider">
             Intelligenza Finanziaria Adattiva — ultimi {WINDOW_DAYS} giorni
           </p>

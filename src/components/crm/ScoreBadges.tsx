@@ -22,7 +22,10 @@ export const LeadScoreBadge = ({ score, size = 'md' }: { score: number; size?: '
     score >= 70 ? 'Caldo' : score >= 40 ? 'Tiepido' : 'Freddo';
   if (size === 'sm') {
     return (
-      <span className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${tone}`}>
+      <span
+        className={`inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${tone}`}
+        title={`Temperatura Lead ${score}/100`}
+      >
         {score}
         <span className="opacity-70 font-medium">· {label}</span>
       </span>
@@ -30,6 +33,7 @@ export const LeadScoreBadge = ({ score, size = 'md' }: { score: number; size?: '
   }
   return (
     <div className={`inline-flex items-center gap-2 rounded-xl border px-2.5 py-1 ${tone}`}>
+      <span className="text-[9px] font-bold uppercase tracking-wider opacity-70">Temperatura</span>
       <span className="text-sm font-bold leading-none">{score}<span className="text-[10px] font-medium opacity-70">/100</span></span>
       <span className="text-[10px] font-bold uppercase tracking-wider">{label}</span>
     </div>
