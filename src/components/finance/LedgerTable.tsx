@@ -381,6 +381,11 @@ export const LedgerTable = ({ year, month }: Props) => {
           </div>
         ))}
       </div>
+
+      <CategoryManagerDialog
+        open={isCategoryManagerOpen}
+        onOpenChange={setIsCategoryManagerOpen}
+      />
     </div>
   );
 };
