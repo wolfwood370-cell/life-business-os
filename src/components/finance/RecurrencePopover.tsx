@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,7 @@ const labelFor = (t: MovementRecurrenceType, v?: number) => {
   return 'Una tantum';
 };
 
-export const RecurrencePopover = ({ type, value, onChange, size = 'sm' }: Props) => {
+export const RecurrencePopover = forwardRef<HTMLButtonElement, Props>(({ type, value, onChange, size = 'sm' }, ref) => {
   const [open, setOpen] = useState(false);
   const [draftType, setDraftType] = useState<MovementRecurrenceType>(type);
   const [draftValue, setDraftValue] = useState<number>(value ?? (type === 'fixed_day' ? 1 : 1));
@@ -45,6 +45,7 @@ export const RecurrencePopover = ({ type, value, onChange, size = 'sm' }: Props)
     }}>
       <PopoverTrigger asChild>
         <button
+          ref={ref}
           type="button"
           className={cn(
             'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wider transition-colors',
@@ -117,4 +118,5 @@ export const RecurrencePopover = ({ type, value, onChange, size = 'sm' }: Props)
       </PopoverContent>
     </Popover>
   );
-};
+});
+RecurrencePopover.displayName = 'RecurrencePopover';

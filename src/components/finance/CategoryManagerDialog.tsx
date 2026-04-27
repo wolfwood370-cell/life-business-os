@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,7 +26,7 @@ const kindLabel: Record<CategoryKind, string> = {
   both: 'Entrambi',
 };
 
-export const CategoryManagerDialog = ({ open, onOpenChange }: Props) => {
+export const CategoryManagerDialog = forwardRef<HTMLDivElement, Props>(({ open, onOpenChange }, _ref) => {
   const { unifiedCategories, addUnifiedCategory, updateUnifiedCategory, deleteUnifiedCategory } = useCrm();
 
   const [name, setName] = useState('');
@@ -180,4 +180,5 @@ export const CategoryManagerDialog = ({ open, onOpenChange }: Props) => {
       </DialogContent>
     </Dialog>
   );
-};
+});
+CategoryManagerDialog.displayName = 'CategoryManagerDialog';
