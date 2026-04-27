@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  SelectGroup, SelectLabel, SelectSeparator,
 } from '@/components/ui/select';
-import { Trash2, Check, Search, X, ArrowUp, ArrowDown, Pencil } from 'lucide-react';
+import { Trash2, Check, Search, X, ArrowUp, ArrowDown, Pencil, Tags, Plus } from 'lucide-react';
 import { PrivacyMask } from '@/components/crm/PrivacyMask';
 import { cn } from '@/lib/utils';
 import { RecurrencePopover } from './RecurrencePopover';
+import { CategoryManagerDialog } from './CategoryManagerDialog';
 
 interface Props {
   year: number;
@@ -30,6 +32,15 @@ export const LedgerTable = ({ year, month }: Props) => {
   const [typeFilter, setTypeFilter] = useState<'all' | 'credit' | 'debit'>('all');
   const [search, setSearch] = useState('');
   const [showOnlyUnreviewed, setShowOnlyUnreviewed] = useState(false);
+  const [isCategoryManagerOpen, setIsCategoryManagerOpen] = useState(false);
+
+  // Group categories by scope so the user can always see and select any category.
+  const groupedCategories = useMemo(() => {
+    const business = unifiedCategories.filter(c => c.scope === 'business');
+    const personal = unifiedCategories.filter(c => c.scope === 'personal');
+    const both = unifiedCategories.filter(c => c.scope === 'both');
+    return { business, personal, both };
+  }, [unifiedCategories]);
 
   const filtered = useMemo<FinancialMovement[]>(() => {
     const monthStart = new Date(year, month, 1).getTime();
