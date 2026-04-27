@@ -185,13 +185,14 @@ export const TaskQueue = () => {
 
   return (
     <div className="space-y-2">
-      {sorted.map((t) => {
+      {sorted.map((t, index) => {
         const s = priorityStyles[t.priority];
         return (
           <button
             key={t.id}
             onClick={() => navigate(`/clients/${t.clientId}`)}
-            className={`w-full text-left rounded-2xl border p-4 transition-smooth active:scale-[0.99] shadow-card ${s.wrap}`}
+            style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }}
+            className={`group w-full text-left rounded-2xl border p-4 transition-smooth active:scale-[0.99] shadow-card hover:bg-muted/50 animate-in fade-in slide-in-from-bottom-4 duration-500 ${s.wrap}`}
           >
             <div className="flex items-center gap-3">
               <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${s.icon}`}>
@@ -203,6 +204,7 @@ export const TaskQueue = () => {
                 </div>
                 <p className="text-xs text-muted-foreground truncate mt-0.5">{t.subtitle}</p>
               </div>
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-muted-foreground/30 transition-colors duration-200 group-hover:text-emerald-500" />
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${s.chip}`}>
                 {s.label}
               </span>
