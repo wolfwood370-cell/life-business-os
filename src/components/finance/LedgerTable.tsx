@@ -172,17 +172,45 @@ export const LedgerTable = ({ year, month }: Props) => {
                           <span className="text-[11px]">{categoryName(mv.category_id)}</span>
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="max-h-[320px]">
                         <SelectItem value="none">—</SelectItem>
-                        {unifiedCategories
-                          .filter(c =>
-                            c.scope === 'both' ||
-                            c.scope === mv.classification ||
-                            c.id === mv.category_id
-                          )
-                          .map(c => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
+                        {groupedCategories.both.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Entrambi</SelectLabel>
+                            {groupedCategories.both.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )}
+                        {groupedCategories.business.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Aziendale</SelectLabel>
+                            {groupedCategories.business.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )}
+                        {groupedCategories.personal.length > 0 && (
+                          <SelectGroup>
+                            <SelectLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">Personale</SelectLabel>
+                            {groupedCategories.personal.map(c => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectGroup>
+                        )}
+                        <SelectSeparator />
+                        <button
+                          type="button"
+                          onMouseDown={(e) => {
+                            // mouseDown beats Radix's outside-click close, so the dialog opens reliably
+                            e.preventDefault();
+                            setIsCategoryManagerOpen(true);
+                          }}
+                          className="relative flex w-full items-center gap-2 rounded-sm py-1.5 pl-2 pr-2 text-xs font-medium text-primary hover:bg-primary/10 transition-colors"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          Aggiungi / Modifica Categoria
+                        </button>
                       </SelectContent>
                     </Select>
                   </TableCell>
