@@ -206,6 +206,29 @@
   .bento-stagger > *:nth-child(4) { animation-delay: 0.35s; }
   .bento-stagger > *:nth-child(5) { animation-delay: 0.45s; }
 
+  /* Aurora background — slow drifting orbs for premium auth */
+  @keyframes aurora-drift-1 {
+    0%, 100% { transform: translate(0%, 0%) rotate(0deg) scale(1); }
+    33% { transform: translate(15%, -10%) rotate(120deg) scale(1.15); }
+    66% { transform: translate(-10%, 15%) rotate(240deg) scale(0.9); }
+  }
+  @keyframes aurora-drift-2 {
+    0%, 100% { transform: translate(0%, 0%) rotate(0deg) scale(1); }
+    50% { transform: translate(-20%, 10%) rotate(180deg) scale(1.2); }
+  }
+  @keyframes aurora-drift-3 {
+    0%, 100% { transform: translate(0%, 0%) rotate(0deg) scale(1.05); }
+    50% { transform: translate(12%, 18%) rotate(-180deg) scale(0.95); }
+  }
+  @keyframes aurora-drift-4 {
+    0%, 100% { transform: translate(0%, 0%) rotate(0deg) scale(0.95); }
+    50% { transform: translate(-15%, -20%) rotate(180deg) scale(1.15); }
+  }
+  .aurora-orb-1 { animation: aurora-drift-1 18s ease-in-out infinite; }
+  .aurora-orb-2 { animation: aurora-drift-2 22s ease-in-out infinite; }
+  .aurora-orb-3 { animation: aurora-drift-3 20s ease-in-out infinite; }
+  .aurora-orb-4 { animation: aurora-drift-4 16s ease-in-out infinite; }
+
   /* Premium shimmer skeleton */
   .skeleton-shimmer {
     position: relative;
